@@ -12,8 +12,16 @@ html(lang="en")
       ol
         li.strike.
           openid auth
-        li.
+        li.strike.
           fetch backpack
+        li.
+          post trade
+        li.
+          show matches
+        li.
+          channels
+        li.
+          chats
 
       br
       p#message connecting...
@@ -26,4 +34,15 @@ html(lang="en")
       br
       div#user.null
         a(href='/logout') logout
+
+
+      br
+      div#backpack-container
+        div#backpack-msg
+        div#backpack.null
+        div#backpack-navs.null
+          span.nav.prev &lt;
+          span.nav.next &gt;
+
+
 

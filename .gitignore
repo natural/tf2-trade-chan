@@ -1,5 +1,6 @@
-*.pyc
 *~
 *.nodist
-tmp
+node_modules
+./tf2tc/public/assets/*
+.socketstream_state
 dist-*
