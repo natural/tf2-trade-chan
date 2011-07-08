@@ -1,0 +1,29 @@
+!!! 5
+html(lang="en")
+  head
+    != SocketStream
+    title TF2 Trade Chan
+  body
+    #content
+      h1 welcome to tf2 trade chan (3)
+
+      h2 todo list:
+
+      ol
+        li.strike.
+          openid auth
+        li.
+          fetch backpack
+
+      br
+      p#message connecting...
+
+      br
+      div#auth.null
+        a(href='/authenticate')
+          img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_large_border.png')
+
+      br
+      div#user.null
+        a(href='/logout') logout
+
