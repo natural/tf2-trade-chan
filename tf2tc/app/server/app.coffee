@@ -30,6 +30,9 @@ exports.actions =
         else
             cb {auth: false, user_id: null, profile: {}}
 
+    user_profile: (params, cb) ->
+        steam.actions.profile params, cb
+
     backpack: (cb) ->
         if @session.user.loggedIn()
             uid = @session.user_id

@@ -113,3 +113,15 @@ String.prototype.sanitize = function(){
 	  replace(/([a-z0-9\-\.]+\@[a-z0-9\-]+([^"'\s]+))/gi,"<a href=\"mailto:$1\" target=\"_blank\">$1<\/a>");
 };
 
+
+
+if (typeof String.prototype.wordwrap !== 'function') {
+    String.prototype.wordwrap = function(width, brk, cut) {
+	brk = brk || '<br />\n'
+	width = width || 75
+	cut = cut || false
+	if (!this) { return this }
+	var rx = '.{1,' +width+ '}(\\s|$)' + (cut ? '|.{' +width+ '}|.+$' : '|\\S+?(\\s|$)')
+	return this.match( RegExp(rx, 'g') ).join( brk )
+    }
+}

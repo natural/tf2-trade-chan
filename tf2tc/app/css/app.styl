@@ -1,4 +1,6 @@
 @import 'helpers'
+@import 'fonts'
+//-@import 'scrollbars'
 
 
 dark-gray = #222
@@ -96,30 +98,40 @@ qual(11, #cd9b1d, #423618) // strange
 
 
 
-::-webkit-scrollbar
-  width 18px
-  height 10px
-
-
-::-webkit-scrollbar-button:start:decrement, ::-webkit-scrollbar-button:end:increment
-  height 30px
-  display block
-  background-color transparent
-
-
-
-::-webkit-scrollbar-track-piece
-  background-color #3b3b3b
-  -webkit-border-radius 6px
-
-
-::-webkit-scrollbar-thumb:vertical
-  height 50px
+#tooltip
+  opacity(0.9)
   background-color dark-gray
-  border 1px solid medium-gray
-  -webkit-border-radius 6px
+  border 2px solid #ccc
+  border-r(8px)
+  padding 24px
+  margin 12px
+  position absolute
+  text-align center
+  z-index 9002
+  overflow hidden
 
+#tooltip .name
+  font-family "TF2Build"
 
+#tooltip .level, #tooltip .alt, #tooltip .positive, #tooltip .negative
+  font-family "TF2secondary"
 
+#tooltip .level
+  color #756b5e
 
+#tooltip .ctrl
+  color #fff
+  text-align left
+  font-family Andale Mono, monospace
+  font-size: 0.75em
+
+#tooltip .alt
+  color #e4dbc4
+  white-space nowrap
+
+#tooltip .positive
+  color #8dbceb
+
+#tooltip .negative
+  color #eb3b3b
 
