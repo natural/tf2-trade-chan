@@ -1,16 +1,19 @@
-// Helper functions
+
 
 vendor(prop, args)
   -webkit-{prop} args
   -moz-{prop} args
   {prop} args
-  
+
+
 round(n)
   vendor border-radius, n
-  
+
+
 round-corner(tb, lr, n)
   border-{tb}\-{lr}-radius n
   -moz-border-radius-{tb}{lr} n
+
 
 border-r(n)
   border-radius n
@@ -21,11 +24,32 @@ border-r(n)
 box-shadow()
   vendor box-shadow, arguments
 
+
 opacity(n)
   opacity n
   -moz-opacity n
+
 
 vertical-gradient(from, to)
   background-color to
   background-image -webkit-gradient(linear, left top, left bottom, from(from), to(to))
   background-image -moz-linear-gradient(top, from, to)
+
+
+qual(i, a, b)
+  .qual-text-{i}
+    color a !important
+
+  .qual-border-{i}
+    border-color a !important
+  .qual-border-{i}:hover
+    border-color b !important
+  .qual-background-{i}:hover
+    background-color a !important
+
+//  .qual-background-{i}
+//    background-color b !important
+
+
+
+

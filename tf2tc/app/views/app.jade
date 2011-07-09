@@ -4,6 +4,7 @@ html(lang="en")
     != SocketStream
     title TF2 Trade Chan
   body
+    #tooltip.null
     #content
       h1 welcome to tf2 trade chan (3)
 
@@ -27,22 +28,19 @@ html(lang="en")
       p#message connecting...
 
       br
-      div#auth.null
+      #auth.null
         a(href='/authenticate')
           img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_large_border.png')
 
       br
-      div#user.null
+      #user.null
         a(href='/logout') logout
 
 
       br
-      div#backpack-container
-        div#backpack-msg
-        div#backpack.null
-        div#backpack-navs.null
-          span.nav.prev &lt;
-          span.nav.next &gt;
+      #backpack-container
+        #backpack-msg
+        #backpack.null
 
 
 

@@ -39,9 +39,7 @@ exports.init = ->
                             set_backpack SS.client.globals, backpack
                             draw_backpack SS.client.globals, $('#backpack'), () ->
                                 $('#backpack').slideDown()
-                                $('#backpack-navs').slideDown()
                                 $('#backpack-msg').slideUp().text('')
-                                set_backpack_scroll $('#backpack-container'), $('#backpack')
 
 
 set_backpack = (ns, backpack) ->
@@ -63,47 +61,38 @@ set_schema = (ns, schema) ->
     ns.schema_items = schema_items
 
 
-set_backpack_scroll = (c, bp) ->
-    top = 0
-    offset = $(".row.bot:first").position().top - $(".row:first").position().top + $(".row:first").height()
-
-    $('.nav.prev', c).click (e) ->
-        top -= offset
-        console.log 'prev', top
-        bp.animate({scrollTop: "#{top}px"})
-
-    $('.nav.next', c).click (e) ->
-        top += offset
-        console.log 'next', top
-        bp.animate({scrollTop: "#{top}px"})
-
-
 draw_backpack = (ns, target, cb) ->
     schema_items = ns.schema_items
     backpack_items = ns.backpack_items
 
     mkrow = () ->
-        "<div class='row'></div>"
+        '<div class="row"></div>'
 
-    mkitem = (d) ->
+    mkitem = (d, t) ->
         if d
-            "<div class='item'><img src='#{schema_items[d.defindex].image_url}' /> </div>"
+            v = "<div class='item'><img src='#{schema_items[d.defindex].image_url}' /> </div>"
         else
-            "<div class='item'></div>"
+            v = "<div class='item'></div>"
+        t.append(v)
+        if d
+            i = $('div.item:last', t)
+            i.data('itemdef', d)
+             .data('schemadef', schema_items[d.defindex])
+             .addClass("qual-border-#{d.quality} qual-background-#{d.quality}")
 
     items = ns.backpack.result.items.item
     slots = ns.backpack.result.num_backpack_slots
-    page_size = 50 # or 25
+    page_size = 25 # 50 # or 25
     pages = slots / page_size
     i = 0
-    cols = 10 # or 5
+    cols = 5 # 10 # or 5
 
     target.append(mkrow())
     row = $('div.row:last', target)
     for slot in [1..slots]
         do (slot) ->
             item = backpack_items[slot]
-            row.append( mkitem(item) )
+            mkitem(item, row)
             i += 1
             if !(i % cols) and slot < slots
                 if !(i % page_size)
