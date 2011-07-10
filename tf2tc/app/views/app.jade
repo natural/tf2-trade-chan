@@ -6,49 +6,53 @@ html(lang="en")
   body
     #tooltip.null
       div.name
-      div.crafter
-      div.ctrl
       div.level
-      div.alt
+      div.crafter
+      div.killeater
       div.positive
       div.negative
+      div.alt
+      div.neutral
+      div.limiteduse
+      div.ctrl
 
     #content
       h1 welcome to tf2 trade chan (3)
 
-      h2 todo list:
+      #message-container
+          span#message
+          span#auth.null
+            a(href='/authenticate')
+              img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
 
-      ol
-        li.strike.
-          openid auth
-        li.strike.
-          fetch backpack
-        li.
-          post trade
-        li.
-          show matches
-        li.
-          channels
-        li.
-          chats
+          span#user.null
+            a(href='/logout') logout
 
-      br
-      p#message connecting...
-
-      br
-      #auth.null
-        a(href='/authenticate')
-          img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_large_border.png')
-
-      br
-      #user.null
-        a(href='/logout') logout
-
-
-      br
-      #backpack-container
-        #backpack-msg
-        #backpack.null
+      div.line#user-container
+        div.unit.size1of2
+          #backpack-container
+            #backpack-title your backpack
+            #backpack-msg
+            #backpack.null
+        div.unit.size1of2.lastUnit
+          #trades-container
+            #trades-title your trades
+            #trades.null
+      div
+        h2 todo list:
+        ol
+          li.strike.
+            openid auth
+          li.strike.
+            fetch backpack
+          li.
+            post trade
+          li.
+            show matches
+          li.
+            channels
+          li.
+            chats
 
 
 

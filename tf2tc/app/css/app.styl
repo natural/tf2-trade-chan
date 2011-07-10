@@ -1,6 +1,5 @@
 @import 'helpers'
 @import 'fonts'
-//-@import 'scrollbars'
 
 
 dark-gray = #222
@@ -36,11 +35,11 @@ h1
 .null
   display none
 
-#backpack-container
+#backpack-container, #trades-container
   background-color black;
   width 90px*6
 
-#backpack
+#backpack, #trades
   padding 12px
   overflow-y scroll
   height 90px*5
@@ -110,11 +109,11 @@ qual(11, #cd9b1d, #423618) // strange
   z-index 9002
   overflow hidden
 
+#tooltip div
+  font-family "TF2secondary"
+
 #tooltip .name
   font-family "TF2Build"
-
-#tooltip .level, #tooltip .alt, #tooltip .positive, #tooltip .negative
-  font-family "TF2secondary"
 
 #tooltip .level
   color #756b5e
@@ -129,9 +128,84 @@ qual(11, #cd9b1d, #423618) // strange
   color #e4dbc4
   white-space nowrap
 
-#tooltip .positive
+#tooltip .positive, #tooltip .crafter
   color #8dbceb
 
 #tooltip .negative
   color #eb3b3b
 
+#tooltip .limiteduse
+  color green
+
+
+.line:before,
+.line:after
+  content ""
+  display table
+
+.line:after
+  clear both
+
+.line
+  *zoom 1
+
+.unit
+  float left
+
+.size1of1
+  float none
+
+.size1of2
+  width 50%
+
+.size1of3
+  width 33.33333%
+
+.size2of3
+  width 66.66666%
+
+.size1of4
+  width 25%
+
+.size3of4
+  width 75%
+
+.size1of5
+  width 20%
+
+.size2of5
+  width 40%
+
+.size3of5
+  width 60%
+
+.size4of5
+  width 80%
+
+.lastUnit
+  float none
+  display block
+  display table-cell
+  width 9999em
+  *width auto
+  *zoom 1
+  _position relative
+  _left -3px
+  _margin-right -3px
+
+
+
+#message-container
+  border-r(12px)
+  border 1px solid black
+  padding 12px
+  margin 12px
+
+#user-container
+  border 1px solid red
+
+#backpack-container
+  border 1px solid green
+
+#trades-container
+  border 1px solid blue
