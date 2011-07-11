@@ -13,19 +13,21 @@ exports.init = ->
 boot = ->
     window.oo = SS.client.util
     player_ns = {}
-    $('div.item:not(:empty)').live 'mouseover', ns:player_ns, tooltip_over
-    $('div.item:not(:empty)').live 'mouseout', ns:player_ns, tooltip_out
+    $('div.item:not(:empty)').live 'mouseover', ns:player_ns, show_tooltip
+    $('div.item:not(:empty)').live 'mouseout', ns:player_ns, -> $('#tooltip').hide()
+
+
     SS.server.app.login document.cookie, (r) ->
         (if r.success then boot_user else boot_anon)(player_ns)
 
 
 boot_anon = (ns) ->
-    $('#auth').show()
+    $('#login').show()
 
 
 boot_user = (ns) ->
     SS.server.app.user_data (data) ->
-        $('#user').prepend("Welcome, #{data.profile.personaname} &nbsp;").show()
+        $('#logout').prepend("Welcome, #{data.profile.personaname} &nbsp;").show()
         $('#backpack-msg').text 'Loading backpack...'
         SS.server.app.backpack (backpack) ->
             oo.mk_backpack ns, backpack
@@ -33,25 +35,32 @@ boot_user = (ns) ->
             SS.server.app.schema (schema) ->
                 oo.mk_schema ns, schema
                 put_backpack ns, $('#backpack'), 25, 5, ->
-                    $('#backpack').slideDown()
                     $('#backpack-msg').slideUp().text('')
-                put_trades ns, $('#trades'), ->
-                    $('#trades').slideDown()
+                    put_trades ns, $('#trades'), ->
+                        dragdrop_items $('#backpack'), $('#trades')
+                        $('#user-container').slideDown()
 
 
+## TODO: add effects, paint swatch, nametags, desc tags, equipped
+## badge, use count badge
 put_backpack = (ns, target, page_size, cols, cb) ->
     mk_row = -> '<div class="row"></div>'
     mk_item = (d, t) ->
         if d
-            v = "<div class='item'><img src='#{ns.schema_items[d.defindex].image_url}' /> </div>"
+            v = "<div class='itemw'>
+                   <div class='item'>
+                     <img src='#{ns.schema_items[d.defindex].image_url}' />
+                   </div>
+                 </div>"
         else
-            v = "<div class='item'></div>"
+            v = '<div class="itemw"><div class="item" /></div>'
         t.append(v)
         if d
             i = $ 'div.item:last', t
             i.data 'itemdef', d
             i.data 'schemadef', ns.schema_items[d.defindex]
-            i.addClass "qual-border-#{d.quality} qual-background-#{d.quality}"
+            i.addClass "qual-border-#{d.quality} qual-hover-#{d.quality}"
+            i.addClass "untradable" if d.flag_cannot_trade
     i = 0
     items = ns.backpack.result.items.item
     slots = ns.backpack.result.num_backpack_slots
@@ -82,14 +91,16 @@ mk_tooltip_vals = ->
     positive: ''
 
 
-tooltip_over = (e) ->
+## TODO:  add untradable text
+show_tooltip = (e) ->
     tt = $('#tooltip').hide()
     cell = $ e.currentTarget
     ns = e.data.ns
     item = cell.data 'itemdef'
     sdef = cell.data 'schemadef'
     vals = mk_tooltip_vals()
-
+    if !sdef
+        return
     type = sdef.item_type_name.replace('TF_Wearable_Hat', 'Wearable Item').replace('TF_LockedCrate', 'Crate')
     vals.level = "Level #{item.level} #{type}" if item.level?
     if item.custom_name
@@ -167,16 +178,61 @@ tooltip_over = (e) ->
 
     # set the values
     for k, v of vals
-        do(k, v) -> $(".#{k}", tt).html v #; console.log k, v
+        do(k, v) -> $(".#{k}", tt).html v
 
     # position and show
     tt.css left: Math.max(0, (cell.offset().left + (cell.width()/2) - (tt.width()/2))), top: cell.offset().top + cell.height()
     tt.show()
 
 
-tooltip_out = (e) ->
-    $('#tooltip').hide()
 
 
 put_trades = (ns, target, cb) ->
+    for i in [0..4]
+        do (i) ->
+            $('#trades').append $('#trade-proto').tmpl({index:i+1})
     cb()
+
+
+## TODO:  disallow moving of items *within* the target
+dragdrop_items = (source, target) ->
+    sources = -> $('div.item:not(:empty)', source).not('div.untradable')
+    targets = -> $('div.item:empty', target).not('div.want')
+
+    drag_options =
+        helper: 'clone'
+        revert: 'invalid'
+        cursor: 'move'
+        start: (e, ui) ->
+            q = ui.helper.prevObject.data('itemdef').quality
+            ui.helper.addClass "qual-background-#{q}"
+
+    move = (src, trg) ->
+        if !trg
+            return
+        srcp = src.parent()
+        trgp = trg.parent()
+        src.detach()
+        trg.detach()
+        srcp.append trg.removeClass('outline')
+        trgp.append src
+        src.unbind('dblclick').dblclick (e) ->
+            src.detach()
+            trg.detach()
+            srcp.append src
+            trgp.append trg
+            src.unbind('dblclick').dblclick move_to_trade
+
+    move_to_trade = (e) ->
+        move $(e.currentTarget), targets().first()
+
+    drop_options =
+        accept: 'div.item'
+        hoverClass: 'outline'
+        drop: (e, ui) ->
+            move ui.draggable, $(this)
+
+    sources().draggable drag_options
+    sources().dblclick move_to_trade
+    targets().droppable drop_options
+

@@ -20,39 +20,26 @@ html(lang="en")
       h1 welcome to tf2 trade chan (3)
 
       #message-container
-          span#message
-          span#auth.null
-            a(href='/authenticate')
-              img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
+        span#message
+        span#login.null
+          a(href='/authenticate')
+            img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
+        span#logout.null
+          a(href='/logout') logout
 
-          span#user.null
-            a(href='/logout') logout
-
-      div.line#user-container
-        div.unit.size1of2
-          #backpack-container
-            #backpack-title your backpack
-            #backpack-msg
-            #backpack.null
-        div.unit.size1of2.lastUnit
-          #trades-container
-            #trades-title your trades
-            #trades.null
-      div
-        h2 todo list:
-        ol
-          li.strike.
-            openid auth
-          li.strike.
-            fetch backpack
-          li.
-            post trade
-          li.
-            show matches
-          li.
-            channels
-          li.
-            chats
+      #user-container.null
+        table
+          tr
+            td
+              #backpack-container
+                h2#backpack-title your backpack
+                #backpack-msg
+                #backpack
+            td
+              #trades-container
+                h2#trades-title your trades
+                #trades-msg
+                #trades
 
 
 

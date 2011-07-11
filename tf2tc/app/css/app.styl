@@ -11,13 +11,11 @@ body, html
 
 
 body
-  color white
-  background-color medium-gray
-  font normal 1em sans-serif
+  color #9a9a9a
+  background-color black
+  font-family "TF2secondary"
+  font-size 14pt
 
-
-.strike
-  text-decoration line-through
 
 
 p
@@ -26,7 +24,11 @@ p
 
 h1
   font-size 1.5em
-  text-shadow 1px 1px 2px white
+  font-family "TF2Build"
+
+h2
+  font-size 1.25em
+  font-family "TF2Build"
 
 #content
   padding 0.5em
@@ -35,15 +37,13 @@ h1
 .null
   display none
 
-#backpack-container, #trades-container
-  background-color black;
-  width 90px*6
 
 #backpack, #trades
-  padding 12px
   overflow-y scroll
   height 90px*5
-
+  background-color black;
+  padding-right 24px
+  margin-right 24px
 
 div.row
   height 78px
@@ -52,6 +52,9 @@ div.row
 div.row.bot
    margin-bottom 18px
 
+
+div.itemw
+  display inline-block
 
 div.item
   display inline-block
@@ -67,6 +70,12 @@ div.item:hover:not(:empty)
   border 3px solid medium-gray
   background-color dark-gray
 
+div.outline
+  border 3px solid medium-gray
+  background-color dark-gray
+
+div.untradable
+  background-color dark-gray
 
 div.item img
   border none
@@ -98,7 +107,7 @@ qual(11, #cd9b1d, #423618) // strange
 
 
 #tooltip
-  opacity(0.9)
+  opacity(0.95)
   background-color dark-gray
   border 2px solid #ccc
   border-r(8px)
@@ -138,74 +147,32 @@ qual(11, #cd9b1d, #423618) // strange
   color green
 
 
-.line:before,
-.line:after
-  content ""
-  display table
-
-.line:after
-  clear both
-
-.line
-  *zoom 1
-
-.unit
-  float left
-
-.size1of1
-  float none
-
-.size1of2
-  width 50%
-
-.size1of3
-  width 33.33333%
-
-.size2of3
-  width 66.66666%
-
-.size1of4
-  width 25%
-
-.size3of4
-  width 75%
-
-.size1of5
-  width 20%
-
-.size2of5
-  width 40%
-
-.size3of5
-  width 60%
-
-.size4of5
-  width 80%
-
-.lastUnit
-  float none
-  display block
-  display table-cell
-  width 9999em
-  *width auto
-  *zoom 1
-  _position relative
-  _left -3px
-  _margin-right -3px
-
-
-
 #message-container
   border-r(12px)
-  border 1px solid black
-  padding 12px
-  margin 12px
+  border 1px solid medium-gray
 
-#user-container
-  border 1px solid red
 
-#backpack-container
-  border 1px solid green
+div.trade
+  padding-bottom 24px
 
-#trades-container
-  border 1px solid blue
+.pl1
+  padding-left 1em;
+
+.center
+  width 100%
+  text-align center
+
+.text-center
+  text-align center
+
+
+.valign-top
+  vertical-align top
+
+
+.p1
+  padding 1em
+
+
+.notes
+  height 70px
