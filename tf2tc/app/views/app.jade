@@ -14,30 +14,44 @@ html(lang="en")
       div.alt
       div.neutral
       div.limiteduse
+      div.untradable
       div.ctrl
+
+    #message-container
+      span#message
+      span#login.null
+        a(href='/authenticate')
+          img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
+      span#logout.null
+        a(href='/logout') logout
 
     #content
       h1 welcome to tf2 trade chan (3)
 
-      #message-container
-        span#message
-        span#login.null
-          a(href='/authenticate')
-            img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
-        span#logout.null
-          a(href='/logout') logout
 
-      #user-container.null
+      #user-container.null.mt1
         table
           tr
             td
+              h2#backpack-title your backpack
+            td
+              h2#trades-title your trades
+
+          tr
+            td
+              #backpack-help.pb1 Drag items into your trades.  Double-click works, too.
+            td
+              #trades-help.pb1
+                | Remove items by double click.  Tip:  you can have the same
+                | item in multiple trades, but not multiple times within a single trade.
+
+          tr
+            td
               #backpack-container
-                h2#backpack-title your backpack
                 #backpack-msg
                 #backpack
             td
               #trades-container
-                h2#trades-title your trades
                 #trades-msg
                 #trades
 

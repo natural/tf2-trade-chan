@@ -7,7 +7,14 @@ libxmljs = require('libxmljs')
 exports.actions =
     schema: (cb) ->
         o = urls.schema SS.config.local.steam_api_key
-        get o, JSON.parse, cb
+        schema_fix = (d) ->
+            d = JSON.parse d
+            ks = (Number(k) for k, o of image_fixes)
+            for k, n of d.result.items.item
+                if n.defindex in ks
+                    n.image_url = image_fixes[n.defindex]
+            d
+        get o, schema_fix, cb
 
     items: (params, cb) ->
         o = urls.items params.id64, SS.config.local.steam_api_key
@@ -22,7 +29,7 @@ exports.actions =
 
     status: (params, cb) ->
         o = urls.status params.id64
-        get o, parseStatus, cb
+        get o, status_keys, cb
 
     news: (cb) ->
         o = urls.news 5, 256
@@ -35,10 +42,10 @@ get = (opts, parse, cb) ->
     cachekey = "#{opts.host}#{opts.path}"
     R.get cachekey, (err, val) ->
         if val
-            console.log 'cache hit', cachekey
+            #console.log 'cache hit', cachekey
             cb if parse then parse val else val
         else
-            console.log 'cache miss', cachekey
+            #console.log 'cache miss', cachekey
             http.get opts, (res) ->
                 res.setEncoding 'utf8'
                 chunks = []
@@ -49,16 +56,6 @@ get = (opts, parse, cb) ->
                     R.set cachekey, str, (e, x) ->
                         R.expire cachekey, opts.ttl
                         cb if parse then parse str else str
-
-
-parseStatus = (v) ->
-    x = libxmljs.parseXmlString(v)
-    name: x.get('//steamID').text()
-    state: x.get('//onlineState').text()
-    avatar_full: x.get('//avatarFull').text()
-    avatar_icon: x.get('//avatarIcon').text()
-    avatar_medium: x.get('//avatarMedium').text()
-    state_message: x.get('//stateMessage').text()
 
 
 urls =
@@ -91,3 +88,42 @@ urls =
         path: "/ISteamNews/GetNewsForApp/v0001/?appid=440&count=#{count}&maxlength=#{max}&format=json"
         port: 80
         ttl: 60*15
+
+
+status_keys = (v) ->
+    x = libxmljs.parseXmlString(v)
+    name: x.get('//steamID').text()
+    state: x.get('//onlineState').text()
+    avatar_full: x.get('//avatarFull').text()
+    avatar_icon: x.get('//avatarIcon').text()
+    avatar_medium: x.get('//avatarMedium').text()
+    state_message: x.get('//stateMessage').text()
+
+
+image_fixes =
+    5027: '/images/paints/TF_Tool_PaintCan_1.png'      # Indubitably Green
+    5028: '/images/paints/TF_Tool_PaintCan_2.png'      # Zephaniah's Greed
+    5029: '/images/paints/TF_Tool_PaintCan_3.png'      # Noble Hatter's Violet
+    5030: '/images/paints/TF_Tool_PaintCan_4.png'      # Color No. 216-190-216
+    5031: '/images/paints/TF_Tool_PaintCan_5.png'      # A Deep Commitment to Purple
+    5032: '/images/paints/TF_Tool_PaintCan_6.png'      # Mann Co. Orange
+    5033: '/images/paints/TF_Tool_PaintCan_7.png'      # Muskelmannbraun
+    5034: '/images/paints/TF_Tool_PaintCan_8.png'      # Peculiarly Drab Tincture
+    5035: '/images/paints/TF_Tool_PaintCan_9.png'      # Radigan Conagher Brown
+    5036: '/images/paints/TF_Tool_PaintCan_10.png'     # Ye Olde Rustic Colour
+    5037: '/images/paints/TF_Tool_PaintCan_11.png'     # Australium Gold
+    5038: '/images/paints/TF_Tool_PaintCan_12.png'     # Aged Moustache Grey
+    5039: '/images/paints/TF_Tool_PaintCan_13.png'     # An Extraordinary Abundance of Tinge
+    5040: '/images/paints/TF_Tool_PaintCan_14.png'     # A Distinctive Lack of Hue
+    5051: '/images/paints/TF_Tool_PaintCan_15.png'     # Pink as Hell
+    5052: '/images/paints/TF_Tool_PaintCan_16.png'     # A Color Similar to Slate
+    5053: '/images/paints/TF_Tool_PaintCan_17.png'     # Drably Olive
+    5054: '/images/paints/TF_Tool_PaintCan_18.png'     # The Bitter Taste of Defeat and Lime
+    5055: '/images/paints/TF_Tool_PaintCan_19.png'     # The Color of a Gentlemann's Business Pants
+    5056: '/images/paints/TF_Tool_PaintCan_20.png'     # Dark Salmon Injustice
+    5060: '/images/paints/TF_Tool_PaintCan_5060.png'   # operators overalls
+    5061: '/images/paints/TF_Tool_PaintCan_5061.png'   # waterlogged lab coat
+    5062: '/images/paints/TF_Tool_PaintCan_5062.png'   # balaclavas are forever
+    5063: '/images/paints/TF_Tool_PaintCan_5063.png'   # air of debonair
+    5064: '/images/paints/TF_Tool_PaintCan_5064.png'   # value of teamwork
+    5065: '/images/paints/TF_Tool_PaintCan_5065.png'   # cream spirit

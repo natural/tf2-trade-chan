@@ -5,6 +5,18 @@
 dark-gray = #222
 medium-gray = #5c5c5c
 
+s1 = 3px
+s2 = 6px
+s4 = 12px
+s6 = 18px
+s8 = 24px
+
+iw1 = 90px
+
+
+iw = 80px
+ih = iw * 0.85
+
 
 body, html
   height 100%
@@ -14,7 +26,7 @@ body
   color #9a9a9a
   background-color black
   font-family "TF2secondary"
-  font-size 14pt
+  font-size s6
 
 
 
@@ -23,15 +35,26 @@ p
 
 
 h1
-  font-size 1.5em
+  font-size s8 * 1.5
   font-family "TF2Build"
 
 h2
-  font-size 1.25em
+  font-size s8
   font-family "TF2Build"
+  margin 0
+  padding 0
+
+.pb1
+  padding-bottom s4
+.mt1
+  margin-top s4
+
+
+#user-container td
+  aa-border 1px solid red
 
 #content
-  padding 0.5em
+  padding s1
 
 
 .null
@@ -40,17 +63,18 @@ h2
 
 #backpack, #trades
   overflow-y scroll
-  height 90px*5
+  height 90px * 5
   background-color black;
-  padding-right 24px
-  margin-right 24px
+  padding-right s8
+  margin-right s8
+
 
 div.row
-  height 78px
+  height ih + s4
 
 
 div.row.bot
-   margin-bottom 18px
+   margin-bottom s6
 
 
 div.itemw
@@ -58,36 +82,43 @@ div.itemw
 
 div.item
   display inline-block
-  border 3px solid dark-gray
-  border-r(12px)
-  width 80px
-  height 68px
+  border s1 solid dark-gray
+  border-r(s4)
+  width iw
+  height ih
   vertical-align top
-  margin-right 4px
+  margin-right s2
 
 
 div.item:hover:not(:empty)
   border 3px solid medium-gray
   background-color dark-gray
+  cursor move
+
 
 div.outline
   border 3px solid medium-gray
   background-color dark-gray
 
+
 div.untradable
   background-color dark-gray
 
+
+#tooltip .untradable
+  background-color inherit
+
+
 div.item img
   border none
-  width 66px
-  height 66px
-  margin-left 4px
-  margin-top 4px
+  width iw - s2
+  height iw - s2
+
 
 span.nav
   display inline-block
-  height 24px
-  width 24px
+  height s8
+  width s8
   border-r(3px)
   background-color dark-gray
   color medium-gray
@@ -109,14 +140,15 @@ qual(11, #cd9b1d, #423618) // strange
 #tooltip
   opacity(0.95)
   background-color dark-gray
-  border 2px solid #ccc
-  border-r(8px)
-  padding 24px
-  margin 12px
+  border s1 - 1 solid #ccc
+  border-r(s1 * 3)
+  padding s8
+  margin s4
   position absolute
   text-align center
-  z-index 9002
+  z-index 9000
   overflow hidden
+
 
 #tooltip div
   font-family "TF2secondary"
@@ -146,17 +178,18 @@ qual(11, #cd9b1d, #423618) // strange
 #tooltip .limiteduse
   color green
 
-
 #message-container
   border-r(12px)
   border 1px solid medium-gray
+  padding s4
 
 
 div.trade
-  padding-bottom 24px
+  padding-bottom s8
 
 .pl1
-  padding-left 1em;
+  padding-left s4
+
 
 .center
   width 100%
@@ -176,3 +209,92 @@ div.trade
 
 .notes
   height 70px
+
+
+.deco
+  width 80px
+  height 68px
+  position relative
+
+.tag
+  background-repeat no-repeat
+  background-position left top
+
+.tag-5020
+  background-image url('/images/tags/5020.png')
+
+.tag-5044
+  background-image url('/images/tags/5044.png')
+
+.tag-5020-5044
+  background-image url('/images/tags/5020-5044.png')
+
+.jewel
+  background-repeat no-repeat
+  background-position right top
+
+jwl(1)
+jwl(10843461)
+jwl(12955537)
+jwl(1315860)
+jwl(13595446)
+jwl(14204632)
+jwl(15132390)
+jwl(15185211)
+jwl(4345659)
+jwl(5322826)
+jwl(6901050)
+jwl(7511618)
+jwl(8154199)
+jwl(8208497)
+jwl(8289918)
+jwl(8421376)
+jwl(15787660)
+jwl(3100495)
+jwl(15308410)
+jwl(3329330)
+jwl(16738740)
+
+
+
+.effect
+  background-repeat no-repeat
+  background-position center center
+
+eff(4)
+eff(6)
+eff(7)
+eff(8)
+eff(9)
+eff(10)
+eff(11)
+eff(12)
+eff(13)
+eff(14)
+eff(15)
+eff(16)
+eff(17)
+eff(18)
+eff(19)
+eff(20)
+eff(99) // earbuds
+
+
+div.badge
+  background-color dark-gray
+  font-family "TF2secondary"
+  color medium-gray
+  border-r(6px)
+  font-size 8pt
+  position absolute
+  padding 4px
+
+
+div.equipped
+  top 48px
+  left 26px
+
+
+div.quantity
+  top 3px
+  left 3px

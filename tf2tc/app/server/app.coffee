@@ -1,6 +1,7 @@
 ## server code
 steam = require('./steam.coffee')
 
+## trade:id:gen
 
 exports.actions =
     init: (cb) ->
