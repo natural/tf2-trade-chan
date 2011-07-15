@@ -1,0 +1,34 @@
+#!/usr/bin/env coffee
+
+
+global.SS = require('../config/app.coffee')
+global.R = require('redis').createClient()
+
+
+make_item = (def) ->
+    name: def.name
+    item_class: def.item_class
+    item_type_name: def.item_type_name
+    craft_class: def.craft_class or null
+    _q: []
+    _v: 1
+
+
+main = ->
+    steam = require('../app/server/steam.coffee')
+    steam.actions.schema (schema) ->
+        items = {}
+        for item in schema.result.items.item
+            items[item.defindex] = make_item item
+
+        console.log JSON.stringify(items, null, 4)
+
+        console.log 'total item count:', schema.result.items.item.length
+        console.log 'filtered count:  ', Object.keys(items).length
+
+        #console.warn process.argv[3]
+        #console.log schema.result.items.item[334]
+        R.quit()
+
+main()
+

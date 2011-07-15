@@ -1,7 +1,7 @@
 @import 'helpers'
 @import 'fonts'
 
-
+bg-black = #000
 dark-gray = #222
 medium-gray = #5c5c5c
 
@@ -21,17 +21,15 @@ ih = iw * 0.85
 body, html
   height 100%
 
-
 body
-  color #9a9a9a
+  color white
   background-color black
   font-family "TF2secondary"
   font-size s6
-
-
+  margin s2
 
 p
-  margin-bottom 1em
+  margin-bottom s4
 
 
 h1
@@ -44,29 +42,90 @@ h2
   margin 0
   padding 0
 
+
+h3
+  font-size s6 + 2
+  font-family "TF2Build"
+  margin 0
+  padding 0
+  color lighten(medium-gray, 25%)
+
+h4
+  font-size s6 - 2
+  font-family "TF2Build"
+  margin 0
+  padding 0
+  color darken(medium-gray, 25%)
+
+
+a, a:visited, a:active, a:hover
+  color white
+  text-decoration none
+
+
 .pb1
   padding-bottom s4
+
 .mt1
   margin-top s4
 
 
-#user-container td
-  aa-border 1px solid red
+#user-container
+  background-color white
+
 
 #content
   padding s1
 
 
-.null
-  display none
+#user-container-left
+  float left
+  margin-right s4
+  margin-bottom s4
+  width (iw * 7) - s4
+
+#user-container-right
+  float left
+  width iw * 10
 
 
-#backpack, #trades
+#user-container-right table
+  width 100%
+
+#user-container-last
+  clear both
+
+#chooser-container
+  margin-top s4 * 2
+
+
+
+#backpack, #trades, #chooser
   overflow-y scroll
-  height 90px * 5
-  background-color black;
+  background-color black
   padding-right s8
   margin-right s8
+  height 90px * 3
+  padding s4
+  border-r(s4)
+
+.w
+  padding s4
+  background-color black
+  border-r(s4*1.5)
+
+
+
+
+#trades
+  height 90px * 6
+
+
+#user-container-left, #user-container-right
+  border s1 solid dark-gray
+  border-r(s4)
+  padding s4
+  background-color medium-gray
 
 
 div.row
@@ -92,8 +151,7 @@ div.item
 
 div.item:hover:not(:empty)
   border 3px solid medium-gray
-  background-color dark-gray
-  cursor move
+  background-color white
 
 
 div.outline
@@ -115,15 +173,6 @@ div.item img
   height iw - s2
 
 
-span.nav
-  display inline-block
-  height s8
-  width s8
-  border-r(3px)
-  background-color dark-gray
-  color medium-gray
-
-
 qual(1,  #4d7455, #3a5840) // genuine
 qual(2,  #b2b2b2, #706e6e) // rare
 qual(3,  #476291, #6279a1) // vintage
@@ -135,7 +184,8 @@ qual(9,  #70b04a, #4f6d3a) // self-made
 qual(10, #70b04a, #4f6d3a) // custom
 qual(11, #cd9b1d, #423618) // strange
 
-
+.z-top
+  z-index 9000
 
 #tooltip
   opacity(0.95)
@@ -182,6 +232,17 @@ qual(11, #cd9b1d, #423618) // strange
   border-r(12px)
   border 1px solid medium-gray
   padding s4
+  vertical-align middle
+
+#message
+  text-align left
+#user-tools
+  text-align right
+
+
+#login img
+  vertical-align middle
+
 
 
 div.trade
@@ -298,3 +359,36 @@ div.equipped
 div.quantity
   top 3px
   left 3px
+
+
+.button, .small-button
+  background-color #766b5e
+  border-bottom none !important
+  border-r(0.25em)
+  color #ece3cb
+  font-family "TF2Build"
+  height 1.5em
+  line-height 1.5em
+  padding 0.6em 0.75em 0.6em 0.75em
+  text-align center
+  vertical-align middle
+  white-space nowrap !important
+
+
+.button:hover, .small-button:hover
+  background-color #924738
+  color #ece3cb
+
+
+
+.button:active, .small-button:active
+  color #2e2b2a
+
+
+.small-button
+  font-size 90%
+  height 1em
+  line-height 1em
+  padding 0.35em 1.5em 0.25em 1.5em
+
+

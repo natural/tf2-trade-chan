@@ -2,13 +2,15 @@
 
 http = require('http')
 libxmljs = require('libxmljs')
-
+ext = require('./schema_ext').actions
 
 exports.actions =
     schema: (cb) ->
         o = urls.schema SS.config.local.steam_api_key
         schema_fix = (d) ->
             d = JSON.parse d
+            ext.all_groups (gs) ->
+                d.ext = groups:gs
             ks = (Number(k) for k, o of image_fixes)
             for k, n of d.result.items.item
                 if n.defindex in ks

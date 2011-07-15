@@ -80,14 +80,14 @@ exports.format_schema_attr = (def, val) ->
 
 
 
-exports.mk_backpack = (ns, bp) ->
+exports.make_backpack = (ns, bp) ->
     ns.backpack = bp
     ns.backpack_items = items = {} # backpack item mapping by defindex
     for item in bp.result.items.item
         do (item) -> items[item.inventory & 0xFFFF] = item
 
 
-exports.mk_schema = (ns, sch) ->
+exports.make_schema = (ns, sch) ->
     ns.schema = sch
     ns.schema_items = items = {} # schema item mapping by defindex
     for item in sch.result.items.item

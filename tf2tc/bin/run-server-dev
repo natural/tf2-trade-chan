@@ -1,0 +1,8 @@
+#!/bin/sh
+../node_modules/socketstream/bin/socketstream start &
+while true; do
+   inotifywait `ls -d *` -r -e MODIFY
+   pid=`ps -eaf | grep "node ../node_modules/socketstream/bin/socketstream start" | grep -v grep | awk '{print $2}'`
+   kill $pid
+   ../node_modules/socketstream/bin/socketstream start &
+done

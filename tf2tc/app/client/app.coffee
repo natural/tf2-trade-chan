@@ -6,13 +6,14 @@ exports.init = ->
     #SS.socket.on 'connect', -> at_connect
     #SS.events.on('user_message', (msg) -> console.log('user message:', msg))
     #SS.events.on('group_message', (msg) -> console.log('group message:', msg))
+
     SS.server.app.init (msg) ->
         $('#message').text msg
         boot()
 
 boot = ->
     window.oo = SS.client.util
-    player_ns = {}
+    window.player_ns = player_ns = {}
     $('div.item:not(:empty)').live 'mouseover', ns:player_ns, show_tooltip
     $('div.item:not(:empty)').live 'mouseout', ns:player_ns, hide_tooltip
 
@@ -27,21 +28,60 @@ boot_anon = (ns) ->
 
 boot_user = (ns) ->
     SS.server.app.user_data (data) ->
-        $('#logout').prepend("Welcome, #{data.profile.personaname} &nbsp;").show()
+        $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
         $('#backpack-msg').text 'Loading backpack...'
         SS.server.app.backpack (backpack) ->
-            oo.mk_backpack ns, backpack
+            oo.make_backpack ns, backpack
             $('#backpack-msg').text 'Loading schema...'
             SS.server.app.schema (schema) ->
-                oo.mk_schema ns, schema
+                oo.make_schema ns, schema
                 put_backpack ns, $('#backpack'), 25, 5, ->
                     $('#backpack-msg').slideUp().text('')
                     put_trades ns, $('#trades'), ->
                         config_backpack_selections $('#backpack'), $('#trades')
                         $('#user-container').slideDown()
+                    put_chooser ns, $('#chooser'), ->
+                        config_chooser_selections $('#chooser'), $('#trades')
+                        $('#chooser-container').slideDown()
 
 
-mk_item_props = (ns, defn) ->
+
+
+put_chooser = (ns, target, cb) ->
+    with_qual = (id, q) ->
+        x = JSON.parse(JSON.stringify(ns.schema_items[id]))
+        x.quality = q
+        x
+
+    ## commodities
+    target.append $('#chooser-proto').tmpl({title:'Commodities'})
+    cg = $('.chooser-group:last', target)
+    put_chooser_items ns, (with_qual(x, 6) for x in ns.schema.ext.groups.commodities), cg
+
+    target.append $('#chooser-proto').tmpl({title:'Promos'})
+    cg = $('.chooser-group:last', target)
+    put_chooser_items ns, (with_qual(x, 6) for x in ns.schema.ext.groups.promos), cg
+
+    target.append $('#chooser-proto').tmpl({title:'Vintage Hats'})
+    cg = $('.chooser-group:last', target)
+    put_chooser_items ns, (with_qual(x, 3) for x in ns.schema.ext.groups.vintage_hats), cg
+
+    target.append $('#chooser-proto').tmpl({title:'Genuine Hats'})
+    cg = $('.chooser-group:last', target)
+    put_chooser_items ns, (with_qual(x, 1) for x in ns.schema.ext.groups.genuine_hats), cg
+
+    target.append $('#chooser-proto').tmpl({title:'Vintage Weapons'})
+    cg = $('.chooser-group:last', target)
+    put_chooser_items ns, (with_qual(x, 3) for x in ns.schema.ext.groups.vintage_weapons), cg
+
+    target.append $('#chooser-proto').tmpl({title:'Genuine Weapons'})
+    cg = $('.chooser-group:last', target)
+    put_chooser_items ns, (with_qual(x, 1) for x in ns.schema.ext.groups.genuine_weapons), cg
+
+    cb()
+
+
+make_item_props = (ns, defn) ->
     attr_select = (id) ->
         if defn.attributes
             x = (n for n in defn.attributes.attribute)
@@ -77,74 +117,88 @@ mk_item_props = (ns, defn) ->
         if defn.defindex in (t.defindex for t in ns.schema_tools()) or defn.defindex in (t.defindex for t in ns.schema_actions())
             defn.quantity
 
+make_item_row = -> '<div class="row"></div>'
+
+
+make_item = (ns, defn, target, type) ->
+    if defn
+        v = "<div class='itemw'>
+               <div class='item #{type}'>
+                 <img src='#{ns.schema_items[defn.defindex].image_url}' />
+               </div>
+             </div>"
+        target.append v
+    else
+        v = '<div class="itemw"><div class="item" /></div>'
+        target.append v
+        return
+
+    props = make_item_props ns, defn
+    item = $ 'div.item:last', target
+    item.data 'item-defn', defn
+    item.data 'schema-defn', ns.schema_items[defn.defindex]
+    item.addClass "qual-border-#{defn.quality or 6} qual-hover-#{defn.quality or 6}"
+    item.addClass "untradable" if defn.flag_cannot_trade
+    img = $ 'img', item
+
+    ## name tag and/or desc tag icon
+    tag = props.tag()
+    img.wrap "<div class='deco tag tag-#{tag}' />" if tag
+
+    ## paint jewel
+    jewel = props.paint()
+    img.wrap "<div class='deco jewel jewel-#{jewel}' />" if jewel
+
+    ## equipped badge
+    equip = props.equipped()
+    if equip
+        img.wrap '<div class="deco" />'
+        img.parent().append '<div class="badge equipped">Equipped</div>'
+
+    ## use count badge
+    count = props.use_count()
+    if count?
+        img.wrap '<div class="deco" />'
+        img.parent().append "<div class='badge quantity'>#{count}</div>"
+
+    ## effect bg
+    effect = props.effect()
+    img.wrap "<div class='deco effect effect-#{effect}' />" if effect
+
 
 put_backpack = (ns, target, page_size, cols, cb) ->
-    mk_row = -> '<div class="row"></div>'
-
-    mk_item = (defn, target) ->
-        if defn
-            v = "<div class='itemw'>
-                   <div class='item'>
-                     <img src='#{ns.schema_items[defn.defindex].image_url}' />
-                   </div>
-                 </div>"
-            target.append v
-        else
-            v = '<div class="itemw"><div class="item" /></div>'
-            target.append v
-            return
-
-        props = mk_item_props ns, defn
-        item = $ 'div.item:last', target
-        item.data 'item-defn', defn
-        item.data 'schema-defn', ns.schema_items[defn.defindex]
-        item.addClass "qual-border-#{defn.quality} qual-hover-#{defn.quality}"
-        item.addClass "untradable" if defn.flag_cannot_trade
-        img = $ 'img', item
-
-        ## name tag and/or desc tag icon
-        tag = props.tag()
-        img.wrap "<div class='deco tag tag-#{tag}' />" if tag
-
-        ## paint jewel
-        jewel = props.paint()
-        img.wrap "<div class='deco jewel jewel-#{jewel}' />" if jewel
-
-        ## equipped badge
-        equip = props.equipped()
-        if equip
-            img.wrap '<div class="deco" />'
-            img.parent().append '<div class="badge equipped">Equipped</div>'
-
-        ## use count badge
-        count = props.use_count()
-        if count?
-            img.wrap '<div class="deco" />'
-            img.parent().append "<div class='badge quantity'>#{count}</div>"
-
-        ## effect bg
-        effect = props.effect()
-        img.wrap "<div class='deco effect effect-#{effect}' />" if effect
-
     i = 0
     items = ns.backpack.result.items.item
     slots = ns.backpack.result.num_backpack_slots
-    target.append mk_row()
+    target.append make_item_row()
     row = $ 'div.row:last', target
     for slot in [1..slots]
-        do (slot) ->
-            item = ns.backpack_items[slot]
-            mk_item item, row
-            i += 1
-            if !(i % cols) and slot < slots
-                if !(i % page_size)
-                    row.addClass 'bot'
-                target.append mk_row()
-                row = $ 'div.row:last', target
+        item = ns.backpack_items[slot]
+        make_item ns, item, row, 'backpack'
+        i += 1
+        if !(i % cols) and slot < slots
+            row.addClass 'bot' if !(i % page_size)
+            target.append make_item_row()
+            row = $ 'div.row:last', target
     cb()
 
 
-mk_tooltip_vals = ->
+put_chooser_items = (ns, items, target) ->
+    i = 0
+    target.append make_item_row()
+    row = $ 'div.row:last', target
+    cols = 5
+    page_size = 25
+    for item in items
+        make_item ns, item, row, 'chooser'
+        i += 1
+        if !(i % cols) and i < items.length
+            target.append make_item_row()
+            row = $ 'div.row:last', target
+
+
+
+make_tooltip_vals = ->
     alt: ''
     ctrl: ''
     killeater: ''
@@ -166,7 +220,7 @@ show_tooltip = (e) ->
     ns = e.data.ns
     item = cell.data 'item-defn'
     sdef = cell.data 'schema-defn'
-    vals = mk_tooltip_vals()
+    vals = make_tooltip_vals()
     if !sdef
         return
     type = sdef.item_type_name.replace('TF_Wearable_Hat', 'Wearable Item').replace('TF_LockedCrate', 'Crate')
@@ -273,6 +327,53 @@ put_trades = (ns, target, cb) ->
         target.append $('#trade-proto').tmpl({index:i+1})
     cb()
 
+config_chooser_selections = (source, target) ->
+    sources = -> $('div.item:not(:empty):not(.untradable)', source)
+    targets = -> $('div.item.want:empty', target)
+
+    copy = (a, b) ->
+        c = a.clone(true, true).unbind()
+        t = b.parents '.trade'
+        id = a.data('item-defn').id
+        b.replaceWith c
+        hide_tooltip()
+        c.dblclick (e) ->
+            hide_tooltip()
+            repl = $ '<div class="item" />'
+            c.replaceWith repl
+            repl.droppable drop_options
+            ids = t.data 'ids'
+            ids.splice ids.indexOf(id), 1
+
+    copy_to_trade = (e) ->
+        s = $ e.currentTarget
+        avail = (x for x in $('.trade', target))
+        if avail
+            a = $ avail[0]
+            t = $ 'div.item.want:empty:first', a
+            copy s, t
+        ## else alert or message or something
+
+    drag_options =
+        helper: 'clone'
+        revert: 'invalid'
+        cursor: 'move'
+        start: (e, ui) ->
+            q = ui.helper.prevObject.data('item-defn').quality
+            ui.helper.addClass "qual-background-#{q} z-top"
+
+    drop_options =
+        accept: 'div.item.chooser'
+        hoverClass: 'outline'
+        drop: (e, ui) ->
+            s = ui.helper.prevObject
+            copy s, $(this)
+
+    sources().dblclick copy_to_trade
+    sources().draggable drag_options
+    targets().droppable drop_options
+
+
 
 config_backpack_selections = (source, target) ->
     sources = -> $('div.item:not(:empty):not(.untradable)', source)
@@ -314,7 +415,7 @@ config_backpack_selections = (source, target) ->
             ui.helper.addClass "qual-background-#{q} z-top"
 
     drop_options =
-        accept: 'div.item'
+        accept: 'div.item.backpack'
         hoverClass: 'outline'
         drop: (e, ui) ->
             s = ui.helper.prevObject

@@ -1,8 +1,0 @@
-#!/bin/sh
-cd tf2tc && ../node_modules/socketstream/bin/socketstream start &
-while true; do
-   inotifywait ./tf2tc/app ./tf2tc/config ./tf2tc/public ./tf2tc/static ./tf2tc/lib -r -e MODIFY
-   pid=`ps -eaf | grep "node ../node_modules/socketstream/bin/socketstream start" | grep -v grep | awk '{print $2}'`
-   kill $pid
-   cd tf2tc && ../node_modules/socketstream/bin/socketstream start &
-done

@@ -1,6 +1,6 @@
 *~
 *.nodist
 node_modules
-./tf2tc/public/assets/*
+tf2tc/public/assets/lib_*
 .socketstream_state
 dist-*

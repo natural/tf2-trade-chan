@@ -18,42 +18,46 @@ html(lang="en")
       div.ctrl
 
     #message-container
-      span#message
-      span#login.null
-        a(href='/authenticate')
-          img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
-      span#logout.null
-        a(href='/logout') logout
+      h1 tf2 trade chan
+      div.w49.float-left
+        #message
+      #user-tools.w49.float-right
+        span#login.null
+          | Safe and Secure Login with Steam
+          a(href='/authenticate')
+            img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
+        span#logout.null
+          a.small-button(href='/logout') logout
+
+      .clear-both
+
 
     #content
-      h1 welcome to tf2 trade chan (3)
 
 
       #user-container.null.mt1
-        table
-          tr
-            td
-              h2#backpack-title your backpack
-            td
-              h2#trades-title your trades
+        #user-container-left
+          #backpack-container
+            h2#backpack-title your backpack
+            #backpack-help.pb1 Drag items into your trades.  Double-click works, too.
+            #backpack-msg
+            .w
+              #backpack
+          #chooser-container
+            h2#chooser-title more stuff
+            #chooser-help.pb1 Drag items you want into your trades.  Double-click works, too.
+            #chooser-msg
+            .w
+              #chooser
 
-          tr
-            td
-              #backpack-help.pb1 Drag items into your trades.  Double-click works, too.
-            td
-              #trades-help.pb1
-                | Remove items by double click.  Tip:  you can have the same
-                | item in multiple trades, but not multiple times within a single trade.
-
-          tr
-            td
-              #backpack-container
-                #backpack-msg
-                #backpack
-            td
-              #trades-container
-                #trades-msg
-                #trades
+        #user-container-right
+          #trades-container
+            h2#trades-title your trades
+            #trades-help.pb1
+              | Remove items by double click.
+            #trades-msg
+            .w
+              #trades
 
 
-
+        #user-container-clear
