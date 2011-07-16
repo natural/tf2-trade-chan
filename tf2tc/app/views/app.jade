@@ -17,47 +17,45 @@ html(lang="en")
       div.untradable
       div.ctrl
 
-    #message-container
+
+    div.w49.float-left
       h1 tf2 trade chan
-      div.w49.float-left
-        #message
-      #user-tools.w49.float-right
-        span#login.null
-          | Safe and Secure Login with Steam
-          a(href='/authenticate')
-            img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
-        span#logout.null
-          a.small-button(href='/logout') logout
-
-      .clear-both
+      #message
+    #user-tools.w49.float-right
+      span#login.null
+        | Safe and Secure Login with Steam
+        a(href='/authenticate')
+          img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
+      span#logout.null
+        a.small-button(href='/logout') logout
+    .clear-both
 
 
-    #content
-
-
-      #user-container.null.mt1
-        #user-container-left
+    table#user-container.null
+      tr
+        td
           #backpack-container
             h2#backpack-title your backpack
-            #backpack-help.pb1 Drag items into your trades.  Double-click works, too.
-            #backpack-msg
-            .w
-              #backpack
-          #chooser-container
-            h2#chooser-title more stuff
-            #chooser-help.pb1 Drag items you want into your trades.  Double-click works, too.
-            #chooser-msg
-            .w
-              #chooser
-
-        #user-container-right
+            .sw
+              #backpack-help.pb1 Drag items into your trades.  Double-click works, too.
+              #backpack-msg
+              .w
+                #backpack
+        td(rowspan=2)
           #trades-container
             h2#trades-title your trades
-            #trades-help.pb1
-              | Remove items by double click.
-            #trades-msg
-            .w
-              #trades
-
-
-        #user-container-clear
+            .sw
+              #trades-help.pb1
+                | Remove items by double click.
+              #trades-msg
+              .w
+                #trades
+      tr
+        td
+          #chooser-container
+            h2#chooser-title more stuff
+            .sw
+              #chooser-help.pb1 Drag items you want into your trades.  Double-click works, too.
+              #chooser-msg
+              .w
+                #chooser

@@ -2,11 +2,6 @@
 
 
 exports.init = ->
-    #SS.socket.on 'disconnect', ->  at_disconnect
-    #SS.socket.on 'connect', -> at_connect
-    #SS.events.on('user_message', (msg) -> console.log('user message:', msg))
-    #SS.events.on('group_message', (msg) -> console.log('group message:', msg))
-
     SS.server.app.init (msg) ->
         $('#message').text msg
         boot()
@@ -14,10 +9,8 @@ exports.init = ->
 boot = ->
     window.oo = SS.client.util
     window.player_ns = player_ns = {}
-    $('div.item:not(:empty)').live 'mouseover', ns:player_ns, show_tooltip
-    $('div.item:not(:empty)').live 'mouseout', ns:player_ns, hide_tooltip
-
-
+    $('div.item:not(:empty)').live 'mouseover', {ns:player_ns}, SS.client.tooltip.show
+    $('div.item:not(:empty)').live 'mouseout', {ns:player_ns}, SS.client.tooltip.hide
     SS.server.app.login document.cookie, (r) ->
         (if r.success then boot_user else boot_anon)(player_ns)
 
@@ -30,6 +23,7 @@ boot_user = (ns) ->
     SS.server.app.user_data (data) ->
         $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
         $('#backpack-msg').text 'Loading backpack...'
+        $('body').bind 'trade-changed', trade_changed
         SS.server.app.backpack (backpack) ->
             oo.make_backpack ns, backpack
             $('#backpack-msg').text 'Loading schema...'
@@ -37,47 +31,43 @@ boot_user = (ns) ->
                 oo.make_schema ns, schema
                 put_backpack ns, $('#backpack'), 25, 5, ->
                     $('#backpack-msg').slideUp().text('')
-                    put_trades ns, $('#trades'), ->
-                        config_backpack_selections $('#backpack'), $('#trades')
-                        $('#user-container').slideDown()
-                    put_chooser ns, $('#chooser'), ->
-                        config_chooser_selections $('#chooser'), $('#trades')
-                        $('#chooser-container').slideDown()
-
-
+                    SS.server.app.trades (trades) ->
+                        put_trades ns, trades, $('#trades'), ->
+                            config_backpack_selections $('#backpack'), $('#trades')
+                            $('#user-container').slideDown()
+                        put_chooser ns, $('#chooser'), ->
+                            config_chooser_selections $('#chooser'), $('#trades')
+                            $('#chooser-container').slideDown()
 
 
 put_chooser = (ns, target, cb) ->
-    with_qual = (id, q) ->
+    grp = ns.schema.ext.groups
+    clone = (id, q) ->
         x = JSON.parse(JSON.stringify(ns.schema_items[id]))
         x.quality = q
         x
+    add = (title) ->
+        target.append $('#chooser-proto').tmpl({title:title})
+        $('.chooser-group:last', target)
+    put = (items) ->
+        i = 0
+        target.append make_item_row()
+        row = $ 'div.row:last', target
+        cols = 5
+        page_size = 25
+        for item in items
+            make_item ns, item, row, 'chooser'
+            i += 1
+            if !(i % cols) and i < items.length
+                target.append make_item_row()
+                row = $ 'div.row:last', target
 
-    ## commodities
-    target.append $('#chooser-proto').tmpl({title:'Commodities'})
-    cg = $('.chooser-group:last', target)
-    put_chooser_items ns, (with_qual(x, 6) for x in ns.schema.ext.groups.commodities), cg
-
-    target.append $('#chooser-proto').tmpl({title:'Promos'})
-    cg = $('.chooser-group:last', target)
-    put_chooser_items ns, (with_qual(x, 6) for x in ns.schema.ext.groups.promos), cg
-
-    target.append $('#chooser-proto').tmpl({title:'Vintage Hats'})
-    cg = $('.chooser-group:last', target)
-    put_chooser_items ns, (with_qual(x, 3) for x in ns.schema.ext.groups.vintage_hats), cg
-
-    target.append $('#chooser-proto').tmpl({title:'Genuine Hats'})
-    cg = $('.chooser-group:last', target)
-    put_chooser_items ns, (with_qual(x, 1) for x in ns.schema.ext.groups.genuine_hats), cg
-
-    target.append $('#chooser-proto').tmpl({title:'Vintage Weapons'})
-    cg = $('.chooser-group:last', target)
-    put_chooser_items ns, (with_qual(x, 3) for x in ns.schema.ext.groups.vintage_weapons), cg
-
-    target.append $('#chooser-proto').tmpl({title:'Genuine Weapons'})
-    cg = $('.chooser-group:last', target)
-    put_chooser_items ns, (with_qual(x, 1) for x in ns.schema.ext.groups.genuine_weapons), cg
-
+    put (clone(x, 6) for x in grp.commodities), add('Commodities')
+    put (clone(x, 6) for x in grp.promos), add('Promos')
+    put (clone(x, 3) for x in grp.vintage_hats), add('Vintage Hats')
+    put (clone(x, 1) for x in grp.genuine_hats), add('Genuine Hats')
+    put (clone(x, 3) for x in grp.vintage_weapons), add('Vintage Weapons')
+    put (clone(x, 1) for x in grp.genuine_weapons), add('Genuine Weapons')
     cb()
 
 
@@ -183,149 +173,23 @@ put_backpack = (ns, target, page_size, cols, cb) ->
     cb()
 
 
-put_chooser_items = (ns, items, target) ->
-    i = 0
-    target.append make_item_row()
-    row = $ 'div.row:last', target
-    cols = 5
-    page_size = 25
-    for item in items
-        make_item ns, item, row, 'chooser'
-        i += 1
-        if !(i % cols) and i < items.length
-            target.append make_item_row()
-            row = $ 'div.row:last', target
-
-
-
-make_tooltip_vals = ->
-    alt: ''
-    ctrl: ''
-    killeater: ''
-    level: ''
-    limiteduse: ''
-    name: ''
-    negative: ''
-    neutral:''
-    positive: ''
-    untradable: ''
-
-
-hide_tooltip = (e) -> $('#tooltip').hide()
-
-
-show_tooltip = (e) ->
-    tt = hide_tooltip()
-    cell = $ e.currentTarget
-    ns = e.data.ns
-    item = cell.data 'item-defn'
-    sdef = cell.data 'schema-defn'
-    vals = make_tooltip_vals()
-    if !sdef
-        return
-    type = sdef.item_type_name.replace('TF_Wearable_Hat', 'Wearable Item').replace('TF_LockedCrate', 'Crate')
-    vals.level = "Level #{item.level} #{type}" if item.level?
-    if item.custom_name
-        vals.name =  "\"#{item.custom_name}\""
-    else
-        vals.name = sdef.item_name # if sdef.proper_name then sdef.name else sdef.item_name
-    vals.name = "#{ns.schema_qualities[item.quality]} " + vals.name if item.quality in [3, 5, 11]
-
-    # clear the quality classes and add the correct one
-    for q in [0..20]
-        $('.name', tt).removeClass("qual-text-#{q}")
-    $('.name', tt).addClass("qual-text-#{item.quality}")
-
-    ## clear the crafter value.  nb: crafter isn't set via the 'vals'
-    ## object because of the async lookup
-    $('.crafter', tt).text ''
-
-    # set the control text
-    ctrl_text = ->
-        i = JSON.stringify item, null, 2
-        s = JSON.stringify sdef, null, 2
-        "item: #{i}\n\nschema: #{s}"
-    vals.ctrl = "<pre>#{ctrl_text()}</pre>" if e.ctrlKey
-
-    if item.attributes
-        for idef in item.attributes.attribute
-            adef = ns.schema_attribs[idef.defindex]
-            extra = oo.format_schema_attr adef, idef.value
-            etype = if adef then adef.effect_type else null
-
-            switch idef.defindex
-                when 134 ## effect name
-                    vals[etype] = oo.format_schema_attr adef, oo.item_effects[idef.float_value]
-
-                when 186 ## gift
-                    acc = oo.value_format_map.value_is_account_id idef.value
-                    $('.crafter', tt).text "Gift from #{acc}."
-                    oo.get_profile acc, (p) ->
-                        $('.crafter', tt).text "Gift from #{p.personaname}."
-
-                when 187 ## crate series
-                    vals[etype] = oo.format_schema_attr adef, idef.float_value
-
-                when 214 ## kill eater
-                    vals.killeater = "Kills: #{idef.value}"
-                    vals.name = vals.name.replace 'Strange', oo.strange_text(idef.value)
-
-                when 228 ## craft name
-                    acc = oo.value_format_map.value_is_account_id idef.value
-                    $('.crafter', tt).text "Crafted by #{acc}."
-                    oo.get_profile acc, (p) ->
-                        $('.crafter', tt).text "Crafted by #{p.personaname}."
-
-                when 229 ## craft number
-                    vals.name = "#{vals.name} ##{idef.value}"
-
-                else
-                    vals[etype] += ('<br>'+extra) if extra
-
-    if sdef.attributes
-        skips = ['set_employee_number', 'supply_crate_series']
-        for atyp in sdef.attributes.attribute
-            adef = ns.schema_attribs[atyp.name]
-            if adef and adef.attribute_class not in skips
-                text = oo.format_schema_attr adef, atyp.value
-                curr = vals[adef.effect_type]
-                vals[adef.effect_type] = if curr then curr + '<br>' + text else text
-
-    # reset the item description
-    if sdef.item_description
-        desc = sdef.item_description
-        if desc.indexOf('\n') > -1
-            desc = desc.replace(/\n/g, '<br>')
-        else
-            desc = desc.wordwrap(64)
-        vals.alt = if vals.alt then "#{vals.alt} <br> #{desc}" else desc
-
-    # set limited use count
-    if item.defindex in (t.defindex for t in ns.schema_tools()) or item.defindex in (t.defindex for t in ns.schema_actions())
-        if item.quantity?
-            vals.limiteduse = "<br>This is a limited use item.  Uses: #{item.quantity}"
-
-    # set the untradable text
-    if item.flag_cannot_trade
-        vals.untradable = '<br>( Not Tradable )'
-
-    # set the values
-    for k, v of vals
-        $(".#{k}", tt).html v
-
-    # position and show
-    left = cell.offset().left + (cell.width()/2) - (tt.width()/2)
-    top = cell.offset().top + cell.height()
-    tt.css {left:Math.max(0, left), top:top}
-    tt.show()
-
-
-
-
-put_trades = (ns, target, cb) ->
-    for i in [0..2]
-        target.append $('#trade-proto').tmpl({index:i+1})
+put_trades = (ns, trades, target, cb) ->
+    $('a.clear-trade').live 'click', (e) ->
+        p = $(e.currentTarget).parents('div.trade')
+        j = p.data('tno')
+        p.replaceWith $('#trade-proto').tmpl({index:j}).data('tno', j)
+        config_backpack_selections $('#backpack'), $('#trades')
+        config_chooser_selections $('#chooser'), $('#trades')
+        false
+    $('a.set-trade').live 'click', (e) ->
+        p = $(e.currentTarget).parents('div.trade')
+        console.log 'put trade', p
+        false
+    for i in [0..3]
+        j = i + 1
+        target.append $('#trade-proto').tmpl({index:j}).data('tno', j)
     cb()
+
 
 config_chooser_selections = (source, target) ->
     sources = -> $('div.item:not(:empty):not(.untradable)', source)
@@ -336,14 +200,16 @@ config_chooser_selections = (source, target) ->
         t = b.parents '.trade'
         id = a.data('item-defn').id
         b.replaceWith c
-        hide_tooltip()
+        SS.client.tooltip.hide()
+        $('body').trigger 'trade-changed', t
         c.dblclick (e) ->
-            hide_tooltip()
+            SS.client.tooltip.hide()
             repl = $ '<div class="item" />'
             c.replaceWith repl
             repl.droppable drop_options
             ids = t.data 'ids'
             ids.splice ids.indexOf(id), 1
+            $('body').trigger 'trade-changed', t
 
     copy_to_trade = (e) ->
         s = $ e.currentTarget
@@ -369,7 +235,7 @@ config_chooser_selections = (source, target) ->
             s = ui.helper.prevObject
             copy s, $(this)
 
-    sources().dblclick copy_to_trade
+    sources().unbind('dblclick').dblclick copy_to_trade
     sources().draggable drag_options
     targets().droppable drop_options
 
@@ -384,14 +250,16 @@ config_backpack_selections = (source, target) ->
         t = b.parents '.trade'
         id = a.data('item-defn').id
         b.replaceWith c
-        hide_tooltip()
+        SS.client.tooltip.hide()
+        $('body').trigger 'trade-changed', t
         c.dblclick (e) ->
-            hide_tooltip()
+            SS.client.tooltip.hide()
             repl = $ '<div class="item" />'
             c.replaceWith repl
             repl.droppable drop_options
             ids = t.data 'ids'
             ids.splice ids.indexOf(id), 1
+            $('body').trigger 'trade-changed', t
 
     copy_to_trade = (e) ->
         s = $ e.currentTarget
@@ -427,6 +295,14 @@ config_backpack_selections = (source, target) ->
                 t.data 'ids', ids
                 copy s, $(this)
 
-    sources().dblclick copy_to_trade
+    sources().unbind('dblclick').dblclick copy_to_trade
     sources().draggable drag_options
     targets().droppable drop_options
+
+
+trade_changed = (e, tc) ->
+    have = $ 'div.item.backpack:not(:empty)', tc
+    if have.length
+        $('a.set-trade, a.clear-trade', tc).slideDown()
+    else
+        $('a.set-trade, a.clear-trade', tc).slideUp()

@@ -4,9 +4,11 @@
 bg-black = #000
 dark-gray = #222
 medium-gray = #5c5c5c
+light-gray = #aaa
 
 s1 = 3px
 s2 = 6px
+s3 = 9px
 s4 = 12px
 s6 = 18px
 s8 = 24px
@@ -23,10 +25,10 @@ body, html
 
 body
   color white
-  background-color black
+  background-color light-gray
   font-family "TF2secondary"
   font-size s6
-  margin s2
+  padding s4
 
 p
   margin-bottom s4
@@ -69,34 +71,14 @@ a, a:visited, a:active, a:hover
 .mt1
   margin-top s4
 
-
-#user-container
-  background-color white
-
-
-#content
-  padding s1
+.mt2
+  margin-top s8
 
 
-#user-container-left
-  float left
-  margin-right s4
-  margin-bottom s4
-  width (iw * 7) - s4
-
-#user-container-right
-  float left
-  width iw * 10
 
 
-#user-container-right table
-  width 100%
 
-#user-container-last
-  clear both
 
-#chooser-container
-  margin-top s4 * 2
 
 
 
@@ -105,7 +87,6 @@ a, a:visited, a:active, a:hover
   background-color black
   padding-right s8
   margin-right s8
-  height 90px * 3
   padding s4
   border-r(s4)
 
@@ -114,18 +95,27 @@ a, a:visited, a:active, a:hover
   background-color black
   border-r(s4*1.5)
 
+.w100
+  width 100%
 
+.w30
+  width 30%
 
-
-#trades
-  height 90px * 6
-
-
-#user-container-left, #user-container-right
+#backpack-container, #chooser-container, #trades-container
   border s1 solid dark-gray
   border-r(s4)
   padding s4
   background-color medium-gray
+
+#backpack-container, #chooser-container
+  margin-right s8
+  margin-bottom s8
+
+#chooser, #backpack
+  height s8 * 12
+
+#trades
+  height s3 * 81
 
 
 div.row
@@ -228,11 +218,7 @@ qual(11, #cd9b1d, #423618) // strange
 #tooltip .limiteduse
   color green
 
-#message-container
-  border-r(12px)
-  border 1px solid medium-gray
-  padding s4
-  vertical-align middle
+
 
 #message
   text-align left
@@ -247,6 +233,7 @@ qual(11, #cd9b1d, #423618) // strange
 
 div.trade
   padding-bottom s8
+  padding-right s8
 
 .pl1
   padding-left s4
@@ -342,9 +329,9 @@ eff(99) // earbuds
 
 
 div.badge
-  background-color dark-gray
+  background-color #fff
   font-family "TF2secondary"
-  color medium-gray
+  color dark-gray
   border-r(6px)
   font-size 8pt
   position absolute
@@ -362,10 +349,10 @@ div.quantity
 
 
 .button, .small-button
-  background-color #766b5e
+  background-color medium-gray
   border-bottom none !important
   border-r(0.25em)
-  color #ece3cb
+  color lighten(medium-gray, 75%)
   font-family "TF2Build"
   height 1.5em
   line-height 1.5em
@@ -377,12 +364,12 @@ div.quantity
 
 .button:hover, .small-button:hover
   background-color #924738
-  color #ece3cb
+  color light-gray
 
 
 
 .button:active, .small-button:active
-  color #2e2b2a
+  color dark-gray
 
 
 .small-button
@@ -392,3 +379,53 @@ div.quantity
   padding 0.35em 1.5em 0.25em 1.5em
 
 
+
+
+
+.pt1
+  padding-top s4
+
+.m1
+  margin s4
+
+.m2
+  margin s8
+
+.mr1
+  margin-right s4
+
+
+.pr1
+  padding-right s4
+
+
+
+.mb1
+  margin-bottom s4
+
+
+.mb05
+  margin-bottom s2
+
+
+.dbg-brd
+  border 1px dotted yellow
+
+
+
+.trade-notes
+  margin 0
+  width 100%
+
+.trade-notes textarea
+  height 12em
+  width 100%
+
+
+
+
+.invis
+  opacity(0)
+
+.vis
+  opacity(1)

@@ -1,11 +1,17 @@
 ## server code
+util = require('util')
 steam = require('./steam.coffee')
+
 
 ## trade:id:gen
 
 exports.actions =
     init: (cb) ->
-        cb "version: #{SS.version}, websockets: okay app: 5"
+        @getSession (session) ->
+            session.on 'disconnect', client_disconnect
+            client_connect(session)
+
+        cb "framework: #{SS.version}, websockets: okay, application: v07"
 
     send_message: (params, cb) ->
         SS.publish.user params.user, 'user_message', {source: @session.user_id, body: params.message}
@@ -44,3 +50,15 @@ exports.actions =
 
     schema: (cb) ->
         steam.actions.schema cb
+
+    trades: (cb) ->
+        cb []
+
+
+client_connect = (s) ->
+    util.log "CONNECT user_id=#{s.user_id}"
+
+
+client_disconnect = (s) ->
+    util.log "DISCONNECT user_id=#{s.user_id}"
+    s.user.logout()

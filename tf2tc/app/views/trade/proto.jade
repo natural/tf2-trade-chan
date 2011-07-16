@@ -2,17 +2,9 @@ div.trade
 
   table
     tr
-      td(style='padding-bottom:1em')
-        h2 Trade #${index}
-      td
-        span
-          a.small-button(href='/logout') (un)Publish
-        span(style='margin-left:1em')
-          a.small-button(href='/logout') Clear
-    tr
       td
         h3 Your Offerings
-        h4 These are the items you will give in the trade.
+        h4.null These are the items you will give in the trade.
         div.row
           div.itemw
             div.item.have
@@ -31,12 +23,22 @@ div.trade
             div.item.have
           div.itemw
             div.item.have
-      td(rowspan=2, style='vertical-align:top')
+      td(rowspan=2, style='width:240px')
+        h2.mb05.text-center Trade #${index}
+        .text-center.mb1(style='height:35px')
+          a.set-trade.null.mr1.small-button(href='#') publish
+          a.clear-trade.null.mr1.small-button(href='#') clear
+
+        .mt2.mb05
+          h4 Notes:
+        .trade-notes
+          textarea
+
 
     tr
       td
-        h3(style='padding-top: 1em') Your Wishlist
-        h4 These are the items you want to receive in the trade.
+        h3 Your Wishlist
+        h4.null These are the items you want to receive in the trade.
         div.row
           div.itemw
             div.item.want
@@ -55,6 +57,4 @@ div.trade
             div.item.want
           div.itemw
             div.item.want
-
-
-
+      td

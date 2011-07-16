@@ -4,29 +4,31 @@ Keygrip = require('keygrip')
 
 
 exports.authenticate = (params, cb) ->
-  cookies = new Cookies dummyReq(params), dummyRes(), Keygrip SS.config.keygrip.keys
-  id64 = cookies.get "id64", { signed: true, httpOnly: false } # needs date
-  if id64
-    id64 = decode(id64)
-    cb {success: true, user_id: id64, info: {username: 'unknown', id64: id64}}
-  else
-    cb {success: false}
+    cs = cookies params
+    id64 = cs.get 'id64', {signed: true, httpOnly: false} # needs date
+    if id64
+        cb success: true, user_id: decode id64
+    else
+        cb success: false, user_id: null
+
+
+cookies = (p) ->
+    new Cookies dummy_req(p), dummy_res(), Keygrip SS.config.keygrip.keys
 
 
 decode = (v) ->
-  decodeURI( new Buffer(v, 'base64').toString() )
+    decodeURI(new Buffer(v, 'base64').toString())
 
 
-dummyRes = () ->
-  getHeader: () -> null,
-  setHeader: () -> null,
-  socket:
-    encrypted: false
+dummy_res = () ->
+    getHeader: () -> null,
+    setHeader: () -> null,
+    socket:
+        encrypted: false
 
 
-
-dummyReq = (cs) ->
-  headers:
-    cookie: cs
+dummy_req = (cs) ->
+    headers:
+        cookie: cs
 
 
