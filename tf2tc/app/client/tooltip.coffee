@@ -20,9 +20,7 @@ exports.show = (e) ->
     vals.name = "#{ns.schema_qualities[item.quality]} " + vals.name if item.quality in [3, 5, 11]
 
     # clear the quality classes and add the correct one
-    for q in [0..20]
-        $('.name', tt).removeClass("qual-text-#{q}")
-    $('.name', tt).addClass("qual-text-#{item.quality}")
+    $('.name', tt).resetQualityClasses("qual-text-#{item.quality}")
 
     ## clear the crafter value.  nb: crafter isn't set via the 'vals'
     ## object because of the async lookup

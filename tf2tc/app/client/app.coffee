@@ -9,6 +9,12 @@ exports.init = ->
 boot = ->
     window.oo = SS.client.util
     window.player_ns = player_ns = {}
+    jQuery.fn.resetQualityClasses = (v) ->
+        this.each () ->
+            for q in [0..20]
+                $(this).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
+            $(this).addClass(v)
+
     $('div.item:not(:empty)').live 'mouseover', {ns:player_ns}, SS.client.tooltip.show
     $('div.item:not(:empty)').live 'mouseout', {ns:player_ns}, SS.client.tooltip.hide
     SS.server.app.login document.cookie, (r) ->
@@ -174,17 +180,37 @@ put_backpack = (ns, target, page_size, cols, cb) ->
 
 
 put_trades = (ns, trades, target, cb) ->
-    $('a.clear-trade').live 'click', (e) ->
+    $('a.clear-trade', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
         j = p.data('tno')
         p.replaceWith $('#trade-proto').tmpl({index:j}).data('tno', j)
         config_backpack_selections $('#backpack'), $('#trades')
         config_chooser_selections $('#chooser'), $('#trades')
         false
-    $('a.set-trade').live 'click', (e) ->
+    $('a.set-trade', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
-        console.log 'put trade', p
+        have = ($(i).data('item-defn') for i in $('div.backpack', p))
+        want = ($(i).data('item-defn') for i in $('div.chooser', p))
+        if have and have.length
+            SS.server.trades.publish {have:have, want:want}, (status) ->
+                console.log 'publishing status:', status
         false
+    $('div.item.chooser', target).live 'click', (e) ->
+        item = $(e.currentTarget)
+        id = item.data('item-defn').defindex
+        qualseq = ns.schema.ext.quals[id]
+        qualc = item.data('qual')
+        if qualc?
+            i = qualseq.indexOf(qualc)
+        else
+            i = 1
+        j = qualseq[(i+1) % qualseq.length]
+        item.data('qual', j)
+        item.resetQualityClasses("qual-border-#{j} qual-hover-#{j}")
+        item.data('item-defn').quality = j
+        item.trigger('mouseout').trigger('mouseover')
+
+
     for i in [0..3]
         j = i + 1
         target.append $('#trade-proto').tmpl({index:j}).data('tno', j)
@@ -199,16 +225,14 @@ config_chooser_selections = (source, target) ->
         c = a.clone(true, true).unbind()
         t = b.parents '.trade'
         id = a.data('item-defn').id
+        r = b.clone(false, false)
         b.replaceWith c
         SS.client.tooltip.hide()
         $('body').trigger 'trade-changed', t
         c.dblclick (e) ->
             SS.client.tooltip.hide()
-            repl = $ '<div class="item" />'
-            c.replaceWith repl
-            repl.droppable drop_options
-            ids = t.data 'ids'
-            ids.splice ids.indexOf(id), 1
+            c.replaceWith r
+            r.droppable drop_options
             $('body').trigger 'trade-changed', t
 
     copy_to_trade = (e) ->
@@ -249,14 +273,14 @@ config_backpack_selections = (source, target) ->
         c = a.clone(true, true).unbind()
         t = b.parents '.trade'
         id = a.data('item-defn').id
+        r = b.clone(false, false)
         b.replaceWith c
         SS.client.tooltip.hide()
         $('body').trigger 'trade-changed', t
         c.dblclick (e) ->
             SS.client.tooltip.hide()
-            repl = $ '<div class="item" />'
-            c.replaceWith repl
-            repl.droppable drop_options
+            c.replaceWith r
+            r.droppable drop_options
             ids = t.data 'ids'
             ids.splice ids.indexOf(id), 1
             $('body').trigger 'trade-changed', t
@@ -303,6 +327,11 @@ config_backpack_selections = (source, target) ->
 trade_changed = (e, tc) ->
     have = $ 'div.item.backpack:not(:empty)', tc
     if have.length
-        $('a.set-trade, a.clear-trade', tc).slideDown()
+        $('a.set-trade', tc).slideDown()
     else
-        $('a.set-trade, a.clear-trade', tc).slideUp()
+        $('a.set-trade', tc).slideUp()
+    want = $ 'div.item.chooser:not(:empty)', tc
+    if want.length or have.length
+        $('a.clear-trade', tc).slideDown()
+    else
+        $('a.clear-trade', tc).slideUp()

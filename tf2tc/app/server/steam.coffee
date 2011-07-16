@@ -11,6 +11,9 @@ exports.actions =
             d = JSON.parse d
             ext.all_groups (gs) ->
                 d.ext = groups:gs
+                ext.qual_cycle (qm) ->
+                    d.ext.quals = qm
+
             ks = (Number(k) for k, o of image_fixes)
             for k, n of d.result.items.item
                 if n.defindex in ks

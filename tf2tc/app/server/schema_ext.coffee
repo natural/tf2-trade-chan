@@ -4080,7 +4080,15 @@ groups =
     untradables: select (a, b) -> b._t == NEVER
 
 
+quals = () ->
+    m = {}
+    for k, i of items
+        m[k] = i._q
+    m
 
 exports.actions =
     all_groups: (cb) ->
         cb groups
+
+    qual_cycle: (cb) ->
+        cb quals()
