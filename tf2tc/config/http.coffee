@@ -14,8 +14,7 @@ exports.call = (request, response, next) ->
     # Hook-in your own custom HTTP middleware to modify or respond to requests before they're passed to the SocketStream HTTP stack
     # See README for more details and example middleware code
 
-    # require('my_middleware').call request, response, next
-    require('./openid_auth').call request, response, next
+    require('./local_urls.coffee').call request, response, next
 
     # Unless you're passing the callback to custom middleware, you'll need to call next() here
     #next()

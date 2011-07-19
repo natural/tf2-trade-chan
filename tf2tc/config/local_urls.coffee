@@ -1,7 +1,8 @@
-url = require('url')
-openid = require('openid')
-Cookies = require('cookies')
-Keygrip = require('keygrip')
+url = require 'url'
+openid = require 'openid'
+Cookies = require 'cookies'
+Keygrip = require 'keygrip'
+server = require 'socketstream/lib/utils/server.coffee'
 
 
 exports.call = (request, response, next) ->
@@ -25,9 +26,13 @@ exports.call = (request, response, next) ->
             ## what to do with no provider url?
 
     else if u.pathname == c.logout_path
-          cookies = new Cookies request, response
-          cookies.set 'id64', ''
-          redirect response, c.success_path
+        cookies = new Cookies request, response
+        cookies.set 'id64', ''
+        redirect response, c.success_path
+
+    else if u.pathname == '/schema'
+        SS.server.steam.schema (s) ->
+            server.deliver response, 200, 'text/javascript', JSON.stringify(s)
 
     else
         next()

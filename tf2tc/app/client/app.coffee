@@ -34,7 +34,7 @@ bootUser = (ns) ->
         SS.server.app.backpack (backpack) ->
             oo.makeBackpack ns, backpack
             $('#backpack-msg').text 'Loading schema...'
-            SS.server.app.schema (schema) ->
+            $.getJSON '/schema', (schema) ->
                 oo.makeSchema ns, schema
                 putBackpack ns, $('#backpack'), 25, 5, ->
                     $('#backpack-msg').slideUp().text('')
