@@ -1,5 +1,7 @@
+## client util
 
-exports.strange_text = (c) ->
+
+exports.strangeName = (c) ->
     t = ''
     t = 'Strange'              if 0 <= c <= 10
     t = 'Unremarkable'         if 10 <= c < 25
@@ -25,7 +27,7 @@ exports.strange_text = (c) ->
     t
 
 
-exports.item_effects =
+exports.effectNames =
     4:  'Community Sparkle'
     5:  'Holy Glow'
     6:  'Green Confetti'
@@ -45,7 +47,7 @@ exports.item_effects =
     20: 'Map Stamps'
 
 
-exports.value_format_map =
+exports.formats =
   value_is_additive: (a) -> a
   value_is_particle_index: (a) -> a
   value_is_or: (a) -> a
@@ -56,38 +58,37 @@ exports.value_format_map =
   value_is_account_id: (v) -> '7656' + (v + 1197960265728)
 
 
-profile_cache = {}
+caches =
+    profile: {}
 
-exports.get_profile = (id64, cb) ->
-    if profile_cache[id64]
-        cb profile_cache[id64]
+
+exports.readProfile = (id64, cb) ->
+    if caches.profile[id64]
+        cb caches.profile[id64]
     else
-        SS.server.app.user_profile id64:id64, (p) ->
-            profile_cache[id64] = p
+        SS.server.app.readProfile id64:id64, (p) ->
+            caches.profile[id64] = p
             cb p
 
 
-exports.format_schema_attr = (def, val) ->
+exports.attrFormat = (def, val) ->
     line = if (def and def.description_string) then def.description_string.replace(/\n/gi, '<br />') else ''
     ## we only sub one '%s1'; that's the most there is (as of oct 2010)
     if line.indexOf('%s1') > -1
-        line = line.replace('%s1', exports.value_format_map[def['description_format']](val))
+        line = line.replace('%s1', exports.formats[def['description_format']](val))
     if line.indexOf('Attrib_') > -1
         line = ''
     line
 
 
-
-
-
-exports.make_backpack = (ns, bp) ->
+exports.makeBackpack = (ns, bp) ->
     ns.backpack = bp
     ns.backpack_items = items = {} # backpack item mapping by defindex
     for item in bp.result.items.item
         do (item) -> items[item.inventory & 0xFFFF] = item
 
 
-exports.make_schema = (ns, sch) ->
+exports.makeSchema = (ns, sch) ->
     ns.schema = sch
     ns.schema_items = items = {} # schema item mapping by defindex
     for item in sch.result.items.item

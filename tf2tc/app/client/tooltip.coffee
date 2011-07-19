@@ -1,3 +1,6 @@
+## client tooltip
+
+
 exports.hide = (e) ->
     $('#tooltip').hide()
 
@@ -8,10 +11,12 @@ exports.show = (e) ->
     ns = e.data.ns
     item = cell.data 'item-defn'
     sdef = cell.data 'schema-defn'
-    vals = make_tooltip_vals()
+    vals = defaults()
     if !sdef
         return
-    type = sdef.item_type_name.replace('TF_Wearable_Hat', 'Wearable Item').replace('TF_LockedCrate', 'Crate')
+    type = sdef.item_type_name
+                .replace('TF_Wearable_Hat', 'Wearable Item')
+                .replace('TF_LockedCrate', 'Crate')
     vals.level = "Level #{item.level} #{type}" if item.level?
     if item.custom_name
         vals.name =  "\"#{item.custom_name}\""
@@ -36,30 +41,30 @@ exports.show = (e) ->
     if item.attributes
         for idef in item.attributes.attribute
             adef = ns.schema_attribs[idef.defindex]
-            extra = oo.format_schema_attr adef, idef.value
+            extra = oo.attrFormat adef, idef.value
             etype = if adef then adef.effect_type else null
 
             switch idef.defindex
                 when 134 ## effect name
-                    vals[etype] = oo.format_schema_attr adef, oo.item_effects[idef.float_value]
+                    vals[etype] = oo.attrFormat adef, oo.effectNames[idef.float_value]
 
                 when 186 ## gift
-                    acc = oo.value_format_map.value_is_account_id idef.value
+                    acc = oo.formats.value_is_account_id idef.value
                     $('.crafter', tt).text "Gift from #{acc}."
-                    oo.get_profile acc, (p) ->
+                    oo.readProfile acc, (p) ->
                         $('.crafter', tt).text "Gift from #{p.personaname}."
 
                 when 187 ## crate series
-                    vals[etype] = oo.format_schema_attr adef, idef.float_value
+                    vals[etype] = oo.attrFormat adef, idef.float_value
 
                 when 214 ## kill eater
                     vals.killeater = "Kills: #{idef.value}"
-                    vals.name = vals.name.replace 'Strange', oo.strange_text(idef.value)
+                    vals.name = vals.name.replace 'Strange', oo.strangeName(idef.value)
 
                 when 228 ## craft name
-                    acc = oo.value_format_map.value_is_account_id idef.value
+                    acc = oo.formats.value_is_account_id idef.value
                     $('.crafter', tt).text "Crafted by #{acc}."
-                    oo.get_profile acc, (p) ->
+                    oo.readProfile acc, (p) ->
                         $('.crafter', tt).text "Crafted by #{p.personaname}."
 
                 when 229 ## craft number
@@ -73,7 +78,7 @@ exports.show = (e) ->
         for atyp in sdef.attributes.attribute
             adef = ns.schema_attribs[atyp.name]
             if adef and adef.attribute_class not in skips
-                text = oo.format_schema_attr adef, atyp.value
+                text = oo.attrFormat adef, atyp.value
                 curr = vals[adef.effect_type]
                 vals[adef.effect_type] = if curr then curr + '<br>' + text else text
 
@@ -107,7 +112,7 @@ exports.show = (e) ->
 
 
 
-make_tooltip_vals = ->
+defaults = ->
     alt: ''
     ctrl: ''
     killeater: ''

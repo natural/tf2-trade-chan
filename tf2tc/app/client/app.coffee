@@ -1,5 +1,6 @@
-## client code
+## client app
 
+## TODO:  add better feedback during auth load.
 
 exports.init = ->
     SS.server.app.init (msg) ->
@@ -8,45 +9,45 @@ exports.init = ->
 
 boot = ->
     window.oo = SS.client.util
-    window.player_ns = player_ns = {}
+    window.playerNS = playerNS = {}
     jQuery.fn.resetQualityClasses = (v) ->
         this.each () ->
             for q in [0..20]
                 $(this).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
             $(this).addClass(v)
 
-    $('div.item:not(:empty)').live 'mouseover', {ns:player_ns}, SS.client.tooltip.show
-    $('div.item:not(:empty)').live 'mouseout', {ns:player_ns}, SS.client.tooltip.hide
+    $('div.item:not(:empty)').live 'mouseover', {ns:playerNS}, SS.client.tooltip.show
+    $('div.item:not(:empty)').live 'mouseout', {ns:playerNS}, SS.client.tooltip.hide
     SS.server.app.login document.cookie, (r) ->
-        (if r.success then boot_user else boot_anon)(player_ns)
+        (if r.success then bootUser else bootAnon)(playerNS)
 
 
-boot_anon = (ns) ->
+bootAnon = (ns) ->
     $('#login').show()
 
 
-boot_user = (ns) ->
-    SS.server.app.user_data (data) ->
+bootUser = (ns) ->
+    SS.server.app.userProfile (data) ->
         $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
         $('#backpack-msg').text 'Loading backpack...'
-        $('body').bind 'trade-changed', trade_changed
+        $('body').bind 'trade-changed', tradeChanged
         SS.server.app.backpack (backpack) ->
-            oo.make_backpack ns, backpack
+            oo.makeBackpack ns, backpack
             $('#backpack-msg').text 'Loading schema...'
             SS.server.app.schema (schema) ->
-                oo.make_schema ns, schema
-                put_backpack ns, $('#backpack'), 25, 5, ->
+                oo.makeSchema ns, schema
+                putBackpack ns, $('#backpack'), 25, 5, ->
                     $('#backpack-msg').slideUp().text('')
-                    SS.server.app.trades (trades) ->
-                        put_trades ns, trades, $('#trades'), ->
-                            config_backpack_selections $('#backpack'), $('#trades')
+                    SS.server.trades.userTrades {}, (trades) ->
+                        putTrades ns, trades, $('#trades'), ->
+                            configBackpack $('#backpack'), $('#trades')
                             $('#user-container').slideDown()
-                        put_chooser ns, $('#chooser'), ->
-                            config_chooser_selections $('#chooser'), $('#trades')
+                        putChooser ns, $('#chooser'), ->
+                            configChooser $('#chooser'), $('#trades')
                             $('#chooser-container').slideDown()
 
 
-put_chooser = (ns, target, cb) ->
+putChooser = (ns, target, cb) ->
     grp = ns.schema.ext.groups
     clone = (id, q) ->
         x = JSON.parse(JSON.stringify(ns.schema_items[id]))
@@ -57,15 +58,15 @@ put_chooser = (ns, target, cb) ->
         $('.chooser-group:last', target)
     put = (items) ->
         i = 0
-        target.append make_item_row()
+        target.append makeItemRow()
         row = $ 'div.row:last', target
         cols = 5
         page_size = 25
         for item in items
-            make_item ns, item, row, 'chooser'
+            makeItem ns, item, row, 'chooser'
             i += 1
             if !(i % cols) and i < items.length
-                target.append make_item_row()
+                target.append makeItemRow()
                 row = $ 'div.row:last', target
 
     put (clone(x, 6) for x in grp.commodities), add('Commodities')
@@ -77,8 +78,8 @@ put_chooser = (ns, target, cb) ->
     cb()
 
 
-make_item_props = (ns, defn) ->
-    attr_select = (id) ->
+makeItemProps = (ns, defn) ->
+    selectAttr = (id) ->
         if defn.attributes
             x = (n for n in defn.attributes.attribute)
             try
@@ -97,7 +98,7 @@ make_item_props = (ns, defn) ->
             '5044'
 
     paint: () ->
-        p = attr_select(142)
+        p = selectAttr(142)
         if p then p.float_value else null
 
     effect: () ->
@@ -106,17 +107,17 @@ make_item_props = (ns, defn) ->
         else if defn.defindex==1899
             20
         else
-            e = attr_select(134)
+            e = selectAttr(134)
             if e then e.float_value else null
 
-    use_count: () ->
+    useCount: () ->
         if defn.defindex in (t.defindex for t in ns.schema_tools()) or defn.defindex in (t.defindex for t in ns.schema_actions())
             defn.quantity
 
-make_item_row = -> '<div class="row"></div>'
+makeItemRow = -> '<div class="row"></div>'
 
 
-make_item = (ns, defn, target, type) ->
+makeItem = (ns, defn, target, type) ->
     if defn
         v = "<div class='itemw'>
                <div class='item #{type}'>
@@ -129,7 +130,7 @@ make_item = (ns, defn, target, type) ->
         target.append v
         return
 
-    props = make_item_props ns, defn
+    props = makeItemProps ns, defn
     item = $ 'div.item:last', target
     item.data 'item-defn', defn
     item.data 'schema-defn', ns.schema_items[defn.defindex]
@@ -152,7 +153,7 @@ make_item = (ns, defn, target, type) ->
         img.parent().append '<div class="badge equipped">Equipped</div>'
 
     ## use count badge
-    count = props.use_count()
+    count = props.useCount()
     if count?
         img.wrap '<div class="deco" />'
         img.parent().append "<div class='badge quantity'>#{count}</div>"
@@ -162,30 +163,30 @@ make_item = (ns, defn, target, type) ->
     img.wrap "<div class='deco effect effect-#{effect}' />" if effect
 
 
-put_backpack = (ns, target, page_size, cols, cb) ->
+putBackpack = (ns, target, page_size, cols, cb) ->
     i = 0
     items = ns.backpack.result.items.item
     slots = ns.backpack.result.num_backpack_slots
-    target.append make_item_row()
+    target.append makeItemRow()
     row = $ 'div.row:last', target
     for slot in [1..slots]
         item = ns.backpack_items[slot]
-        make_item ns, item, row, 'backpack'
+        makeItem ns, item, row, 'backpack'
         i += 1
         if !(i % cols) and slot < slots
             row.addClass 'bot' if !(i % page_size)
-            target.append make_item_row()
+            target.append makeItemRow()
             row = $ 'div.row:last', target
     cb()
 
 
-put_trades = (ns, trades, target, cb) ->
+putTrades = (ns, trades, target, cb) ->
     $('a.clear-trade', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
         j = p.data('tno')
         p.replaceWith $('#trade-proto').tmpl({index:j}).data('tno', j)
-        config_backpack_selections $('#backpack'), $('#trades')
-        config_chooser_selections $('#chooser'), $('#trades')
+        configBackpack $('#backpack'), $('#trades')
+        configChooser $('#chooser'), $('#trades')
         false
     $('a.set-trade', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
@@ -210,14 +211,13 @@ put_trades = (ns, trades, target, cb) ->
         item.data('item-defn').quality = j
         item.trigger('mouseout').trigger('mouseover')
 
-
     for i in [0..3]
         j = i + 1
         target.append $('#trade-proto').tmpl({index:j}).data('tno', j)
     cb()
 
 
-config_chooser_selections = (source, target) ->
+configChooser = (source, target) ->
     sources = -> $('div.item:not(:empty):not(.untradable)', source)
     targets = -> $('div.item.want:empty', target)
 
@@ -232,10 +232,10 @@ config_chooser_selections = (source, target) ->
         c.dblclick (e) ->
             SS.client.tooltip.hide()
             c.replaceWith r
-            r.droppable drop_options
+            r.droppable dropOpts
             $('body').trigger 'trade-changed', t
 
-    copy_to_trade = (e) ->
+    copyToTrade = (e) ->
         s = $ e.currentTarget
         avail = (x for x in $('.trade', target))
         if avail
@@ -244,7 +244,7 @@ config_chooser_selections = (source, target) ->
             copy s, t
         ## else alert or message or something
 
-    drag_options =
+    dragOpts =
         helper: 'clone'
         revert: 'invalid'
         cursor: 'move'
@@ -252,20 +252,20 @@ config_chooser_selections = (source, target) ->
             q = ui.helper.prevObject.data('item-defn').quality
             ui.helper.addClass "qual-background-#{q} z-top"
 
-    drop_options =
+    dropOpts =
         accept: 'div.item.chooser'
         hoverClass: 'outline'
         drop: (e, ui) ->
             s = ui.helper.prevObject
             copy s, $(this)
 
-    sources().unbind('dblclick').dblclick copy_to_trade
-    sources().draggable drag_options
-    targets().droppable drop_options
+    sources().unbind('dblclick').dblclick copyToTrade
+    sources().draggable dragOpts
+    targets().droppable dropOpts
 
 
 
-config_backpack_selections = (source, target) ->
+configBackpack = (source, target) ->
     sources = -> $('div.item:not(:empty):not(.untradable)', source)
     targets = -> $('div.item.have:empty', target)
 
@@ -280,12 +280,12 @@ config_backpack_selections = (source, target) ->
         c.dblclick (e) ->
             SS.client.tooltip.hide()
             c.replaceWith r
-            r.droppable drop_options
+            r.droppable dropOpts
             ids = t.data 'ids'
             ids.splice ids.indexOf(id), 1
             $('body').trigger 'trade-changed', t
 
-    copy_to_trade = (e) ->
+    copyToTrade = (e) ->
         s = $ e.currentTarget
         i = s.data('item-defn').id
         avail = (x for x in $('.trade', target) when i not in ($(x).data('ids') or []))
@@ -298,7 +298,7 @@ config_backpack_selections = (source, target) ->
             copy s, t
         ## else alert or message or something
 
-    drag_options =
+    dragOpts =
         helper: 'clone'
         revert: 'invalid'
         cursor: 'move'
@@ -306,7 +306,7 @@ config_backpack_selections = (source, target) ->
             q = ui.helper.prevObject.data('item-defn').quality
             ui.helper.addClass "qual-background-#{q} z-top"
 
-    drop_options =
+    dropOpts =
         accept: 'div.item.backpack'
         hoverClass: 'outline'
         drop: (e, ui) ->
@@ -319,12 +319,12 @@ config_backpack_selections = (source, target) ->
                 t.data 'ids', ids
                 copy s, $(this)
 
-    sources().unbind('dblclick').dblclick copy_to_trade
-    sources().draggable drag_options
-    targets().droppable drop_options
+    sources().unbind('dblclick').dblclick copyToTrade
+    sources().draggable dragOpts
+    targets().droppable dropOpts
 
 
-trade_changed = (e, tc) ->
+tradeChanged = (e, tc) ->
     have = $ 'div.item.backpack:not(:empty)', tc
     if have.length
         $('a.set-trade', tc).slideDown()

@@ -1,23 +1,22 @@
-## server code
+## server-side app module
+#
 util = require('util')
 steam = require('./steam.coffee')
 
 
-## trade:id:gen
-
 exports.actions =
     init: (cb) ->
         @getSession (session) ->
-            session.on 'disconnect', client_disconnect
-            client_connect(session)
+            session.on 'disconnect', clientDisconnect
+            clientConnect(session)
 
         cb "framework: #{SS.version}, websockets: okay, application: v07"
 
-    send_message: (params, cb) ->
+    sendMessage: (params, cb) ->
         SS.publish.user params.user, 'user_message', {source: @session.user_id, body: params.message}
         cb true
 
-    broadcast_message: (params, cb) ->
+    bcastMessage: (params, cb) ->
         SS.publish.broadcast 'group_message', {source: @session.user_id, body: params.message}
         cb true
 
@@ -29,7 +28,7 @@ exports.actions =
     logout: (cb) ->
         @session.user.logout(cb)
 
-    user_data: (cb) ->
+    userProfile: (cb) ->
         if @session.user.loggedIn()
             uid = @session.user_id
             steam.actions.profile {id64: uid.split('/').pop()}, (profile) ->
@@ -37,7 +36,7 @@ exports.actions =
         else
             cb {auth: false, user_id: null, profile: {}}
 
-    user_profile: (params, cb) ->
+    readProfile: (params, cb) ->
         steam.actions.profile params, cb
 
     backpack: (cb) ->
@@ -51,14 +50,11 @@ exports.actions =
     schema: (cb) ->
         steam.actions.schema cb
 
-    trades: (cb) ->
-        cb []
 
-
-client_connect = (s) ->
+clientConnect = (s) ->
     util.log "CONNECT user_id=#{s.user_id}"
 
 
-client_disconnect = (s) ->
+clientDisconnect = (s) ->
     util.log "DISCONNECT user_id=#{s.user_id}"
     s.user.logout()

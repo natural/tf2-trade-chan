@@ -23,12 +23,12 @@ items =
 
     '-2':
         name: 'Hat Offers'
-        _q: [C, G, U, V]
+        _q: [C, G, V, U]
         _t: ALWAYS
 
     '-1':
         name: 'Offers'
-        _q: [C, G, S, U, V]
+        _q: [C, S, G, V, U]
         _t: ALWAYS
 
     '0':
@@ -332,7 +332,7 @@ items =
         item_class: 'tf_weapon_minigun'
         item_type_name: 'Minigun'
         craft_class: 'weapon'
-        _q: [C, V, S]
+        _q: [C, S, V]
         _t: ALWAYS
 
     '42':
@@ -732,7 +732,7 @@ items =
         item_class: 'tf_weapon_rocketlauncher_directhit'
         item_type_name: 'Rocket Launcher'
         craft_class: 'weapon'
-        _q: [C, V, S]
+        _q: [C, S, V]
         _t: ALWAYS
 
     '128':
@@ -764,7 +764,7 @@ items =
         item_class: 'tf_wearable_demoshield'
         item_type_name: 'Shield'
         craft_class: 'weapon'
-        _q: [C, V, S]
+        _q: [C, S, V]
         _t: ALWAYS
 
     '132':
@@ -772,7 +772,7 @@ items =
         item_class: 'tf_weapon_sword'
         item_type_name: 'Sword'
         craft_class: 'weapon'
-        _q: [C, V, S]
+        _q: [C, S, V]
         _t: ALWAYS
 
     '133':
@@ -940,7 +940,7 @@ items =
         item_class: 'tf_weapon_shovel'
         item_type_name: 'Makeshift Club'
         craft_class: 'weapon'
-        _q: [C, V, S]
+        _q: [C, S, V]
         _t: ALWAYS
 
     '155':
@@ -2316,7 +2316,7 @@ items =
         item_class: 'tf_weapon_fireaxe'
         item_type_name: 'RIFT Fire Axe'
         craft_class: null
-        _q: [C, V, G]
+        _q: [C, G, V]
         _t: ALWAYS
 
     '349':
@@ -2324,7 +2324,7 @@ items =
         item_class: 'tf_weapon_bat'
         item_type_name: 'RIFT Fire Mace'
         craft_class: null
-        _q: [C, V, G]
+        _q: [C, G, V]
         _t: ALWAYS
 
     '351':
@@ -2340,7 +2340,7 @@ items =
         item_class: 'tf_weapon_buff_item'
         item_type_name: 'Sashimono'
         craft_class: 'weapon'
-        _q: [C, V, G]
+        _q: [C, G, V]
         _t: ALWAYS
 
     '355':
@@ -2348,7 +2348,7 @@ items =
         item_class: 'tf_weapon_bat'
         item_type_name: 'Gunbai'
         craft_class: 'weapon'
-        _q: [C, V, G]
+        _q: [C, G, V]
         _t: ALWAYS
 
     '356':
@@ -2356,7 +2356,7 @@ items =
         item_class: 'tf_weapon_knife'
         item_type_name: 'Kunai'
         craft_class: 'weapon'
-        _q: [C, V, G]
+        _q: [C, G, V]
         _t: ALWAYS
 
     '357':
@@ -2364,7 +2364,7 @@ items =
         item_class: 'tf_weapon_katana'
         item_type_name: 'Katana'
         craft_class: 'weapon'
-        _q: [C, V, G]
+        _q: [C, G, V]
         _t: ALWAYS
 
     '358':
@@ -2836,7 +2836,7 @@ items =
         item_class: 'tf_wearable'
         item_type_name: 'TF_Wearable_Hat'
         craft_class: 'hat'
-        _q: [C, U, G]
+        _q: [C, G, U]
         _t: ALWAYS
 
     '435':
@@ -2844,7 +2844,7 @@ items =
         item_class: 'tf_wearable'
         item_type_name: 'TF_Wearable_Hat'
         craft_class: 'hat'
-        _q: [C, U, G]
+        _q: [C, G, U]
         _t: ALWAYS
 
     '436':
@@ -2852,7 +2852,7 @@ items =
         item_class: 'tf_wearable'
         item_type_name: 'TF_Wearable_Hat'
         craft_class: 'hat'
-        _q: [C, U, G]
+        _q: [C, G, U]
         _t: ALWAYS
 
     '437':
@@ -2860,7 +2860,7 @@ items =
         item_class: 'tf_wearable'
         item_type_name: 'TF_Wearable_Hat'
         craft_class: 'hat'
-        _q: [C, U, G]
+        _q: [C, G, U]
         _t: ALWAYS
 
     '438':
@@ -3020,7 +3020,7 @@ items =
         item_class: 'tf_weapon_fireaxe'
         item_type_name: 'Sledgehammer'
         craft_class: 'weapon'
-        _q: [C, G, U]
+        _q: [C, G]
         _t: ALWAYS
 
     '467':
@@ -4087,8 +4087,8 @@ quals = () ->
     m
 
 exports.actions =
-    all_groups: (cb) ->
+    allGroups: (cb) ->
         cb groups
 
-    qual_cycle: (cb) ->
+    qualCycle: (cb) ->
         cb quals()

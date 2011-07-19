@@ -1,25 +1,27 @@
 ## steam apis
 
+
 http = require('http')
 libxmljs = require('libxmljs')
 ext = require('./schema_ext').actions
 
+
 exports.actions =
     schema: (cb) ->
         o = urls.schema SS.config.local.steam_api_key
-        schema_fix = (d) ->
+        schemaTweak = (d) ->
             d = JSON.parse d
-            ext.all_groups (gs) ->
+            ext.allGroups (gs) ->
                 d.ext = groups:gs
-                ext.qual_cycle (qm) ->
+                ext.qualCycle (qm) ->
                     d.ext.quals = qm
 
-            ks = (Number(k) for k, o of image_fixes)
+            ks = (Number(k) for k, o of imgFixes)
             for k, n of d.result.items.item
                 if n.defindex in ks
-                    n.image_url = image_fixes[n.defindex]
+                    n.image_url = imgFixes[n.defindex]
             d
-        get o, schema_fix, cb
+        get o, schemaTweak, cb
 
     items: (params, cb) ->
         o = urls.items params.id64, SS.config.local.steam_api_key
@@ -34,7 +36,7 @@ exports.actions =
 
     status: (params, cb) ->
         o = urls.status params.id64
-        get o, status_keys, cb
+        get o, statusKeys, cb
 
     news: (cb) ->
         o = urls.news 5, 256
@@ -95,17 +97,17 @@ urls =
         ttl: 60*15
 
 
-status_keys = (v) ->
+statusKeys = (v) ->
     x = libxmljs.parseXmlString(v)
     name: x.get('//steamID').text()
     state: x.get('//onlineState').text()
-    avatar_full: x.get('//avatarFull').text()
-    avatar_icon: x.get('//avatarIcon').text()
-    avatar_medium: x.get('//avatarMedium').text()
-    state_message: x.get('//stateMessage').text()
+    avatarFull: x.get('//avatarFull').text()
+    avatarIcon: x.get('//avatarIcon').text()
+    avatarMedium: x.get('//avatarMedium').text()
+    stateMessage: x.get('//stateMessage').text()
 
 
-image_fixes =
+imgFixes =
     5027: '/images/paints/TF_Tool_PaintCan_1.png'      # Indubitably Green
     5028: '/images/paints/TF_Tool_PaintCan_2.png'      # Zephaniah's Greed
     5029: '/images/paints/TF_Tool_PaintCan_3.png'      # Noble Hatter's Violet

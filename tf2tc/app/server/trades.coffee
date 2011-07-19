@@ -1,38 +1,114 @@
+## server-side module for trades
+#
+
 
 exports.actions =
+
+    ## pass in params.user to retrieve trades for a specific user; if
+    ## params.user not given, callback receives trades for current
+    ## session user.
+    userTrades: (params, cb) ->
+        if not @session.user.loggedIn()
+            cb {success:false, trades:null}
+
+        uid = uidFromOpenID (if params.user? then params.user else @session.user_id)
+        getTradeUids uid, (ids) ->
+            ## map ids to trade payloads
+            getTrades (keys.trade(i) for i in ids), (trades) ->
+                cb {success:true, trades:trades}
+
+
     publish: (params, cb) ->
         if not @session.user.loggedIn()
-            cb {success:false}
+            cb {success:false, tradeID:null}
+
         have = params.have
         want = params.want
-        uid = uid_from_openid @session.user_id
+        uid = uidFromOpenID @session.user_id
+
         ## generate trade id
-        next_trade_id uid, (trade_id) ->
-            console.log "TRADE ID #{trade_id} FOR USER #{uid}"
+        nextTradeID uid, (tradeID) ->
+            console.log "TRADE ID #{tradeID} FOR USER #{uid}"
 
-        ## for each have.defindex, place the trade id into each defindex:quality bucket
-        ## for each have.defindex, publish the trade to each ???:quality channel
+            ## set the payload
+            setTradePayload tradeID, params, () ->
 
-        cb {success:true}
+                ## for each have.defindex, place the trade id into each defindex:quality bucket
+                ks = keys.tradeBuckets have, tradeID
+                fillTradeBuckets ks, (status) ->
+                    console.log "ADD #{tradeID} TRADE TO BUCKETS #{ks} STATUS #{status}"
+
+                    ## for each have.defindex, publish the trade to each ???:quality channel
+                    cb {success:true, tradeID:tradeID}
 
 
 keys =
-    global_trade: 'tf2tc:trade_counter'
-    user_trades: (uid) ->
-        "tid:#{uid}"
+    ## this key is used to generate trade ids.
+    global_trade: 'g:trade_counter'
+
+    ## given a user id, this creates a key for holding the list of
+    ## trades associated with the user.
+    userTrades: (uid) ->
+        "u:trades:#{uid}"
+
+    ## given a list of items and their trade id, this creates an array
+    ## of keys to various buckets (def + qual).  the array is mixed
+    ## with the trade id so it can be easily passed to R.mset.
+    tradeBuckets: (items, tradeID) ->
+        bs = []
+        for defn in items
+            q = if defn.quality? then defn.quality else defn.item_quality
+            bs.push "b:#{defn.defindex}:#{q}", tradeID
+        bs
+
+    ## given a trade id, this creates a key for it.
+    trade: (tid) ->
+        "t:#{tid}"
 
 
-uid_from_openid = (openid) ->
+dekey =
+    trade: (key) ->
+        key.split(':').pop()
+
+
+uidFromOpenID = (openid) ->
     openid.split('/').pop()
 
 
-next_trade_id = (uid, next) ->
+setTradePayload = (tid, data, next) ->
+    k = keys.trade tid
+    v = JSON.stringify data
+    R.set k, v, () ->
+        next true ## set can't fail
+
+
+fillTradeBuckets = (keyvals, next) ->
+    R.mset keyvals, () ->
+        next true ## mset can't fail
+
+
+nextTradeID = (uid, next) ->
     R.incr keys.global_trade, (err, tid) ->
         if not err and tid?
             ## need to add hook to session disconnect to remove
             ## the user trade key "tid:#{uid}"
 
-            ## set the user:#{tradeid} key to the trade (as string)
-            R.lpush keys.user_trades(uid), tid, (e, v) ->
+            ## push the tradeID to the user.trades key
+            R.lpush keys.userTrades(uid), tid, (e, v) ->
                 if not e and v?
-                    next(tid)
+                    next tid
+
+
+getTradeUids = (uid, next) ->
+    k = keys.userTrades uid
+    R.lrange k, 0, -1, (err, val) ->
+        next val
+
+
+getTrades = (ids, next) ->
+    R.mget ids, (err, vals) ->
+        trades = {}
+        for id in ids
+            v = vals[ids.indexOf(id)]
+            trades[id.split(':').pop()] = v if v
+        next trades
