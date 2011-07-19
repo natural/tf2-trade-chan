@@ -3,6 +3,7 @@ openid = require 'openid'
 Cookies = require 'cookies'
 Keygrip = require 'keygrip'
 server = require 'socketstream/lib/utils/server.coffee'
+hashlib = require 'hashlib'
 
 
 exports.call = (request, response, next) ->
@@ -31,8 +32,19 @@ exports.call = (request, response, next) ->
         redirect response, c.success_path
 
     else if u.pathname == '/schema'
+
         SS.server.steam.schema (s) ->
-            server.deliver response, 200, 'text/javascript', JSON.stringify(s)
+            ss = JSON.stringify s
+            et = hashlib.md5(ss)
+            response.setHeader('ETag', et)
+            if request.headers['if-none-match'] == et
+                response.setHeader('Content-Length', 0)
+                rc = 304
+                rd = ''
+            else
+                rc = 200
+                rd = ss
+            server.deliver response, rc, 'text/javascript', rd
 
     else
         next()
