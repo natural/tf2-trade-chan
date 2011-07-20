@@ -4087,8 +4087,8 @@ quals = () ->
     m
 
 exports.actions =
-    allGroups: (cb) ->
-        cb groups
+    allGroups: () ->
+        groups
 
-    qualCycle: (cb) ->
-        cb quals()
+    qualCycle: () ->
+        quals()

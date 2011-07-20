@@ -47,9 +47,6 @@ exports.actions =
         else
             cb {}
 
-    schema: (cb) ->
-        steam.actions.schema cb
-
 
 clientConnect = (s) ->
     util.log "CONNECT user_id=#{s.user_id}"

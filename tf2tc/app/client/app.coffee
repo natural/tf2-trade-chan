@@ -34,7 +34,7 @@ bootUser = (ns) ->
         SS.server.app.backpack (backpack) ->
             oo.makeBackpack ns, backpack
             $('#backpack-msg').text 'Loading schema...'
-            $.getJSON '/schema', (schema) ->
+            getSchema (schema) ->
                 oo.makeSchema ns, schema
                 putBackpack ns, $('#backpack'), 25, 5, ->
                     $('#backpack-msg').slideUp().text('')
@@ -335,3 +335,11 @@ tradeChanged = (e, tc) ->
         $('a.clear-trade', tc).slideDown()
     else
         $('a.clear-trade', tc).slideUp()
+
+
+getSchema = (cb) ->
+    $.getJSON '/schema', cb
+
+
+getProfile = (id64, cb) ->
+    $.getJSON "/profile/#{id64}", cb

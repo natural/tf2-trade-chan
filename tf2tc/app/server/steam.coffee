@@ -11,11 +11,7 @@ exports.actions =
         o = urls.schema SS.config.local.steam_api_key
         schemaTweak = (d) ->
             d = JSON.parse d
-            ext.allGroups (gs) ->
-                d.ext = groups:gs
-                ext.qualCycle (qm) ->
-                    d.ext.quals = qm
-
+            d.ext = {groups:ext.allGroups(), quals:ext.qualCycle()}
             ks = (Number(k) for k, o of imgFixes)
             for k, n of d.result.items.item
                 if n.defindex in ks
@@ -30,9 +26,12 @@ exports.actions =
     profile: (params, cb) ->
         o = urls.profile params.id64, SS.config.local.steam_api_key
         get o, JSON.parse, (d) ->
-            profile = d.response.players.player[0]
-            profile.steamid = params.id64
-            cb(profile)
+            try
+                profile = d.response.players.player[0]
+                profile.steamid = params.id64
+                cb profile
+            catch err
+                cb {}
 
     status: (params, cb) ->
         o = urls.status params.id64
@@ -49,10 +48,10 @@ get = (opts, parse, cb) ->
     cachekey = "#{opts.host}#{opts.path}"
     R.get cachekey, (err, val) ->
         if val
-            #console.log 'cache hit', cachekey
+            console.log 'cache hit', cachekey
             cb if parse then parse val else val
         else
-            #console.log 'cache miss', cachekey
+            console.log 'cache miss', cachekey
             http.get opts, (res) ->
                 res.setEncoding 'utf8'
                 chunks = []
@@ -82,7 +81,7 @@ urls =
         host: 'api.steampowered.com'
         path: "/ISteamUser/GetPlayerSummaries/v0001/?key=#{key}&steamids=#{id64}"
         port: 80
-        ttl: 60*15
+        ttl: 60*2
 
     status: (id64) ->
         host: 'steamcommunity.com'
