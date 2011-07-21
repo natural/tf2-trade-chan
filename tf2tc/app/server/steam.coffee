@@ -45,13 +45,13 @@ exports.actions =
 
 
 get = (opts, parse, cb) ->
-    cachekey = "#{opts.host}#{opts.path}"
-    R.get cachekey, (err, val) ->
+    key = "#{opts.host}#{opts.path}"
+    R.get key, (err, val) ->
         if val
-            util.log "steam url get: cache hit  #{cachekey}"
-            cb if parse then parse val else val
+            util.log "steam data hit #{key}"
+            cb(if parse then parse val else val)
         else
-            util.log "steam url get: cache miss #{cachekey}"
+            util.log "steam data miss #{key}"
             req = http.get opts, (res) ->
                 res.setEncoding 'utf8'
                 chunks = []
@@ -59,10 +59,9 @@ get = (opts, parse, cb) ->
                     chunks.push(c)
                 res.on 'end', () ->
                     if res.statusCode == 200
-                        str = chunks.join('')
-                        R.set cachekey, str, (e, x) ->
-                            R.expire cachekey, opts.ttl
-                            cb if parse then parse str else str
+                        str = chunks.join ''
+                        R.setex key, str, opts.ttl, (e, x) ->
+                            cb(if parse then parse str else str)
                     else
                         cb ''
 

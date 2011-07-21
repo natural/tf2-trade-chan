@@ -298,9 +298,9 @@ div.quantity
 
 #usernav
   border-r(bord_w * 4)
-  border bord_w solid gray1
+  border bord_w solid gray6
+  background-color black
   padding bord_w * 4
-
 
 .button-bar a.small-button
   margin-right 1em
@@ -321,7 +321,7 @@ div.quantity
 #channelnav
   background-color darken(#a0a0a3, 10%)
   border-r(bord_w * 4)
-  border 1px dotted blue
+  border bord_w solid blk
   padding bord_w * 4
 
 #channel
@@ -332,6 +332,8 @@ div.quantity
   border bord_w solid blk
   color blk
   background-color wht
+
+#top, #main, #usernav, #channelnav, #channels
   margin-bottom (base_w / 2)
 
 
@@ -374,7 +376,7 @@ div.bpnav
   height item_h * 6
 
 .bpshell
-  padding bord_w
+  margin-top base_w
   text-align center
   width (item_w * 12) * 20
   height item_h * 6

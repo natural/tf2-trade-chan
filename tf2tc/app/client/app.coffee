@@ -1,48 +1,43 @@
 ## client app
+#
 
 
+## this is the namespace for the schema, backpack, and various stuff.
+## yes, it's a singleton, but we really don't use it that way.
+exports.ns = {}
+
+
+## this is the framework hook for initializing the app in the browser.
+## the routine initializes the app, fetches the schema, and attempts
+## an initial authorization.
 exports.init = ->
-    SS.server.app.init () ->
-        ns = initNS()
-        initJQ()
-        initEvents ns
-
+    SS.server.app.init ->
         msg = $('#message').text 'Loading schema...'
-
-        getSchema (s) ->
-            oo.makeSchema ns, schema
+        ns = exports.ns
+        initJQ jQuery
+        initEvents ns
+        getSchema ns, ->
             $('body').trigger 'schema-ready'
             msg.append('done.').delay(2000).slideUp()
-            SS.server.app.login document.cookie, (v) -> initUser(ns, v)
+            SS.server.app.login document.cookie, (status) ->
+                ns.auth = status.success
+                (if status.success then bootUser else bootAnon)(ns)
 
 
-initUser = (ns, status) ->
-    ns.auth = status.success
-    (if status.success then bootUser else bootAnon)(ns)
-
-
-bootAnon = (ns) ->
+bootAnon = ->
     $('#login').show()
 
 
 bootUser = (ns) ->
     SS.server.app.userProfile (data) ->
         $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
-        showPlayerToolbar()
-
-
-a__bootUser = (ns) ->
-    SS.server.app.userProfile (data) ->
-        $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
-        $('#backpack-msg').text 'Loading backpack...'
-        $('body').bind 'trade-changed', tradeChanged
-        SS.server.app.backpack (backpack) ->
-            oo.makeBackpack ns, backpack
-            $('#backpack-msg').text 'Loading schema...'
-            getSchema (schema) ->
-                oo.makeSchema ns, schema
-                putBackpack ns, $('#backpack'), 25, 5, ->
-                    $('#backpack-msg').slideUp().text('')
+        $('#usernav').delay(500).slideDown()
+        $('#backpack').bind 'lazy-load', (e) ->
+            bp = $ this
+            getBackpack data.profile.steamid, ns, (backpack) ->
+                putBackpack ns, $('.bpshell', bp), 50, 10, ->
+                    $('.msg', bp).fadeOut()
+                    initBackpackNav()
                     SS.server.trades.userTrades {}, (trades) ->
                         putTrades ns, trades, $('#trades'), ->
                             configBackpack $('#backpack'), $('#trades')
@@ -91,10 +86,10 @@ makeItemProps = (ns, defn) ->
                 (n for n in x when n.defindex==id)[0]
             catch e
                 null
-    equipped: () ->
+    equipped: ->
         (defn.inventory & 0xff0000) != 0
 
-    tag: () ->
+    tag: ->
         if defn.custom_desc and defn.custom_name
             '5020-5044'
         else if defn.custom_name
@@ -102,11 +97,11 @@ makeItemProps = (ns, defn) ->
         else if defn.custom_desc
             '5044'
 
-    paint: () ->
+    paint: ->
         p = selectAttr(142)
         if p then p.float_value else null
 
-    effect: () ->
+    effect: ->
         if defn.defindex==143
             99
         else if defn.defindex==1899
@@ -115,7 +110,7 @@ makeItemProps = (ns, defn) ->
             e = selectAttr(134)
             if e then e.float_value else null
 
-    useCount: () ->
+    useCount: ->
         if defn.defindex in (t.defindex for t in ns.schema_tools()) or defn.defindex in (t.defindex for t in ns.schema_actions())
             defn.quantity
 
@@ -351,83 +346,73 @@ tradeChanged = (e, tc) ->
         $('a.clear-trade', tc).slideUp()
 
 
-getSchema = (cb) ->
-    if window.schema?
-        cb window.schema
+exports.getSchema = getSchema = (ns, cb) ->
+    if ns.schema?
+        cb ns.schema
     else
         $.getJSON '/schema', (s) ->
-            window.schema = s
-            cb s
+            SS.client.util.makeSchema ns, s
+            cb ns.schema
 
 getProfile = (id64, cb) ->
     $.getJSON "/profile/#{id64}", cb
 
 
-showPlayerToolbar = () ->
-    $('#usernav').delay(500).slideDown()
+getBackpack = (id64, ns, cb) ->
+    if ns.backpack?
+        cb ns.backpack
+    else
+        $.getJSON "/items/#{id64}", (b) ->
+            SS.client.util.makeBackpack ns, b
+            cb ns.backpack
 
 
-initJQ = () ->
-    jQuery.fn.resetQualityClasses = (v) ->
-        this.each () ->
+initJQ = ($) ->
+    $.fn.resetQualityClasses = (v) ->
+        this.each ->
             for q in [0..20]
                 $(this).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
             $(this).addClass(v)
 
 
 initEvents = (ns) ->
-    $('div.item:not(:empty)').live 'mouseover', {ns:ns}, SS.client.itemtip.show
-    $('div.item:not(:empty)').live 'mouseout', {ns:ns}, SS.client.itemtip.hide
-
-    $('#backpack').bind 'data-load', (e) ->
-        bp = $ this
-        bp.attr('data-load', true)
-        console.log 'backpack on data-load'
-        SS.server.app.backpack (backpack) ->
-           oo.makeBackpack playerNS, backpack
-           putBackpack playerNS, $('.bpshell', bp), 50, 10, ->
-                $('.msg', bp).slideUp()
-                backpackNav $('#backpack .bpshell'), $('#backpack .bpnav'), $('#backpack .bpscroll')
-
-    $('#usernav a').click () ->
+    $('body').bind 'trade-changed', tradeChanged
+    $('div.item:not(:empty)').live 'mouseover', {namespace:ns}, SS.client.itemtip.show
+    $('div.item:not(:empty)').live 'mouseout', {namespace:ns}, SS.client.itemtip.hide
+    $('#usernav a').click ->
         target = $ $(this).attr('data-target')
         target.slideToggle()
-        target.trigger('data-load') if not target.attr('data-load')
+        if not target.attr('data-load')
+            target.attr('data-load', true).trigger('lazy-load')
         false
 
 
-initNS = () ->
-    window.oo = SS.client.util if not window.oo?
-    window.playerNS = {} if not window.playerNS?
-    window.playerNS
-
+initBackpackNav = ->
+    c = $ '#backpack'
+    backpackNav $('.bpshell', c), $('.bpnav', c), $('.bpscroll', c)
 
 
 backpackNav = (pageContext, buttonContext, scrollContext) ->
-    pages = $('.page', pageContext)
+    pages = $ '.page', pageContext
     pageCount = pages.length
     pageCurrent = 1
-    w = 920
 
-    nonPrev = $('.non.prev', buttonContext)
-    navPrev = $('.nav.prev', buttonContext)
-    nonNext = $('.non.next', buttonContext)
-    navNext = $('.nav.next', buttonContext)
-
-    navCount = $('.count', buttonContext)
-
-    console.log nonPrev, navPrev, nonNext, navNext
-
+    nonPrev = $ '.non.prev', buttonContext
+    navPrev = $ '.nav.prev', buttonContext
+    nonNext = $ '.non.next', buttonContext
+    navNext = $ '.nav.next', buttonContext
+    navCount = $ '.count', buttonContext
 
     navigate = (offset) ->
         if ((pageCurrent + offset) > 0) and (pageCurrent + offset <= pageCount)
             pageCurrent += offset
+            w = pages.width()
             scrollContext.animate({scrollLeft: w * (pageCurrent-1)})
             navCount.text "#{pageCurrent}/#{pageCount}"
             updateButtons()
         false
 
-    updateButtons = () ->
+    updateButtons = ->
         if pageCurrent == 1
             nonPrev.show()
             navPrev.hide()
@@ -441,7 +426,7 @@ backpackNav = (pageContext, buttonContext, scrollContext) ->
             nonNext.hide()
             navNext.show()
 
-    navPrev.click () -> navigate -1
-    navNext.click () -> navigate  1
+    navPrev.click -> navigate -1
+    navNext.click -> navigate  1
     navigate 0
 
