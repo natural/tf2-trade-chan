@@ -60,7 +60,7 @@ get = (opts, parse, cb) ->
                 res.on 'end', () ->
                     if res.statusCode == 200
                         str = chunks.join ''
-                        R.setex key, str, opts.ttl, (e, x) ->
+                        R.setex key, opts.ttl, str, (e, x) ->
                             cb(if parse then parse str else str)
                     else
                         cb ''
