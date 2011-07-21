@@ -1,8 +1,8 @@
-## client tooltip
+## client itemtip
 
 
 exports.hide = (e) ->
-    $('#tooltip').hide()
+    $('#itemtip').hide()
 
 
 exports.show = (e) ->

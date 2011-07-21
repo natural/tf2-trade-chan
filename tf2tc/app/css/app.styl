@@ -1,129 +1,84 @@
 @import 'helpers'
 @import 'fonts'
 
-bg-black = #000
-dark-gray = #222
-medium-gray = #5c5c5c
-light-gray = #aaa
 
-s1 = 3px
-s2 = 6px
-s3 = 9px
-s4 = 12px
-s6 = 18px
-s8 = 24px
-
-iw1 = 90px
+blk = #000
+wht = #fff
+gray1 = #202020
+gray2 = #404040
+gray3 = #606060
+gray4 = #808080
+gray5 = #a0a0a0
+gray6 = #c0c0c0
+gray7 = #e0e0e0
 
 
-iw = 80px
-ih = iw * 0.85
 
+item_w = 80px
+item_h = item_w * 0.85
+base_w = 12px
+bord_w = (base_w / 4)
+
+
+pal_brown1 = #F6E7DE
+pal_brown2 = #DABDAB
+pal_brown3 = #C1A18A
+pal_brown4 = #6A4534
+pal_brown5 = #452C25
+
+pal_orange1 = #F8B98A
+pal_orange2 = #F5AD87
+pal_orange3 = #EF9849
+pal_orange4 = #F18149
+
+pal_red1 = #913A1F
+pal_red2 = #BD3A3A
+pal_red3 = #9D302F
+
+
+pal_gray1 = #454545
+pal_gray2 = #1F1F1F
+
+pal_blue1 = #768A88
+pal_blue2 = #5B7A8C
+pal_blue3 = #385C78
 
 body, html
   height 100%
+  padding (base_w / 2)
+
 
 body
-  color white
-  background-color light-gray
+  color gray7
+  background-color gray2
   font-family "TF2secondary"
-  font-size s6
-  padding s4
 
-p
-  margin-bottom s4
 
+h1, h2, h3, h4
+  font-family "TF2Build"
 
 h1
-  font-size s8 * 1.5
-  font-family "TF2Build"
-
-h2
-  font-size s8
-  font-family "TF2Build"
-  margin 0
-  padding 0
-
-
-h3
-  font-size s6 + 2
-  font-family "TF2Build"
-  margin 0
-  padding 0
-  color lighten(medium-gray, 25%)
-
-h4
-  font-size s6 - 2
-  font-family "TF2Build"
-  margin 0
-  padding 0
-  color darken(medium-gray, 25%)
-
+  font-size 125%
 
 a, a:visited, a:active, a:hover
   color white
   text-decoration none
 
 
-.pb1
-  padding-bottom s4
-
-.mt1
-  margin-top s4
-
-.mt2
-  margin-top s8
-
-
-
-
-
-
-
-
-
-#backpack, #trades, #chooser
-  overflow-y scroll
-  background-color black
-  padding-right s8
-  margin-right s8
-  padding s4
-  border-r(s4)
-
-.w
-  padding s4
-  background-color black
-  border-r(s4*1.5)
-
-.w100
-  width 100%
-
-.w30
-  width 30%
 
 #backpack-container, #chooser-container, #trades-container
-  border s1 solid dark-gray
-  border-r(s4)
-  padding s4
-  background-color medium-gray
+  background-color black
 
 #backpack-container, #chooser-container
-  margin-right s8
-  margin-bottom s8
-
-#chooser, #backpack
-  height s8 * 12
-
-#trades
-  height s3 * 81
+  margin 0
 
 
 div.row
-  height ih + s4
+  height item_h + base_w
 
 
 div.row.bot
-   margin-bottom s6
+   margin-bottom base_w * 1.5
 
 
 div.itemw
@@ -131,36 +86,36 @@ div.itemw
 
 div.item
   display inline-block
-  border s1 solid dark-gray
-  border-r(s4)
-  width iw
-  height ih
+  border bord_w solid gray1
+  border-r(base_w)
+  width item_w
+  height item_h
   vertical-align top
-  margin-right s2
+  margin-right bord_w * 2
 
 
 div.item:hover:not(:empty)
-  border 3px solid medium-gray
+  border 3px solid gray5
   background-color white
 
 
 div.outline
-  border 3px solid medium-gray
-  background-color dark-gray
+  border 3px solid gray5
+  background-color gray2
 
 
 div.untradable
-  background-color dark-gray
+  background-color gray2
 
 
-#tooltip .untradable
+#itemtip .untradable
   background-color inherit
 
 
 div.item img
   border none
-  width iw - s2
-  height iw - s2
+  width item_w - bord_w * 2
+  height item_w - bord_w * 2
 
 
 qual(1,  #4d7455, #3a5840) // genuine
@@ -177,86 +132,48 @@ qual(11, #cd9b1d, #423618) // strange
 .z-top
   z-index 9000
 
-#tooltip
+#itemtip
   opacity(0.95)
-  background-color dark-gray
-  border s1 - 1 solid #ccc
-  border-r(s1 * 3)
-  padding s8
-  margin s4
+  background-color gray2
+  border bord_w - 1 solid #ccc
+  border-r(bord_w * 3)
+  padding base_w * 2
+  margin base_w
   position absolute
   text-align center
   z-index 9000
   overflow hidden
 
 
-#tooltip div
+#itemtip div
   font-family "TF2secondary"
 
-#tooltip .name
+#itemtip .name
   font-family "TF2Build"
 
-#tooltip .level
+#itemtip .level
   color #756b5e
 
-#tooltip .ctrl
+#itemtip .ctrl
   color #fff
   text-align left
   font-family Andale Mono, monospace
   font-size: 0.75em
 
-#tooltip .alt
+#itemtip .alt
   color #e4dbc4
   white-space nowrap
 
-#tooltip .positive, #tooltip .crafter
+#itemtip .positive, #itemtip .crafter
   color #8dbceb
 
-#tooltip .negative
+#itemtip .negative
   color #eb3b3b
 
-#tooltip .limiteduse
+#itemtip .limiteduse
   color green
 
 
-
-#message
-  text-align left
-#user-tools
-  text-align right
-
-
-#login img
-  vertical-align middle
-
-
-
-div.trade
-  padding-bottom s8
-  padding-right s8
-
-.pl1
-  padding-left s4
-
-
-.center
-  width 100%
-  text-align center
-
-.text-center
-  text-align center
-
-
-.valign-top
-  vertical-align top
-
-
-.p1
-  padding 1em
-
-
-.notes
-  height 70px
 
 
 .deco
@@ -331,7 +248,7 @@ eff(99) // earbuds
 div.badge
   background-color #fff
   font-family "TF2secondary"
-  color dark-gray
+  color gray2
   border-r(6px)
   font-size 8pt
   position absolute
@@ -348,84 +265,116 @@ div.quantity
   left 3px
 
 
-.button, .small-button
-  background-color medium-gray
-  border-bottom none !important
-  border-r(0.25em)
-  color lighten(medium-gray, 75%)
+.button, .small-button, .nav-button
+  background-color black
+  border-r(0.35em)
+  color lighten(black, 75%)
   font-family "TF2Build"
-  height 1.5em
-  line-height 1.5em
-  padding 0.6em 0.75em 0.6em 0.75em
   text-align center
   vertical-align middle
   white-space nowrap !important
+  display inline-block
+  padding 0.5em
+  background -moz-linear-gradient(top, #dcd2ba, #9a8b6b)
+  background -webkit-gradient(linear, left top, left bottom, from(#dcd2ba), to(#9a8b6b))
 
 
 .button:hover, .small-button:hover
-  background-color #924738
-  color light-gray
-
+  background-color pal_red3
+  background-color #512a20
+  background  -moz-linear-gradient(top, #995040, #512a20)
+  background  -webkit-gradient(linear, left top, left bottom, from(#995040), to(#512a20))
 
 
 .button:active, .small-button:active
-  color dark-gray
-
+  color lighten(black, 50%)
 
 .small-button
-  font-size 90%
-  height 1em
-  line-height 1em
-  padding 0.35em 1.5em 0.25em 1.5em
+  font-size 80%
+  color white
+
+.nav-button
+  font-size 200%
+
+#usernav
+  border-r(bord_w * 4)
+  border bord_w solid gray1
+  padding bord_w * 4
+
+
+.button-bar a.small-button
+  margin-right 1em
+
+
+#backpack, #trades
+  color wht
+  background-color blk
+  position relative
+  overflow hidden
+
+
+#trades
+  background-color darken(#a0a0a3, 5%)
 
 
 
+#channelnav
+  background-color darken(#a0a0a3, 10%)
+  border-r(bord_w * 4)
+  border 1px dotted blue
+  padding bord_w * 4
+
+#channel
+
+#top
+  border-r(bord_w * 3)
+  padding bord_w * 3
+  border bord_w solid blk
+  color blk
+  background-color wht
+  margin-bottom (base_w / 2)
 
 
-.pt1
-  padding-top s4
-
-.m1
-  margin s4
-
-.m2
-  margin s8
-
-.mr1
-  margin-right s4
+.msg
+  height 2em
 
 
-.pr1
-  padding-right s4
+div.bpnav
+  line-height 2em
 
+  div, a
+    height 1.5em
+    width 1.5em
+    font-family "TF2Build"
+    vertical-align middle
+    text-align center
+    line-height 1.5em
+    display inline-block
 
+  .non, .nav
+    background-color pal_red1
+    border-r(0.25em)
 
-.mb1
-  margin-bottom s4
+  .non
+    color pal_gray2
 
-
-.mb05
-  margin-bottom s2
-
-
-.dbg-brd
-  border 1px dotted yellow
+  .count
+    width 4em
 
 
 
-.trade-notes
-  margin 0
-  width 100%
+.page
+  display inline-block
+  float left
+  white-space nowrap !important
 
-.trade-notes textarea
-  height 12em
-  width 100%
+.bpscroll
+  overflow hidden
+  width 920px
+  height item_h * 6
 
-
-
-
-.invis
-  opacity(0)
-
-.vis
-  opacity(1)
+.bpshell
+  padding bord_w
+  text-align center
+  width (item_w * 12) * 20
+  height item_h * 6

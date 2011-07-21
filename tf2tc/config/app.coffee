@@ -41,7 +41,7 @@ exports.config =
     provider_url: 'https://steamcommunity.com/openid/'
 
   keygrip:
-    keys: JSON.parse( fs.readFileSync('cookie_keys.nodist', 'utf8') )
+    keys: JSON.parse fs.readFileSync('cookie_keys.nodist', 'utf8')
 
   local:
     steam_api_key: fs.readFileSync('steam_api_key.nodist', 'utf8')

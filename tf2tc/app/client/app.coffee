@@ -1,25 +1,24 @@
 ## client app
 
-## TODO:  add better feedback during auth load.
 
 exports.init = ->
-    SS.server.app.init (msg) ->
-        $('#message').text msg
-        boot()
+    SS.server.app.init () ->
+        ns = initNS()
+        initJQ()
+        initEvents ns
 
-boot = ->
-    window.oo = SS.client.util
-    window.playerNS = playerNS = {}
-    jQuery.fn.resetQualityClasses = (v) ->
-        this.each () ->
-            for q in [0..20]
-                $(this).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
-            $(this).addClass(v)
+        msg = $('#message').text 'Loading schema...'
 
-    $('div.item:not(:empty)').live 'mouseover', {ns:playerNS}, SS.client.tooltip.show
-    $('div.item:not(:empty)').live 'mouseout', {ns:playerNS}, SS.client.tooltip.hide
-    SS.server.app.login document.cookie, (r) ->
-        (if r.success then bootUser else bootAnon)(playerNS)
+        getSchema (s) ->
+            oo.makeSchema ns, schema
+            $('body').trigger 'schema-ready'
+            msg.append('done.').delay(2000).slideUp()
+            SS.server.app.login document.cookie, (v) -> initUser(ns, v)
+
+
+initUser = (ns, status) ->
+    ns.auth = status.success
+    (if status.success then bootUser else bootAnon)(ns)
 
 
 bootAnon = (ns) ->
@@ -27,6 +26,12 @@ bootAnon = (ns) ->
 
 
 bootUser = (ns) ->
+    SS.server.app.userProfile (data) ->
+        $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
+        showPlayerToolbar()
+
+
+a__bootUser = (ns) ->
     SS.server.app.userProfile (data) ->
         $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
         $('#backpack-msg').text 'Loading backpack...'
@@ -58,7 +63,7 @@ putChooser = (ns, target, cb) ->
         $('.chooser-group:last', target)
     put = (items) ->
         i = 0
-        target.append makeItemRow()
+        target.append makeItemPage()
         row = $ 'div.row:last', target
         cols = 5
         page_size = 25
@@ -66,7 +71,7 @@ putChooser = (ns, target, cb) ->
             makeItem ns, item, row, 'chooser'
             i += 1
             if !(i % cols) and i < items.length
-                target.append makeItemRow()
+                target.append makeItemPage()
                 row = $ 'div.row:last', target
 
     put (clone(x, 6) for x in grp.commodities), add('Commodities')
@@ -114,8 +119,8 @@ makeItemProps = (ns, defn) ->
         if defn.defindex in (t.defindex for t in ns.schema_tools()) or defn.defindex in (t.defindex for t in ns.schema_actions())
             defn.quantity
 
+makeItemPage = -> '<div class="page"></div>'
 makeItemRow = -> '<div class="row"></div>'
-
 
 makeItem = (ns, defn, target, type) ->
     if defn
@@ -167,16 +172,25 @@ putBackpack = (ns, target, page_size, cols, cb) ->
     i = 0
     items = ns.backpack.result.items.item
     slots = ns.backpack.result.num_backpack_slots
-    target.append makeItemRow()
-    row = $ 'div.row:last', target
+
+    target.append makeItemPage()
+    page = $ 'div.page:last', target
+
+    page.append makeItemRow()
+    row = $ 'div.row:last', page
+
     for slot in [1..slots]
         item = ns.backpack_items[slot]
         makeItem ns, item, row, 'backpack'
         i += 1
         if !(i % cols) and slot < slots
-            row.addClass 'bot' if !(i % page_size)
-            target.append makeItemRow()
-            row = $ 'div.row:last', target
+            if !(i % page_size)
+                target.append makeItemPage()
+                page = $ 'div.page:last', target
+            page.append makeItemRow()
+            row = $ 'div.row:last', page
+    ## if showFirst...
+    $('div.page:first', target).removeClass('null')
     cb()
 
 
@@ -227,10 +241,10 @@ configChooser = (source, target) ->
         id = a.data('item-defn').id
         r = b.clone(false, false)
         b.replaceWith c
-        SS.client.tooltip.hide()
+        SS.client.itemtip.hide()
         $('body').trigger 'trade-changed', t
         c.dblclick (e) ->
-            SS.client.tooltip.hide()
+            SS.client.itemtip.hide()
             c.replaceWith r
             r.droppable dropOpts
             $('body').trigger 'trade-changed', t
@@ -275,10 +289,10 @@ configBackpack = (source, target) ->
         id = a.data('item-defn').id
         r = b.clone(false, false)
         b.replaceWith c
-        SS.client.tooltip.hide()
+        SS.client.itemtip.hide()
         $('body').trigger 'trade-changed', t
         c.dblclick (e) ->
-            SS.client.tooltip.hide()
+            SS.client.itemtip.hide()
             c.replaceWith r
             r.droppable dropOpts
             ids = t.data 'ids'
@@ -338,8 +352,96 @@ tradeChanged = (e, tc) ->
 
 
 getSchema = (cb) ->
-    $.getJSON '/schema', cb
-
+    if window.schema?
+        cb window.schema
+    else
+        $.getJSON '/schema', (s) ->
+            window.schema = s
+            cb s
 
 getProfile = (id64, cb) ->
     $.getJSON "/profile/#{id64}", cb
+
+
+showPlayerToolbar = () ->
+    $('#usernav').delay(500).slideDown()
+
+
+initJQ = () ->
+    jQuery.fn.resetQualityClasses = (v) ->
+        this.each () ->
+            for q in [0..20]
+                $(this).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
+            $(this).addClass(v)
+
+
+initEvents = (ns) ->
+    $('div.item:not(:empty)').live 'mouseover', {ns:ns}, SS.client.itemtip.show
+    $('div.item:not(:empty)').live 'mouseout', {ns:ns}, SS.client.itemtip.hide
+
+    $('#backpack').bind 'data-load', (e) ->
+        bp = $ this
+        bp.attr('data-load', true)
+        console.log 'backpack on data-load'
+        SS.server.app.backpack (backpack) ->
+           oo.makeBackpack playerNS, backpack
+           putBackpack playerNS, $('.bpshell', bp), 50, 10, ->
+                $('.msg', bp).slideUp()
+                backpackNav $('#backpack .bpshell'), $('#backpack .bpnav'), $('#backpack .bpscroll')
+
+    $('#usernav a').click () ->
+        target = $ $(this).attr('data-target')
+        target.slideToggle()
+        target.trigger('data-load') if not target.attr('data-load')
+        false
+
+
+initNS = () ->
+    window.oo = SS.client.util if not window.oo?
+    window.playerNS = {} if not window.playerNS?
+    window.playerNS
+
+
+
+backpackNav = (pageContext, buttonContext, scrollContext) ->
+    pages = $('.page', pageContext)
+    pageCount = pages.length
+    pageCurrent = 1
+    w = 920
+
+    nonPrev = $('.non.prev', buttonContext)
+    navPrev = $('.nav.prev', buttonContext)
+    nonNext = $('.non.next', buttonContext)
+    navNext = $('.nav.next', buttonContext)
+
+    navCount = $('.count', buttonContext)
+
+    console.log nonPrev, navPrev, nonNext, navNext
+
+
+    navigate = (offset) ->
+        if ((pageCurrent + offset) > 0) and (pageCurrent + offset <= pageCount)
+            pageCurrent += offset
+            scrollContext.animate({scrollLeft: w * (pageCurrent-1)})
+            navCount.text "#{pageCurrent}/#{pageCount}"
+            updateButtons()
+        false
+
+    updateButtons = () ->
+        if pageCurrent == 1
+            nonPrev.show()
+            navPrev.hide()
+        else
+            nonPrev.hide()
+            navPrev.show()
+        if pageCurrent == pageCount
+            nonNext.show()
+            navNext.hide()
+        else
+            nonNext.hide()
+            navNext.show()
+
+    navPrev.click () -> navigate -1
+    navNext.click () -> navigate  1
+    navigate 0
+

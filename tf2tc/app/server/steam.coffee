@@ -1,7 +1,7 @@
 ## steam apis
-
-
+#
 http = require('http')
+util = require('util')
 libxmljs = require('libxmljs')
 ext = require('./schema_ext').actions
 
@@ -48,20 +48,24 @@ get = (opts, parse, cb) ->
     cachekey = "#{opts.host}#{opts.path}"
     R.get cachekey, (err, val) ->
         if val
-            console.log 'cache hit', cachekey
+            util.log "steam url get: cache hit  #{cachekey}"
             cb if parse then parse val else val
         else
-            console.log 'cache miss', cachekey
-            http.get opts, (res) ->
+            util.log "steam url get: cache miss #{cachekey}"
+            req = http.get opts, (res) ->
                 res.setEncoding 'utf8'
                 chunks = []
                 res.on 'data', (c) ->
                     chunks.push(c)
                 res.on 'end', () ->
-                    str = chunks.join('')
-                    R.set cachekey, str, (e, x) ->
-                        R.expire cachekey, opts.ttl
-                        cb if parse then parse str else str
+                    if res.statusCode == 200
+                        str = chunks.join('')
+                        R.set cachekey, str, (e, x) ->
+                            R.expire cachekey, opts.ttl
+                            cb if parse then parse str else str
+                    else
+                        cb ''
+
 
 
 urls =

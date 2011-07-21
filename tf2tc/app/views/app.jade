@@ -6,7 +6,7 @@ html(lang="en")
     != SocketStream
     title TF2 Trade Chan
   body
-    #tooltip.null
+    #itemtip.null
       div.name
       div.level
       div.crafter
@@ -19,45 +19,46 @@ html(lang="en")
       div.untradable
       div.ctrl
 
+  #main
+      #top
+        h1 tf2 trade chan
+        #message
 
-    div.w49.float-left
-      h1 tf2 trade chan
-      #message
-    #user-tools.w49.float-right
-      span#login.null
-        | Safe and Secure Login with Steam
-        a(href='/authenticate')
-          img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png')
-      span#logout.null
-        a.small-button(href='/logout') logout
-    .clear-both
+        span#login.null
+          | Safe and Secure Login with Steam
+          a(href='/authenticate')
+            img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png', height=23, width=154)
+        span#logout.null
+          a.small-button(href='/logout') logout
+
+    #usernav.button-bar.null
+      a(href="#", class="small-button", data-target="#backpack", data-loaded="") Backpack
+      a(href="#", class="small-button", data-target="#trades", data-loaded="") Trades
+
+      #backpack.null
+        .msg Loading...
+        .bpscroll
+          .bpshell
+        .bpnav
+          a.nav.prev(href="#") &lt;
+          .non.prev &lt;
+          div.count
+          a.nav.next(href="#") &gt;
+          .non.next &gt;
+
+      #trades.null
+        | Hello, this is #trades.
+
+    #channelnav.button-bar
+      a(href="#", class="small-button", data-channel-name="commodities") Commodites
+      a(href="#", class="small-button", data-channel-name="promos") Promos
+      a(href="#", class="small-button", data-channel-name="unusual_hats") Unusual Hats
+      a(href="#", class="small-button", data-channel-name="vintage_hats") Vintage Hats
+
+    #channel
+      | this is the channel area
 
 
-    table#user-container.null
-      tr
-        td
-          #backpack-container
-            h2#backpack-title your backpack
-            .sw
-              #backpack-help.pb1 Drag items into your trades.  Double-click works, too.
-              #backpack-msg
-              .w
-                #backpack
-        td(rowspan=2)
-          #trades-container
-            h2#trades-title your trades
-            .sw
-              #trades-help.pb1
-                | Remove items by double click.  Cycle wishlist item quality with single click.
-              #trades-msg
-              .w
-                #trades
-      tr
-        td
-          #chooser-container
-            h2#chooser-title more stuff
-            .sw
-              #chooser-help.pb1 Drag items you want into your trades.  Double-click works, too.
-              #chooser-msg
-              .w
-                #chooser
+
+
+
