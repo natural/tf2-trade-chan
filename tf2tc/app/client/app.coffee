@@ -58,15 +58,15 @@ putChooser = (ns, target, cb) ->
         $('.chooser-group:last', target)
     put = (items) ->
         i = 0
-        target.append makeItemPage()
+        target.append SS.client.item.page()
         row = $ 'div.row:last', target
         cols = 5
         page_size = 25
         for item in items
-            makeItem ns, item, row, 'chooser'
+            SS.client.item.make ns, item, row, 'chooser'
             i += 1
             if !(i % cols) and i < items.length
-                target.append makeItemPage()
+                target.append SS.client.item.page()
                 row = $ 'div.row:last', target
 
     put (clone(x, 6) for x in grp.commodities), add('Commodities')
@@ -78,111 +78,26 @@ putChooser = (ns, target, cb) ->
     cb()
 
 
-makeItemProps = (ns, defn) ->
-    selectAttr = (id) ->
-        if defn.attributes
-            x = (n for n in defn.attributes.attribute)
-            try
-                (n for n in x when n.defindex==id)[0]
-            catch e
-                null
-    equipped: ->
-        (defn.inventory & 0xff0000) != 0
-
-    tag: ->
-        if defn.custom_desc and defn.custom_name
-            '5020-5044'
-        else if defn.custom_name
-            '5020'
-        else if defn.custom_desc
-            '5044'
-
-    paint: ->
-        p = selectAttr(142)
-        if p then p.float_value else null
-
-    effect: ->
-        if defn.defindex==143
-            99
-        else if defn.defindex==1899
-            20
-        else
-            e = selectAttr(134)
-            if e then e.float_value else null
-
-    useCount: ->
-        if defn.defindex in (t.defindex for t in ns.schema_tools()) or defn.defindex in (t.defindex for t in ns.schema_actions())
-            defn.quantity
-
-makeItemPage = -> '<div class="page"></div>'
-makeItemRow = -> '<div class="row"></div>'
-
-makeItem = (ns, defn, target, type) ->
-    if defn
-        v = "<div class='itemw'>
-               <div class='item #{type}'>
-                 <img src='#{ns.schema_items[defn.defindex].image_url}' />
-               </div>
-             </div>"
-        target.append v
-    else
-        v = '<div class="itemw"><div class="item" /></div>'
-        target.append v
-        return
-
-    props = makeItemProps ns, defn
-    item = $ 'div.item:last', target
-    item.data 'item-defn', defn
-    item.data 'schema-defn', ns.schema_items[defn.defindex]
-    item.addClass "qual-border-#{defn.quality or 6} qual-hover-#{defn.quality or 6}"
-    item.addClass "untradable" if defn.flag_cannot_trade
-    img = $ 'img', item
-
-    ## name tag and/or desc tag icon
-    tag = props.tag()
-    img.wrap "<div class='deco tag tag-#{tag}' />" if tag
-
-    ## paint jewel
-    jewel = props.paint()
-    img.wrap "<div class='deco jewel jewel-#{jewel}' />" if jewel
-
-    ## equipped badge
-    equip = props.equipped()
-    if equip
-        img.wrap '<div class="deco" />'
-        img.parent().append '<div class="badge equipped">Equipped</div>'
-
-    ## use count badge
-    count = props.useCount()
-    if count?
-        img.wrap '<div class="deco" />'
-        img.parent().append "<div class='badge quantity'>#{count}</div>"
-
-    ## effect bg
-    effect = props.effect()
-    img.wrap "<div class='deco effect effect-#{effect}' />" if effect
-
-
 putBackpack = (ns, target, page_size, cols, cb) ->
     i = 0
     items = ns.backpack.result.items.item
     slots = ns.backpack.result.num_backpack_slots
 
-    target.append makeItemPage()
+    target.append SS.client.item.page()
     page = $ 'div.page:last', target
 
-    page.append makeItemRow()
+    page.append SS.client.item.row()
     row = $ 'div.row:last', page
 
     for slot in [1..slots]
         item = ns.backpack_items[slot]
-        makeItem ns, item, row, 'backpack'
+        SS.client.item.make ns, item, row, 'backpack'
         i += 1
         if !(i % cols) and slot < slots
             if !(i % page_size)
-                target.append makeItemPage()
+                target.append SS.client.item.page()
                 page = $ 'div.page:last', target
-            page.append makeItemRow()
+            page.append SS.client.item.row()
             row = $ 'div.row:last', page
     ## if showFirst...
     $('div.page:first', target).removeClass('null')
@@ -405,9 +320,14 @@ backpackNav = (pageContext, buttonContext, scrollContext) ->
 
     navigate = (offset) ->
         if ((pageCurrent + offset) > 0) and (pageCurrent + offset <= pageCount)
+            prev = pageCurrent
+            newM = pages.width() * (if offset>0 then -1 else 1)
             pageCurrent += offset
-            w = pages.width()
-            scrollContext.animate({scrollLeft: w * (pageCurrent-1)})
+
+            $(pages[prev - 1]).animate {marginLeft:newM}, 200, () ->
+                $(pages[prev - 1]).hide()
+                $(pages[pageCurrent - 1]).show().animate {marginLeft:0}, 200
+
             navCount.text "#{pageCurrent}/#{pageCount}"
             updateButtons()
         false

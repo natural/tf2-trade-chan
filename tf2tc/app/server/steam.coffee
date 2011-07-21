@@ -1,22 +1,25 @@
 ## steam apis
 #
-http = require('http')
-util = require('util')
-libxmljs = require('libxmljs')
-ext = require('./schema_ext').actions
+
+http = require 'http'
+util = require 'util'
+libxmljs = require 'libxmljs'
+ext = require './schema_ext'
 
 
 exports.actions =
     schema: (cb) ->
         o = urls.schema SS.config.local.steam_api_key
         schemaTweak = (d) ->
-            d = JSON.parse d
-            d.ext = {groups:ext.allGroups(), quals:ext.qualCycle()}
-            ks = (Number(k) for k, o of imgFixes)
-            for k, n of d.result.items.item
+            sch = JSON.parse d
+            sch.ext =
+                groups: ext.actions.allGroups()
+                quals: ext.actions.qualCycle()
+            ks = (Number(k) for k, j of imgFixes)
+            for k, n of sch.result.items.item
                 if n.defindex in ks
                     n.image_url = imgFixes[n.defindex]
-            d
+            sch
         get o, schemaTweak, cb
 
     items: (params, cb) ->
