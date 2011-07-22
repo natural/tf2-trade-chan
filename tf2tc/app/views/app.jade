@@ -23,19 +23,31 @@ html(lang="en")
            #view.unit.size4of5
                 #user.null
                     .button-bar
-                        a(href="#", class="small-button", data-target="#backpack", data-loaded="") Backpack +
-                        a(href="#", class="small-button", data-target="#trades", data-loaded="") Trades +
-                    #backpack.null
-                        .msg Loading...
+                        a(href="#", class="small-button", data-target="#backpack", data-loaded="") Backpack
+                        a(href="#", class="small-button", data-target="#trades", data-loaded="") Trades
+                        span.msg
                         | Filter:&nbsp;
                         select.bpfilters
                             option(data-filter="*") All
-                            option(data-filter=".vintage") Vintage
-                            option(data-filter=".unusual") Unusual
-                            option(data-filter=".genuine") Genuine
-                            option(data-filter=".strange") Strange
-                            option(data-filter=".wearable") Hats+Wearables
+                            option(data-filter=".commodity") Commodities
+                            option(data-filter=".promo") Promos
+                            option(data-filter=".wearable") Hats and Wearables
                             option(data-filter=".weapon") Weapons
+                            option(data-filter="") ---
+                            option(data-filter=".vintage") Vintage - All
+                            option(data-filter=".vintage.wearable") Vintage - Hats
+                            option(data-filter=".vintage.weapon") Vintage - Weapons
+                            option(data-filter="") ---
+                            option(data-filter=".unusual") Unusual - All
+                            option(data-filter=".unusual.wearable") Unusual - Hats
+                            option(data-filter=".unusual.weapon") Unusual - Weapons
+                            option(data-filter="") ---
+                            option(data-filter=".genuine") Genuine - All
+                            option(data-filter=".genuine.wearable") Genuine - Hats
+                            option(data-filter=".genuine.weapon") Genuine - Weapons
+                            option(data-filter="") ---
+                            option(data-filter=".strange") Strange - Weapons
+
                         | &nbsp;&nbsp; Sort: &nbsp;
                         select.bpsorts
                             option(data-sort="*") Original
@@ -47,7 +59,7 @@ html(lang="en")
                             option(data-sort="name") Name - A to Z
                             option(data-sort="name_desc", data-desc="1") Name - Z to A
                             option(data-sort="type") Type
-
+                    #backpack.null
                         .bpscroll
                             .bpshell
                         .bpnav.null

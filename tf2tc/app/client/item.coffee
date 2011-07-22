@@ -67,6 +67,10 @@ exports.make = (ns, defn, target, type) ->
         w.addClass('wearable')
     else if sdefn.item_class.match(/weapon/)
         w.addClass('weapon')
+    if "#{defn.defindex}" in ns.schema.ext.groups.promos
+        w.addClass('promo')
+    if "#{defn.defindex}" in ns.schema.ext.groups.commodities
+        w.addClass('commodity')
 
 
 exports.props = (ns, defn) ->

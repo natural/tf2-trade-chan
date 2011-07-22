@@ -31,16 +31,16 @@ bootAnon = ->
 bootUser = (ns) ->
     SS.server.app.userProfile (data) ->
         $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
-        $('#user').delay(500).slideDown()
+        $('#user').slideDown()
         $('#backpack').bind 'lazy-load', (e) ->
             bp = $ this
+            $('#user .msg').text('Loading...')
             getBackpack data.profile.steamid, ns, (backpack) ->
-
                 bpshell = $('.bpshell', bp)
                 putBackpack ns, bpshell, ->
-                    $('.msg', bp).text('')
                     layoutBackpack bpshell
-
+                    $('#user .msg').animate({opacity:0}).text('')
+                    return
                     SS.server.trades.userTrades {}, (trades) ->
                         putTrades ns, trades, $('#trades'), ->
                             configBackpack $('#backpack'), $('#trades')
@@ -113,12 +113,13 @@ layoutBackpack = (target) ->
             type:       (i) -> cmp i, 'item_type_name', 'schema-defn'
 
 
-    $('#backpack .bpfilters').change ->
+    $('#user .bpfilters').change ->
         sel = $(':selected', this).attr 'data-filter'
-        target.isotope filter:sel
+        if sel and sel.length
+            target.isotope filter:sel
         false
 
-    $('#backpack .bpsorts').change ->
+    $('#user .bpsorts').change ->
         sel = $(':selected', this).attr 'data-sort'
         ord = $(':selected', this).attr 'data-desc'
         target.isotope sortBy:sel, sortAscending:not ord
@@ -319,9 +320,10 @@ initEvents = (ns) ->
     $('div.item:not(:empty)').live 'mouseout', {namespace:ns}, SS.client.itemtip.hide
     $('#user a').click ->
         target = $ $(this).attr('data-target')
-        target.slideToggle()
         if not target.attr('data-load')
             target.attr('data-load', true).trigger('lazy-load')
+        target.slideToggle()
+
         false
 
 

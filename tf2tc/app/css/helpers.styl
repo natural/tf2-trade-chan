@@ -64,6 +64,56 @@ jwl(i)
   .jewel-{i}
     background-image url('/images/jewels/' + i + '.png')
 
+.jewel
+    background-repeat no-repeat
+    background-position right top
+
+jwl(1)
+jwl(10843461)
+jwl(12955537)
+jwl(1315860)
+jwl(13595446)
+jwl(14204632)
+jwl(15132390)
+jwl(15185211)
+jwl(4345659)
+jwl(5322826)
+jwl(6901050)
+jwl(7511618)
+jwl(8154199)
+jwl(8208497)
+jwl(8289918)
+jwl(8421376)
+jwl(15787660)
+jwl(3100495)
+jwl(15308410)
+jwl(3329330)
+jwl(16738740)
+
+
+.effect
+    background-repeat no-repeat
+    background-position center center
+
+eff(4)
+eff(6)
+eff(7)
+eff(8)
+eff(9)
+eff(10)
+eff(11)
+eff(12)
+eff(13)
+eff(14)
+eff(15)
+eff(16)
+eff(17)
+eff(18)
+eff(19)
+eff(20)
+eff(99) // earbuds
+
+
 
 .clear-both
   clear both
@@ -99,4 +149,94 @@ jwl(i)
 
 .inline-block
   display inline-block
+
+
+
+
+// stubbornella's grid
+
+.line:before, .line:after
+    content ""
+    display table
+
+.line:after
+    clear both
+
+.line
+    *zoom 1
+
+.unit
+    float left
+
+.unitRight
+    float right
+
+.size1of1
+    float none
+
+.size1of2
+    width 50%
+
+.size1of3
+    width 33.33333%
+
+.size2of3
+    width 66.66666%
+
+.size1of4
+    width 25%
+
+.size3of4
+    width 75%
+
+.size1of5
+    width 20%
+
+.size2of5
+    width 40%
+
+.size3of5
+    width 60%
+
+.size4of5
+    width 80%
+
+.lastUnit
+    float none
+    display block
+    display table-cell
+    width 9999em
+    *width auto
+    *zoom 1
+    _position relative
+    _left -3px
+    _margin-right -3px
+
+
+/**** Isotope filtering ****/
+
+.isotope-item
+    a-z-index 2
+
+
+.isotope-hidden.isotope-item
+    pointer-events none
+    a-z-index 1
+
+
+.isotope, .isotope .isotope-item
+    -webkit-transition-duration  1.25s
+    -moz-transition-duration  1.25s
+    transition-duration  1.25s
+
+
+.isotope
+    -webkit-transition-property  height, width
+    -moz-transition-property  height, width
+    transition-property  height, width
+
+.isotope .isotope-item
+    -webkit-transition-property  -webkit-transform, opacity
+    -moz-transition-property     -moz-transform, opacity
+    transition-property          transform, opacity
 

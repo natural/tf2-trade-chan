@@ -42,9 +42,9 @@ body, html
 
 body
     color wht
-    background-color pal_gray1
+    background-color pal_gray2
     font-family font_sec
-
+    font-size 100%
 
 h1, h2, h3, h4
     font-family font_build
@@ -180,56 +180,6 @@ qual(11, #cd9b1d, #423618) // strange
 .tag-5020-5044
     background-image url('/images/tags/5020-5044.png')
 
-.jewel
-    background-repeat no-repeat
-    background-position right top
-
-jwl(1)
-jwl(10843461)
-jwl(12955537)
-jwl(1315860)
-jwl(13595446)
-jwl(14204632)
-jwl(15132390)
-jwl(15185211)
-jwl(4345659)
-jwl(5322826)
-jwl(6901050)
-jwl(7511618)
-jwl(8154199)
-jwl(8208497)
-jwl(8289918)
-jwl(8421376)
-jwl(15787660)
-jwl(3100495)
-jwl(15308410)
-jwl(3329330)
-jwl(16738740)
-
-
-
-.effect
-    background-repeat no-repeat
-    background-position center center
-
-eff(4)
-eff(6)
-eff(7)
-eff(8)
-eff(9)
-eff(10)
-eff(11)
-eff(12)
-eff(13)
-eff(14)
-eff(15)
-eff(16)
-eff(17)
-eff(18)
-eff(19)
-eff(20)
-eff(99) // earbuds
-
 
 div.badge
     background-color #fff
@@ -252,7 +202,7 @@ div.quantity
 
 
 .button, .small-button, .nav-button
-    background-color blk
+    background-color pal_blue3
     border-r(0.35em)
     color lighten(blk, 75%)
     font-family font_build
@@ -261,15 +211,15 @@ div.quantity
     white-space nowrap !important
     display inline-block
     padding 0.5em
-    background -moz-linear-gradient(top, #dcd2ba, #9a8b6b)
-    background -webkit-gradient(linear, left top, left bottom, from(#dcd2ba), to(#9a8b6b))
+    a-background -moz-linear-gradient(top, #dcd2ba, #9a8b6b)
+    a-background -webkit-gradient(linear, left top, left bottom, from(#dcd2ba), to(#9a8b6b))
 
 
 .button:hover, .small-button:hover
     background-color pal_red3
-    background-color #512a20
-    background  -moz-linear-gradient(top, #995040, #512a20)
-    background  -webkit-gradient(linear, left top, left bottom, from(#995040), to(#512a20))
+    a-background-color #512a20
+    a-background  -moz-linear-gradient(top, #995040, #512a20)
+    a-background  -webkit-gradient(linear, left top, left bottom, from(#995040), to(#512a20))
 
 
 .button:active, .small-button:active
@@ -284,8 +234,8 @@ div.quantity
 
 #user
     border-r(bord_w * 4)
-    border bord_w solid pal_blue2
-    background-color blk
+    border bord_w solid pal_gray1
+    background-color pal_gray2
     padding bord_w * 4
 
 
@@ -295,29 +245,31 @@ div.quantity
 
 #backpack, #trades
     color wht
-    background-color blk
     position relative
     overflow hidden
 
-
-#trades
-    background-color darken(#a0a0a3, 5%)
-
+#backpack
+    margin-top base_w
 
 
 #channels
-    background-color darken(#a0a0a3, 10%)
-    border-r(bord_w * 4)
-    border bord_w solid blk
     padding bord_w * 4
     a-width item_w * 11.5
+
+
+#user, #channels
+    margin 0 base_w base_w 0
+    background-color blk // darken(#a0a0a3, 10%)
+    border-r(bord_w * 4)
+    border bord_w solid pal_gray1
+
 
 #site
     border-r(bord_w * 3)
     padding bord_w * 3
-    border bord_w solid blk
-    color blk
-    background-color wht
+    border bord_w solid pal_gray1
+    color pal_gray1
+    background-color pal_gray2
 
 #main
     a-border 1px solid red
@@ -334,135 +286,21 @@ div.quantity
     clear both
 
 
-#user, #channelnav, #channels
-    margin-bottom base_p
-
-
-.msg
-    height 2em
-
-
-div.bpnav
-    line-height 2em
-    text-align right
-
-    div, a
-        height 1.5em
-        width 1.5em
-        font-family font_build
-        vertical-align middle
-        text-align center
-        line-height 1.5em
-        display inline-block
-
-    .non, .nav
-        background-color pal_red1
-        border-r(0.25em)
-
-    .non
-        color pal_gray2
-
-    .count
-        width 4em
 
 
 
 .bpscroll
     overflow-y scroll
     height item_h * 6
-    padding base_p
-    border bord_w solid pal_gray1
-    border-r(base_w)
+    padding base_w
+    padding-left 0
+    border-top (bord_w/2) solid pal_gray1
+    border-bottom (bord_w/2) solid pal_gray1
+    .foo
+        border-r(base_w)
 
 
 .bpshell
     margin 0
 
-
-// stubbornella's grid
-
-.line:before, .line:after
-    content ""
-    display table
-
-.line:after
-    clear both
-
-.line
-    *zoom 1
-
-.unit
-    float left
-
-.unitRight
-    float right
-
-.size1of1
-    float none
-
-.size1of2
-    width 50%
-
-.size1of3
-    width 33.33333%
-
-.size2of3
-    width 66.66666%
-
-.size1of4
-    width 25%
-
-.size3of4
-    width 75%
-
-.size1of5
-    width 20%
-
-.size2of5
-    width 40%
-
-.size3of5
-    width 60%
-
-.size4of5
-    width 80%
-
-.lastUnit
-    float none
-    display block
-    display table-cell
-    width 9999em
-    *width auto
-    *zoom 1
-    _position relative
-    _left -3px
-    _margin-right -3px
-
-
-/**** Isotope filtering ****/
-
-.isotope-item
-    a-z-index 2
-
-
-.isotope-hidden.isotope-item
-    pointer-events none
-    a-z-index 1
-
-
-.isotope, .isotope .isotope-item
-    -webkit-transition-duration  1.25s
-    -moz-transition-duration  1.25s
-    transition-duration  1.25s
-
-
-.isotope
-    -webkit-transition-property  height, width
-    -moz-transition-property  height, width
-    transition-property  height, width
-
-.isotope .isotope-item
-    -webkit-transition-property  -webkit-transform, opacity
-    -moz-transition-property     -moz-transform, opacity
-    transition-property          transform, opacity
 
