@@ -4,77 +4,68 @@
 
 blk = #000
 wht = #fff
-gray1 = #202020
-gray2 = #404040
-gray3 = #606060
-gray4 = #808080
-gray5 = #a0a0a0
-gray6 = #c0c0c0
-gray7 = #e0e0e0
-
-
-
-item_w = 80px
-item_h = item_w * 0.85
-base_w = 12px
-bord_w = (base_w / 4)
-
-
 pal_brown1 = #F6E7DE
 pal_brown2 = #DABDAB
 pal_brown3 = #C1A18A
 pal_brown4 = #6A4534
 pal_brown5 = #452C25
-
 pal_orange1 = #F8B98A
 pal_orange2 = #F5AD87
 pal_orange3 = #EF9849
 pal_orange4 = #F18149
-
 pal_red1 = #913A1F
 pal_red2 = #BD3A3A
 pal_red3 = #9D302F
-
-
 pal_gray1 = #454545
 pal_gray2 = #1F1F1F
-
 pal_blue1 = #768A88
 pal_blue2 = #5B7A8C
 pal_blue3 = #385C78
 
+
+item_w = 80px
+item_h = (item_w * 0.85)
+base_w = 12px
+base_p = (base_w / 2)
+bord_w = (base_w / 4)
+
+
+font_build = "TF2Build"
+font_sec = "TF2secondary"
+
+
+
 body, html
-  height 100%
-  padding (base_w / 2)
+    height 100%
+    padding base_p
 
 
 body
-  color gray7
-  background-color gray2
-  font-family "TF2secondary"
+    color wht
+    background-color pal_gray1
+    font-family font_sec
 
 
 h1, h2, h3, h4
-  font-family "TF2Build"
+    font-family font_build
 
 h1
-  font-size 125%
+    font-size 125%
 
 a, a:visited, a:active, a:hover
-  color white
-  text-decoration none
-
+    color wht
+    text-decoration none
 
 
 #backpack-container, #chooser-container, #trades-container
-  background-color black
+    background-color blk
 
 #backpack-container, #chooser-container
-  margin 0
+    margin 0
 
 
 div.row
-  height item_h + base_w
+    height item_h + base_w
 
 
 div.row.bot
@@ -82,40 +73,43 @@ div.row.bot
 
 
 div.itemw
-  display inline-block
+    a-display inline-block
 
 div.item
-  display inline-block
-  border bord_w solid gray1
-  border-r(base_w)
-  width item_w
-  height item_h
-  vertical-align top
-  margin-right bord_w * 2
+    display inline-block
+    border bord_w solid pal_gray1
+    border-r(base_w)
+    width item_w
+    height item_h
+    vertical-align top
+    a-margin-right (bord_w * 2)
+    margin-right 4px
+    margin-bottom 4px
+
 
 
 div.item:hover:not(:empty)
-  border 3px solid gray5
-  background-color white
+    border 3px solid pal_blue2
+    background-color wht
 
 
 div.outline
-  border 3px solid gray5
-  background-color gray2
+    border 3px solid pal_blue2
+    background-color pal_gray1
 
 
 div.untradable
-  background-color gray2
+    background-color pal_gray1
 
 
 #itemtip .untradable
-  background-color inherit
+    background-color inherit
 
 
 div.item img
-  border none
-  width item_w - bord_w * 2
-  height item_w - bord_w * 2
+    border none
+    width  (item_w - (bord_w * 2))
+    height (item_w - (bord_w * 2))
 
 
 qual(1,  #4d7455, #3a5840) // genuine
@@ -129,74 +123,66 @@ qual(9,  #70b04a, #4f6d3a) // self-made
 qual(10, #70b04a, #4f6d3a) // custom
 qual(11, #cd9b1d, #423618) // strange
 
-.z-top
+
+.ztop
   z-index 9000
+
 
 #itemtip
-  opacity(0.95)
-  background-color gray2
-  border bord_w - 1 solid #ccc
-  border-r(bord_w * 3)
-  padding base_w * 2
-  margin base_w
-  position absolute
-  text-align center
-  z-index 9000
-  overflow hidden
+    opacity(0.95)
+    background-color pal_gray1
+    border bord_w - 1 solid #ccc
+    border-r(bord_w * 3)
+    padding base_w * 2
+    margin base_w
+    position absolute
+    text-align center
+    z-index 9000
+    overflow hidden
 
-
-#itemtip div
-  font-family "TF2secondary"
-
-#itemtip .name
-  font-family "TF2Build"
-
-#itemtip .level
-  color #756b5e
-
-#itemtip .ctrl
-  color #fff
-  text-align left
-  font-family Andale Mono, monospace
-  font-size: 0.75em
-
-#itemtip .alt
-  color #e4dbc4
-  white-space nowrap
-
-#itemtip .positive, #itemtip .crafter
-  color #8dbceb
-
-#itemtip .negative
-  color #eb3b3b
-
-#itemtip .limiteduse
-  color green
-
-
+    div
+        font-family font_sec
+    .name
+        font-family font_build
+    .level
+        color #756b5e
+    .ctrl
+        color wht
+        text-align left
+        font-family Andale Mono, monospace
+        font-size: 75%
+    .alt, .neutral, .killeater, .untradable
+        color #e4dbc4
+        white-space nowrap
+    .positive, .crafter
+        color #8dbceb
+    .negative
+        color #eb3b3b
+    .limiteduse
+        color green
 
 
 .deco
-  width 80px
-  height 68px
-  position relative
+    width item_w
+    height item_h
+    position relative
 
 .tag
-  background-repeat no-repeat
-  background-position left top
+    background-repeat no-repeat
+    background-position left top
 
 .tag-5020
-  background-image url('/images/tags/5020.png')
+    background-image url('/images/tags/5020.png')
 
 .tag-5044
-  background-image url('/images/tags/5044.png')
+    background-image url('/images/tags/5044.png')
 
 .tag-5020-5044
-  background-image url('/images/tags/5020-5044.png')
+    background-image url('/images/tags/5020-5044.png')
 
 .jewel
-  background-repeat no-repeat
-  background-position right top
+    background-repeat no-repeat
+    background-position right top
 
 jwl(1)
 jwl(10843461)
@@ -223,8 +209,8 @@ jwl(16738740)
 
 
 .effect
-  background-repeat no-repeat
-  background-position center center
+    background-repeat no-repeat
+    background-position center center
 
 eff(4)
 eff(6)
@@ -246,135 +232,237 @@ eff(99) // earbuds
 
 
 div.badge
-  background-color #fff
-  font-family "TF2secondary"
-  color gray2
-  border-r(6px)
-  font-size 8pt
-  position absolute
-  padding 4px
+    background-color #fff
+    font-family font_sec
+    color pal_gray1
+    border-r(6px)
+    font-size 8pt
+    position absolute
+    padding 4px
 
 
 div.equipped
-  top 48px
-  left 26px
+    top 48px
+    left 26px
 
 
 div.quantity
-  top 3px
-  left 3px
+    top 3px
+    left 3px
 
 
 .button, .small-button, .nav-button
-  background-color black
-  border-r(0.35em)
-  color lighten(black, 75%)
-  font-family "TF2Build"
-  text-align center
-  vertical-align middle
-  white-space nowrap !important
-  display inline-block
-  padding 0.5em
-  background -moz-linear-gradient(top, #dcd2ba, #9a8b6b)
-  background -webkit-gradient(linear, left top, left bottom, from(#dcd2ba), to(#9a8b6b))
+    background-color blk
+    border-r(0.35em)
+    color lighten(blk, 75%)
+    font-family font_build
+    text-align center
+    vertical-align middle
+    white-space nowrap !important
+    display inline-block
+    padding 0.5em
+    background -moz-linear-gradient(top, #dcd2ba, #9a8b6b)
+    background -webkit-gradient(linear, left top, left bottom, from(#dcd2ba), to(#9a8b6b))
 
 
 .button:hover, .small-button:hover
-  background-color pal_red3
-  background-color #512a20
-  background  -moz-linear-gradient(top, #995040, #512a20)
-  background  -webkit-gradient(linear, left top, left bottom, from(#995040), to(#512a20))
+    background-color pal_red3
+    background-color #512a20
+    background  -moz-linear-gradient(top, #995040, #512a20)
+    background  -webkit-gradient(linear, left top, left bottom, from(#995040), to(#512a20))
 
 
 .button:active, .small-button:active
-  color lighten(black, 50%)
+    color lighten(blk, 50%)
 
 .small-button
-  font-size 80%
-  color white
+    font-size 80%
+    color wht
 
 .nav-button
-  font-size 200%
+    font-size 200%
 
-#usernav
-  border-r(bord_w * 4)
-  border bord_w solid gray6
-  background-color black
-  padding bord_w * 4
-  width item_w * 11.5
+#user
+    border-r(bord_w * 4)
+    border bord_w solid pal_blue2
+    background-color blk
+    padding bord_w * 4
 
 
 .button-bar a.small-button
-  margin-right 1em
+    margin-right 1em
 
 
 #backpack, #trades
-  color wht
-  background-color blk
-  position relative
-  overflow hidden
+    color wht
+    background-color blk
+    position relative
+    overflow hidden
 
 
 #trades
-  background-color darken(#a0a0a3, 5%)
+    background-color darken(#a0a0a3, 5%)
 
 
 
-#channelnav
-  background-color darken(#a0a0a3, 10%)
-  border-r(bord_w * 4)
-  border bord_w solid blk
-  padding bord_w * 4
+#channels
+    background-color darken(#a0a0a3, 10%)
+    border-r(bord_w * 4)
+    border bord_w solid blk
+    padding bord_w * 4
+    a-width item_w * 11.5
 
-#channel
+#site
+    border-r(bord_w * 3)
+    padding bord_w * 3
+    border bord_w solid blk
+    color blk
+    background-color wht
 
-#top
-  border-r(bord_w * 3)
-  padding bord_w * 3
-  border bord_w solid blk
-  color blk
-  background-color wht
+#main
+    a-border 1px solid red
 
-#top, #main, #usernav, #channelnav, #channels
-  margin-bottom (base_w / 2)
+
+#view
+    a-min-width 920px
+    a-border 1px solid green
+
+#site
+    a-border 1px solid blue
+
+.last
+    clear both
+
+
+#user, #channelnav, #channels
+    margin-bottom base_p
 
 
 .msg
-  height 2em
+    height 2em
 
 
 div.bpnav
-  line-height 2em
-  text-align right
+    line-height 2em
+    text-align right
 
-  div, a
-    height 1.5em
-    width 1.5em
-    font-family "TF2Build"
-    vertical-align middle
-    text-align center
-    line-height 1.5em
-    display inline-block
+    div, a
+        height 1.5em
+        width 1.5em
+        font-family font_build
+        vertical-align middle
+        text-align center
+        line-height 1.5em
+        display inline-block
 
-  .non, .nav
-    background-color pal_red1
-    border-r(0.25em)
+    .non, .nav
+        background-color pal_red1
+        border-r(0.25em)
 
-  .non
-    color pal_gray2
+    .non
+        color pal_gray2
 
-  .count
-    width 4em
+    .count
+        width 4em
 
 
 
-.page, .bpscroll
-  overflow hidden
-  width item_w * 11.5
-  height item_h * 6
+.bpscroll
+    overflow-y scroll
+    height item_h * 6
+    padding base_p
+    border bord_w solid pal_gray1
+    border-r(base_w)
+
 
 .bpshell
-  margin-top base_w
-  text-align center
-  width (item_w * 12) * 20
-  height item_h * 6
+    margin 0
+
+
+// stubbornella's grid
+
+.line:before, .line:after
+    content ""
+    display table
+
+.line:after
+    clear both
+
+.line
+    *zoom 1
+
+.unit
+    float left
+
+.unitRight
+    float right
+
+.size1of1
+    float none
+
+.size1of2
+    width 50%
+
+.size1of3
+    width 33.33333%
+
+.size2of3
+    width 66.66666%
+
+.size1of4
+    width 25%
+
+.size3of4
+    width 75%
+
+.size1of5
+    width 20%
+
+.size2of5
+    width 40%
+
+.size3of5
+    width 60%
+
+.size4of5
+    width 80%
+
+.lastUnit
+    float none
+    display block
+    display table-cell
+    width 9999em
+    *width auto
+    *zoom 1
+    _position relative
+    _left -3px
+    _margin-right -3px
+
+
+/**** Isotope filtering ****/
+
+.isotope-item
+    a-z-index 2
+
+
+.isotope-hidden.isotope-item
+    pointer-events none
+    a-z-index 1
+
+
+.isotope, .isotope .isotope-item
+    -webkit-transition-duration  1.25s
+    -moz-transition-duration  1.25s
+    transition-duration  1.25s
+
+
+.isotope
+    -webkit-transition-property  height, width
+    -moz-transition-property  height, width
+    transition-property  height, width
+
+.isotope .isotope-item
+    -webkit-transition-property  -webkit-transform, opacity
+    -moz-transition-property     -moz-transform, opacity
+    transition-property          transform, opacity
+

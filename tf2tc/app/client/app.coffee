@@ -31,13 +31,16 @@ bootAnon = ->
 bootUser = (ns) ->
     SS.server.app.userProfile (data) ->
         $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
-        $('#usernav').delay(500).slideDown()
+        $('#user').delay(500).slideDown()
         $('#backpack').bind 'lazy-load', (e) ->
             bp = $ this
             getBackpack data.profile.steamid, ns, (backpack) ->
-                putBackpack ns, $('.bpshell', bp), 50, 10, ->
-                    $('.msg', bp).fadeOut()
-                    initBackpackNav()
+
+                bpshell = $('.bpshell', bp)
+                putBackpack ns, bpshell, ->
+                    $('.msg', bp).text('')
+                    layoutBackpack bpshell
+
                     SS.server.trades.userTrades {}, (trades) ->
                         putTrades ns, trades, $('#trades'), ->
                             configBackpack $('#backpack'), $('#trades')
@@ -78,30 +81,50 @@ putChooser = (ns, target, cb) ->
     cb()
 
 
-putBackpack = (ns, target, page_size, cols, cb) ->
-    i = 0
-    items = ns.backpack.result.items.item
-    slots = ns.backpack.result.num_backpack_slots
 
-    target.append SS.client.item.page()
-    page = $ 'div.page:last', target
 
-    page.append SS.client.item.row()
-    row = $ 'div.row:last', page
-
-    for slot in [1..slots]
-        item = ns.backpack_items[slot]
-        SS.client.item.make ns, item, row, 'backpack'
-        i += 1
-        if !(i % cols) and slot < slots
-            if !(i % page_size)
-                target.append SS.client.item.page()
-                page = $ 'div.page:last', target
-            page.append SS.client.item.row()
-            row = $ 'div.row:last', page
-    ## if showFirst...
-    $('div.page:first', target).removeClass('null')
+putBackpack = (ns, target, cb) ->
+    m = SS.client.item.make
+    ts = ns.backpack_items
+    mk = (s) -> m(ns, ts[s], target, 'backpack')
+    mk(slot) for slot in [1..ns.backpack.result.num_backpack_slots]
     cb()
+
+
+layoutBackpack = (target) ->
+    mn = Number.MIN_VALUE
+    cmp = (i, attr, which='item-defn', missing=Number.MAX_VALUE) ->
+        d = i.find('.item').data(which)
+        if d
+            d[attr]
+        else
+            missing
+    target.isotope
+        itemSelector: '.itemw'
+        layoutMode: 'fitRows'
+        getSortData:
+            quality:    (i) -> cmp i, 'quality'
+            date:       (i) -> cmp i, 'id'
+            date_desc:  (i) -> cmp i, 'id',             'item-defn', mn
+            level:      (i) -> cmp i, 'level'
+            level_desc: (i) -> cmp i, 'level',          'item-defn',   mn
+            name:       (i) -> cmp i, 'item_name',      'schema-defn', 'ZZZ   '
+            name_desc:  (i) -> cmp i, 'item_name',      'schema-defn', '   AAA'
+            type:       (i) -> cmp i, 'item_type_name', 'schema-defn'
+
+
+    $('#backpack .bpfilters').change ->
+        sel = $(':selected', this).attr 'data-filter'
+        target.isotope filter:sel
+        false
+
+    $('#backpack .bpsorts').change ->
+        sel = $(':selected', this).attr 'data-sort'
+        ord = $(':selected', this).attr 'data-desc'
+        target.isotope sortBy:sel, sortAscending:not ord
+        false
+
+
 
 
 putTrades = (ns, trades, target, cb) ->
@@ -174,7 +197,7 @@ configChooser = (source, target) ->
         cursor: 'move'
         start: (e, ui) ->
             q = ui.helper.prevObject.data('item-defn').quality
-            ui.helper.addClass "qual-background-#{q} z-top"
+            ui.helper.addClass "qual-background-#{q} ztop"
 
     dropOpts =
         accept: 'div.item.chooser'
@@ -228,7 +251,7 @@ configBackpack = (source, target) ->
         cursor: 'move'
         start: (e, ui) ->
             q = ui.helper.prevObject.data('item-defn').quality
-            ui.helper.addClass "qual-background-#{q} z-top"
+            ui.helper.addClass "qual-background-#{q} ztop"
 
     dropOpts =
         accept: 'div.item.backpack'
@@ -294,59 +317,11 @@ initEvents = (ns) ->
     $('body').bind 'trade-changed', tradeChanged
     $('div.item:not(:empty)').live 'mouseover', {namespace:ns}, SS.client.itemtip.show
     $('div.item:not(:empty)').live 'mouseout', {namespace:ns}, SS.client.itemtip.hide
-    $('#usernav a').click ->
+    $('#user a').click ->
         target = $ $(this).attr('data-target')
         target.slideToggle()
         if not target.attr('data-load')
             target.attr('data-load', true).trigger('lazy-load')
         false
 
-
-initBackpackNav = ->
-    c = $ '#backpack'
-    backpackNav $('.bpshell', c), $('.bpnav', c), $('.bpscroll', c)
-
-
-backpackNav = (pageContext, buttonContext, scrollContext) ->
-    pages = $ '.page', pageContext
-    pageCount = pages.length
-    pageCurrent = 1
-
-    nonPrev = $ '.non.prev', buttonContext
-    navPrev = $ '.nav.prev', buttonContext
-    nonNext = $ '.non.next', buttonContext
-    navNext = $ '.nav.next', buttonContext
-    navCount = $ '.count', buttonContext
-
-    navigate = (offset) ->
-        if ((pageCurrent + offset) > 0) and (pageCurrent + offset <= pageCount)
-            prev = pageCurrent
-            newM = pages.width() * (if offset>0 then -1 else 1)
-            pageCurrent += offset
-
-            $(pages[prev - 1]).animate {marginLeft:newM}, 200, () ->
-                $(pages[prev - 1]).hide()
-                $(pages[pageCurrent - 1]).show().animate {marginLeft:0}, 200
-
-            navCount.text "#{pageCurrent}/#{pageCount}"
-            updateButtons()
-        false
-
-    updateButtons = ->
-        if pageCurrent == 1
-            nonPrev.show()
-            navPrev.hide()
-        else
-            nonPrev.hide()
-            navPrev.show()
-        if pageCurrent == pageCount
-            nonNext.show()
-            navNext.hide()
-        else
-            nonNext.hide()
-            navNext.show()
-
-    navPrev.click -> navigate -1
-    navNext.click -> navigate  1
-    navigate 0
 

@@ -1,7 +1,11 @@
 
 
 exports.page = -> '<div class="page"></div>'
+
+
 exports.row = -> '<div class="row"></div>'
+
+
 exports.make = (ns, defn, target, type) ->
     if defn
         v = "<div class='itemw'>
@@ -16,9 +20,10 @@ exports.make = (ns, defn, target, type) ->
         return
 
     prop = exports.props ns, defn
+    sdefn = ns.schema_items[defn.defindex]
     item = $ 'div.item:last', target
     item.data 'item-defn', defn
-    item.data 'schema-defn', ns.schema_items[defn.defindex]
+    item.data 'schema-defn', sdefn
     item.addClass "qual-border-#{defn.quality or 6} qual-hover-#{defn.quality or 6}"
     item.addClass "untradable" if defn.flag_cannot_trade
     img = $ 'img', item
@@ -46,6 +51,22 @@ exports.make = (ns, defn, target, type) ->
     ## effect bg
     effect = prop.effect()
     img.wrap "<div class='deco effect effect-#{effect}' />" if effect
+
+    ## add some classes to the item wrapper (the parent .itemw) for
+    ## filtering.
+    w = $ 'div.itemw:last', target
+    if defn.quality == 1
+        w.addClass('genuine')
+    else if defn.quality == 3
+        w.addClass('vintage')
+    else if defn.quality == 5
+        w.addClass('unusual')
+    else if defn.quality == 11
+        w.addClass('strange')
+    if sdefn.item_class.match(/wear/)
+        w.addClass('wearable')
+    else if sdefn.item_class.match(/weapon/)
+        w.addClass('weapon')
 
 
 exports.props = (ns, defn) ->
@@ -83,4 +104,3 @@ exports.props = (ns, defn) ->
     useCount: ->
         if defn.defindex in (t.defindex for t in ns.schema_tools()) or defn.defindex in (t.defindex for t in ns.schema_actions())
             defn.quantity
-

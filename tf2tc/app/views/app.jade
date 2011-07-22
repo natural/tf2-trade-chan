@@ -1,64 +1,84 @@
 !!! 5
 html(lang="en")
-  head
-    script(src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js", type="text/javascript")
-    script(src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/jquery-ui.min.js", type="text/javascript")
-    != SocketStream
-    title TF2 Trade Chan
-  body
-    #itemtip.null
-      div.name
-      div.level
-      div.crafter
-      div.killeater
-      div.positive
-      div.negative
-      div.alt
-      div.neutral
-      div.limiteduse
-      div.untradable
-      div.ctrl
+    head
+        script(src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js", type="text/javascript")
+        script(src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/jquery-ui.min.js", type="text/javascript")
+        != SocketStream
+        title TF2 Trade Chan
+    body
+        #itemtip.null
+            .name
+            .level
+            .crafter
+            .killeater
+            .positive
+            .negative
+            .alt
+            .neutral
+            .limiteduse
+            .untradable
+            .ctrl
 
-  #main
-      #top
-        h1 tf2 trade chan
-        #message
+        #main.line
+           #view.unit.size4of5
+                #user.null
+                    .button-bar
+                        a(href="#", class="small-button", data-target="#backpack", data-loaded="") Backpack +
+                        a(href="#", class="small-button", data-target="#trades", data-loaded="") Trades +
+                    #backpack.null
+                        .msg Loading...
+                        | Filter:&nbsp;
+                        select.bpfilters
+                            option(data-filter="*") All
+                            option(data-filter=".vintage") Vintage
+                            option(data-filter=".unusual") Unusual
+                            option(data-filter=".genuine") Genuine
+                            option(data-filter=".strange") Strange
+                            option(data-filter=".wearable") Hats+Wearables
+                            option(data-filter=".weapon") Weapons
+                        | &nbsp;&nbsp; Sort: &nbsp;
+                        select.bpsorts
+                            option(data-sort="*") Original
+                            option(data-sort="quality") Quality
+                            option(data-sort="date") Date - Oldest to Newest
+                            option(data-sort="date_desc", data-desc="1") Date - Newest to Oldest
+                            option(data-sort="level") Level - Low to High
+                            option(data-sort="level_desc", data-desc="1") Level - High to Low
+                            option(data-sort="name") Name - A to Z
+                            option(data-sort="name_desc", data-desc="1") Name - Z to A
+                            option(data-sort="type") Type
 
-        span#login.null
-          | Safe and Secure Login with Steam
-          a(href='/authenticate')
-            img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png', height=23, width=154)
-        span#logout.null
-          a.small-button(href='/logout') logout
+                        .bpscroll
+                            .bpshell
+                        .bpnav.null
+                            a.nav.prev(href="#") &lt;
+                            .non.prev &lt;
+                            .count
+                            a.nav.next(href="#") &gt;
+                            .non.next &gt;
+                    #trades.null
+                        | Hello, this is #trades.
 
-    #usernav.button-bar.null
-      a(href="#", class="small-button", data-target="#backpack", data-loaded="") Backpack +
-      a(href="#", class="small-button", data-target="#trades", data-loaded="") Trades +
-
-      #backpack.null
-        .msg Loading...
-        .bpscroll
-          .bpshell
-        .bpnav
-          a.nav.prev(href="#") &lt;
-          .non.prev &lt;
-          div.count
-          a.nav.next(href="#") &gt;
-          .non.next &gt;
-
-      #trades.null
-        | Hello, this is #trades.
-
-    #channelnav.button-bar
-      a(href="#", class="small-button", data-channel-name="commodities") Commodites
-      a(href="#", class="small-button", data-channel-name="promos") Promos
-      a(href="#", class="small-button", data-channel-name="unusual_hats") Unusual Hats
-      a(href="#", class="small-button", data-channel-name="vintage_hats") Vintage Hats
-
-    #channel
-      | this is the channel area
+                #channels
+                    .button-bar
+                        a(href="#", class="small-button", data-channel-name="commodities") Commodites
+                        a(href="#", class="small-button", data-channel-name="promos") Promos
+                        a(href="#", class="small-button", data-channel-name="unusual_hats") Unusual Hats
+                        a(href="#", class="small-button", data-channel-name="vintage_hats") Vintage Hats
+                    .chscroll
+                        | this is the channel area
 
 
+            #site.unit.size1of5.lastUnit
+                h1 tf2 trade chan
+                #message
+
+                span#login.null
+                    | Safe and Secure Login with Steam
+                    a(href='/authenticate')
+                        img(src='http://cdn.steamcommunity.com/public/images/signinthroughsteam/sits_small.png', height=23, width=154)
+                span#logout.null
+                    a.small-button(href='/logout') logout
 
 
 
