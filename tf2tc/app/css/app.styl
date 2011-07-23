@@ -57,13 +57,6 @@ a, a:visited, a:active, a:hover
     text-decoration none
 
 
-#backpack-container, #chooser-container, #trades-container
-    background-color blk
-
-#backpack-container, #chooser-container
-    margin 0
-
-
 div.row
     height item_h + base_w
 
@@ -201,8 +194,8 @@ div.quantity
     left 3px
 
 
-.button, .small-button, .nav-button
-    background-color pal_blue3
+.button, .small-button, .nav-button, .channel-on
+    background-color pal_blue3 !important
     border-r(0.35em)
     color lighten(blk, 75%)
     font-family font_build
@@ -216,10 +209,11 @@ div.quantity
 
 
 .button:hover, .small-button:hover
-    background-color pal_red3
+    background-color pal_red3 !important
     a-background-color #512a20
     a-background  -moz-linear-gradient(top, #995040, #512a20)
     a-background  -webkit-gradient(linear, left top, left bottom, from(#995040), to(#512a20))
+
 
 
 .button:active, .small-button:active
@@ -231,6 +225,13 @@ div.quantity
 
 .nav-button
     font-size 200%
+
+
+.channel-on
+    background-color pal_blue2 !important
+
+.channel-off
+    background-color blk !important
 
 #user
     border-r(bord_w * 4)
@@ -269,7 +270,7 @@ div.quantity
     padding bord_w * 3
     border bord_w solid pal_gray1
     color pal_gray1
-    background-color pal_gray2
+    background-color wht
 
 #main
     a-border 1px solid red
@@ -296,11 +297,29 @@ div.quantity
     padding-left 0
     border-top (bord_w/2) solid pal_gray1
     border-bottom (bord_w/2) solid pal_gray1
-    .foo
-        border-r(base_w)
-
+    margin-bottom base_w
 
 .bpshell
     margin 0
 
 
+
+.mb1
+    margin-bottom base_w
+
+.button-bar .small-button
+    width (base_w * 10)
+
+
+.debug
+    border 1px dotted red
+
+
+
+.chtalk
+    width 24em
+    height 12em
+    border 1px solid pal_gray1
+    background-color pal_gray2
+    color wht
+    padding base_w

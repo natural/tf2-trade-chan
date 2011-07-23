@@ -21,65 +21,43 @@ html(lang="en")
 
         #main.line
            #view.unit.size4of5
-                #user.null
-                    .button-bar
-                        a(href="#", class="small-button", data-target="#backpack", data-loaded="") Backpack
-                        a(href="#", class="small-button", data-target="#trades", data-loaded="") Trades
-                        span.msg
-                        | Filter:&nbsp;
-                        select.bpfilters
-                            option(data-filter="*") All
-                            option(data-filter=".commodity") Commodities
-                            option(data-filter=".promo") Promos
-                            option(data-filter=".wearable") Hats and Wearables
-                            option(data-filter=".weapon") Weapons
-                            option(data-filter="") ---
-                            option(data-filter=".vintage") Vintage - All
-                            option(data-filter=".vintage.wearable") Vintage - Hats
-                            option(data-filter=".vintage.weapon") Vintage - Weapons
-                            option(data-filter="") ---
-                            option(data-filter=".unusual") Unusual - All
-                            option(data-filter=".unusual.wearable") Unusual - Hats
-                            option(data-filter=".unusual.weapon") Unusual - Weapons
-                            option(data-filter="") ---
-                            option(data-filter=".genuine") Genuine - All
-                            option(data-filter=".genuine.wearable") Genuine - Hats
-                            option(data-filter=".genuine.weapon") Genuine - Weapons
-                            option(data-filter="") ---
-                            option(data-filter=".strange") Strange - Weapons
 
-                        | &nbsp;&nbsp; Sort: &nbsp;
-                        select.bpsorts
-                            option(data-sort="*") Original
-                            option(data-sort="quality") Quality
-                            option(data-sort="date") Date - Oldest to Newest
-                            option(data-sort="date_desc", data-desc="1") Date - Newest to Oldest
-                            option(data-sort="level") Level - Low to High
-                            option(data-sort="level_desc", data-desc="1") Level - High to Low
-                            option(data-sort="name") Name - A to Z
-                            option(data-sort="name_desc", data-desc="1") Name - Z to A
-                            option(data-sort="type") Type
+                #user.null
+                    .button-bar.mb1.bp
+                        a(href="#", class="small-button", data-target="#backpack", data-loaded="") Show Backpack
+                        span.msg Click this button to show your backpack.  You use your backpack to make trades.
                     #backpack.null
+                        .bptools.null
+                            include backpack_tools
                         .bpscroll
                             .bpshell
-                        .bpnav.null
-                            a.nav.prev(href="#") &lt;
-                            .non.prev &lt;
-                            .count
-                            a.nav.next(href="#") &gt;
-                            .non.next &gt;
+
+                    .button-bar.ch
+                        a(href="#", class="small-button", data-target="#trades", data-loaded="") Show Trades
+                        span.msg  Click this button to show your trades.
                     #trades.null
-                        | Hello, this is #trades.
+                        .tradescroll.debug.unit.size1of2
+                            .tradeshell: Trade Shell
+
+                        .chooser.debug.unit.lastUnit.size1of2
+                            .bptools.null
+                                include backpack_tools
+                            .bpscroll
+                                .bpshell
+
 
                 #channels
-                    .button-bar
-                        a(href="#", class="small-button", data-channel-name="commodities") Commodites
-                        a(href="#", class="small-button", data-channel-name="promos") Promos
-                        a(href="#", class="small-button", data-channel-name="unusual_hats") Unusual Hats
-                        a(href="#", class="small-button", data-channel-name="vintage_hats") Vintage Hats
-                    .chscroll
-                        | this is the channel area
+                    .mb1.channels-help
+                        | Click on a channel name to join it.  You'll
+                        | see trades as they are added to the channel,
+                        | and you can chat with other channel members.
 
+                    .button-bar.mb1
+                        a(href="#", class="small-button channel-off", data-channel-name="commodities") Commodites
+                        a(href="#", class="small-button channel-off", data-channel-name="promos") Promos
+                        a(href="#", class="small-button channel-off", data-channel-name="unusual_hats") Unusual Hats
+                        a(href="#", class="small-button channel-off", data-channel-name="vintage_hats") Vintage Hats
+                    .chscroll
 
             #site.unit.size1of5.lastUnit
                 h1 tf2 trade chan

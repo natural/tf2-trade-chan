@@ -54,23 +54,22 @@ exports.make = (ns, defn, target, type) ->
 
     ## add some classes to the item wrapper (the parent .itemw) for
     ## filtering.
-    w = $ 'div.itemw:last', target
-    if defn.quality == 1
-        w.addClass('genuine')
-    else if defn.quality == 3
-        w.addClass('vintage')
-    else if defn.quality == 5
-        w.addClass('unusual')
-    else if defn.quality == 11
-        w.addClass('strange')
+    c = [ qualityName(ns, defn.quality).toLowerCase() ]
     if sdefn.item_class.match(/wear/)
-        w.addClass('wearable')
+        c.push 'wearable'
     else if sdefn.item_class.match(/weapon/)
-        w.addClass('weapon')
+        c.push 'weapon'
     if "#{defn.defindex}" in ns.schema.ext.groups.promos
-        w.addClass('promo')
+        c.push 'promo'
     if "#{defn.defindex}" in ns.schema.ext.groups.commodities
-        w.addClass('commodity')
+        c.push 'commodity'
+    if sdefn.used_by_classes
+        for x in sdefn.used_by_classes.class
+            if x
+                c.push x.toLowerCase()
+    else
+        c.push 'allclass'
+    $('div.itemw:last', target).addClass c.join(' ')
 
 
 exports.props = (ns, defn) ->
@@ -108,3 +107,11 @@ exports.props = (ns, defn) ->
     useCount: ->
         if defn.defindex in (t.defindex for t in ns.schema_tools()) or defn.defindex in (t.defindex for t in ns.schema_actions())
             defn.quantity
+
+
+qualityName = (ns, id) ->
+    keys = (k for k, v of ns.schema.result.qualities when v==id)
+    if keys.length
+        ns.schema.result.qualityNames[keys[0]] or ''
+    else
+        'Unknown'

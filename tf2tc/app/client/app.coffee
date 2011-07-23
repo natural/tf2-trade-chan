@@ -32,45 +32,50 @@ bootUser = (ns) ->
     SS.server.app.userProfile (data) ->
         $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
         $('#user').slideDown()
+
+
         $('#backpack').bind 'lazy-load', (e) ->
-            bp = $ this
-            $('#user .msg').text('Loading...')
+            userbp = $ this
+            bpshell = $ '.bpshell', userbp
+            $('#user .bp .msg').text 'Loading...'
+
             getBackpack data.profile.steamid, ns, (backpack) ->
-                bpshell = $('.bpshell', bp)
                 putBackpack ns, bpshell, ->
                     layoutBackpack bpshell
-                    $('#user .msg').animate({opacity:0}).text('')
-                    return
-                    SS.server.trades.userTrades {}, (trades) ->
-                        putTrades ns, trades, $('#trades'), ->
-                            configBackpack $('#backpack'), $('#trades')
-                            $('#user-container').slideDown()
-                        putChooser ns, $('#chooser'), ->
-                            configChooser $('#chooser'), $('#trades')
-                            $('#chooser-container').slideDown()
+                    initBackpackToolbar userbp, bpshell
+                    $('#user .bp .msg').text ''
+
+
+        $('#trades').bind 'lazy-load', (e) ->
+                trades = $ this
+                ch = $ '.chooser', trades
+                chshell = $ '.bpshell', ch
+                $('#user .ch .msg').text 'Loading...'
+
+                putChooser ns, chshell, ->
+                    layoutChooser chshell
+                    $('#user .ch .msg').text ''
+
+                return
+                SS.server.trades.userTrades {}, (trades) ->
+                    putTrades ns, trades, $('#trades'), ->
+                        configBackpack $('#backpack'), $('#trades')
 
 
 putChooser = (ns, target, cb) ->
     grp = ns.schema.ext.groups
+    m = SS.client.item.make
+
     clone = (id, q) ->
         x = JSON.parse(JSON.stringify(ns.schema_items[id]))
         x.quality = q
         x
     add = (title) ->
-        target.append $('#chooser-proto').tmpl({title:title})
-        $('.chooser-group:last', target)
-    put = (items) ->
-        i = 0
-        target.append SS.client.item.page()
-        row = $ 'div.row:last', target
-        cols = 5
-        page_size = 25
+        target.append $('#chooser-proto').tmpl title:title
+        $('.chooserw:last', target)
+    put = (items, t) ->
         for item in items
-            SS.client.item.make ns, item, row, 'chooser'
-            i += 1
-            if !(i % cols) and i < items.length
-                target.append SS.client.item.page()
-                row = $ 'div.row:last', target
+            m ns, item, t, 'chooser'
 
     put (clone(x, 6) for x in grp.commodities), add('Commodities')
     put (clone(x, 6) for x in grp.promos), add('Promos')
@@ -102,6 +107,7 @@ layoutBackpack = (target) ->
     target.isotope
         itemSelector: '.itemw'
         layoutMode: 'fitRows'
+        animationEngine: if $.browser.mozilla then 'jquery' else 'best-available'
         getSortData:
             quality:    (i) -> cmp i, 'quality'
             date:       (i) -> cmp i, 'id'
@@ -112,18 +118,32 @@ layoutBackpack = (target) ->
             name_desc:  (i) -> cmp i, 'item_name',      'schema-defn', '   AAA'
             type:       (i) -> cmp i, 'item_type_name', 'schema-defn'
 
+layoutChooser = (target) ->
+    for grp in $('.chooserw', target)
+        $(grp).isotope
+            itemSelector: '.itemw'
+            layoutMode: 'fitRows'
+            animationEngine: if $.browser.mozilla then 'jquery' else 'best-available'
+    f = -> $('.chooserw', target).isotope()
+    setTimeout f, 100
 
-    $('#user .bpfilters').change ->
+
+initBackpackToolbar = (container, target) ->
+    $('.bptools', container).fadeIn()
+
+    $('.bpfilters', container).change ->
         sel = $(':selected', this).attr 'data-filter'
         if sel and sel.length
             target.isotope filter:sel
         false
 
-    $('#user .bpsorts').change ->
+    $('.bpsorts', container).change ->
         sel = $(':selected', this).attr 'data-sort'
         ord = $(':selected', this).attr 'data-desc'
         target.isotope sortBy:sel, sortAscending:not ord
         false
+
+
 
 
 
@@ -318,12 +338,42 @@ initEvents = (ns) ->
     $('body').bind 'trade-changed', tradeChanged
     $('div.item:not(:empty)').live 'mouseover', {namespace:ns}, SS.client.itemtip.show
     $('div.item:not(:empty)').live 'mouseout', {namespace:ns}, SS.client.itemtip.hide
-    $('#user a').click ->
-        target = $ $(this).attr('data-target')
-        if not target.attr('data-load')
-            target.attr('data-load', true).trigger('lazy-load')
-        target.slideToggle()
 
+    $('#user a').click ->
+        self = $(this)
+        target = $ self.attr('data-target')
+        if not target.attr 'data-load'
+            target.attr('data-load', true).trigger 'lazy-load'
+        target.slideToggle ->
+            v = target.is ':visible'
+            s = if v then 'Show' else 'Hide'
+            r = if v then 'Hide' else 'Show'
+            self.text( self.text().replace s, r )
         false
 
+
+    $('#channels .button-bar a').click ->
+        link = $ this
+        cname = link.attr('data-channel-name')
+        active = link.hasClass('channel-on')
+        link.toggleClass('channel-on').toggleClass('channel-off')
+        (if active then leaveChannel else joinChannel)(cname)
+
+    SS.events.on 'sys-chan-msg', (msg) ->
+        console.log 'System Message:', msg, arguments
+        $("#channels .chshell.cname-#{msg.cname} .chtalk").append "<i>#{msg.msg}</i><br>"
+
+
+leaveChannel = (name) ->
+    area = $ "#channels .chscroll .chshell.cname-#{name}"
+    area.slideUp -> area.detach()
+    SS.server.channels.leave name
+
+
+joinChannel = (name) ->
+    target = $ '#channels .chscroll'
+    target.append $('#channel-proto').tmpl {name:name, title:name}
+    newarea = $ "#channels .chscroll .chshell:last"
+    newarea.addClass("cname-#{name}").slideDown()
+    SS.server.channels.join name
 
