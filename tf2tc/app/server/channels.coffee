@@ -3,28 +3,48 @@ steam = require('./steam.coffee')
 
 exports.actions =
     join: (cname, cb) ->
-        username = 'new user'
         @getSession (session) ->
-            session.channel.subscribe cname
-            data =
-                msg: "#{username} has joined the channel."
-                cname: cname
-            SS.publish.channel [cname], 'sys-chan-msg', data
+            SS.server.app.userProfile (profile) ->
+                key = keys.channelUserList cname
+                username = getProfileName profile
+                R.rpush key, username, (err, okay) ->
+                    if okay and not err
+                        data = who: username, what: 'joined', cname: cname
+                        session.channel.subscribe cname
+                        SS.publish.channel [cname], 'sys-chan-msg', data
+
+
 
     leave: (cname, cb) ->
-        username = 'unknown'
         @getSession (session) ->
-            session.channel.unsubscribe cname
-            if session.user.loggedIn()
-                uid = session.user_id
-                steam.actions.profile {id64: uid.split('/').pop()}, (profile) ->
-                    username = profile.name
-                    data =
-                        msg: "#{username} has left the channel."
-                        cname: cname
+            SS.server.app.userProfile (profile) ->
+                username = getProfileName profile
+                key = keys.channelUserList cname
+                R.lrem key, 0, username, (err, okay) ->
+                    data = who: username, what: 'left', cname: cname
+                    session.channel.unsubscribe cname
                     SS.publish.channel [cname], 'sys-chan-msg', data
-            else
-                data =
-                    msg: "#{username} has left the channel."
-                    cname: cname
-                SS.publish.channel [cname], 'sys-chan-msg', data
+
+    list: (cname, cb) ->
+        key = keys.channelUserList cname
+        R.lrange key, 0, -1, (err, val) ->
+            cb val
+
+    say: (params, cb) ->
+        cname = params.cname
+        text = params.text
+        @getSession (session) ->
+            SS.server.app.userProfile (profile) ->
+                username = getProfileName profile
+                data = who: username, what: 'said', cname: cname, text: text
+                SS.publish.channel [cname], 'user-chan-msg', data
+                cb()
+
+
+getProfileName = (info) ->
+    if info.personaname then info.personaname else 'anon'
+
+
+keys =
+    channelUserList: (c) ->
+        "cusers:#{c}"

@@ -21,6 +21,7 @@ exports.make = (ns, defn, target, type) ->
 
     prop = exports.props ns, defn
     sdefn = ns.schema_items[defn.defindex]
+    itemw = $ 'div.itemw:last', target
     item = $ 'div.item:last', target
     item.data 'item-defn', defn
     item.data 'schema-defn', sdefn
@@ -69,7 +70,8 @@ exports.make = (ns, defn, target, type) ->
                 c.push x.toLowerCase()
     else
         c.push 'allclass'
-    $('div.itemw:last', target).addClass c.join(' ')
+    itemw.addClass c.join(' ')
+    itemw
 
 
 exports.props = (ns, defn) ->

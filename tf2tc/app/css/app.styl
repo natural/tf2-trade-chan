@@ -42,7 +42,7 @@ body, html
 
 body
     color wht
-    background-color pal_gray2
+    background-color darken(pal_gray2, 30%)
     font-family font_sec
     font-size 100%
 
@@ -75,7 +75,6 @@ div.item
     width item_w
     height item_h
     vertical-align top
-    a-margin-right (bord_w * 2)
     margin-right 4px
     margin-bottom 4px
 
@@ -87,8 +86,8 @@ div.item:hover:not(:empty)
 
 
 div.outline
-    border 3px solid pal_blue2
-    background-color pal_gray1
+    border bord_w solid lighten(pal_gray1, 75%)
+    background-color darken(pal_gray1, 25%)
 
 
 div.untradable
@@ -194,7 +193,7 @@ div.quantity
     left 3px
 
 
-.button, .small-button, .nav-button, .channel-on
+.small-button
     background-color pal_blue3 !important
     border-r(0.35em)
     color lighten(blk, 75%)
@@ -206,42 +205,35 @@ div.quantity
     padding 0.5em
     a-background -moz-linear-gradient(top, #dcd2ba, #9a8b6b)
     a-background -webkit-gradient(linear, left top, left bottom, from(#dcd2ba), to(#9a8b6b))
+    font-size 80%
+    color wht
 
 
-.button:hover, .small-button:hover
+.small-button:hover
     background-color pal_red3 !important
     a-background-color #512a20
     a-background  -moz-linear-gradient(top, #995040, #512a20)
     a-background  -webkit-gradient(linear, left top, left bottom, from(#995040), to(#512a20))
 
-
-
-.button:active, .small-button:active
+.small-button:active
     color lighten(blk, 50%)
 
-.small-button
-    font-size 80%
-    color wht
-
-.nav-button
-    font-size 200%
+.button-bar .small-button
+    margin-right 1em
+    width (base_w * 10)
 
 
-.channel-on
-    background-color pal_blue2 !important
 
-.channel-off
-    background-color blk !important
+
+
+
 
 #user
-    border-r(bord_w * 4)
+    border-r(base_w)
     border bord_w solid pal_gray1
     background-color pal_gray2
-    padding bord_w * 4
+    padding base_w
 
-
-.button-bar a.small-button
-    margin-right 1em
 
 
 #backpack, #trades
@@ -254,22 +246,22 @@ div.quantity
 
 
 #channels
-    padding bord_w * 4
+    padding base_w
     a-width item_w * 11.5
 
 
 #user, #channels
     margin 0 base_w base_w 0
     background-color blk // darken(#a0a0a3, 10%)
-    border-r(bord_w * 4)
+    border-r(base_w)
     border bord_w solid pal_gray1
 
 
 #site
-    border-r(bord_w * 3)
-    padding bord_w * 3
-    border bord_w solid pal_gray1
-    color pal_gray1
+    border-r(base_w)
+    padding base_w
+    border bord_w solid blk
+    color blk
     background-color wht
 
 #main
@@ -290,7 +282,7 @@ div.quantity
 
 
 
-.bpscroll
+.bpscroll, .tradescroll
     overflow-y scroll
     height item_h * 6
     padding base_w
@@ -307,19 +299,58 @@ div.quantity
 .mb1
     margin-bottom base_w
 
-.button-bar .small-button
-    width (base_w * 10)
+.mt1
+    margin-top base_w
 
+.mt05
+    margin-top (base_w/2)
 
 .debug
     border 1px dotted red
 
+.chscroll .on
+    background-color pal_red2
 
+.chscroll .off
+    background-color pal_red1
 
-.chtalk
-    width 24em
-    height 12em
+.chsay
+    border 1px solid blue
+
+    input[type=text]
+        border 1px solid green
+        width 100%
+
+.chchat
     border 1px solid pal_gray1
     background-color pal_gray2
     color wht
+    padding (base_w/2)
+    overflow-y scroll
+    overflow-x hidden
+
+
+.chtalk
+    height 18em
+    overflow-y scroll
+    overflow-x hidden
+    font-family monospace
+    margin-right (base_w/2)
+
+    .sys
+        color pal_red2
+
+    .timestamp
+        color pal_gray1
+
+    .timestamp:before
+        content "["
+
+    .timestamp:after
+        content "]"
+
+.chtrade
     padding base_w
+    border 1px solid pal_blue2
+
+

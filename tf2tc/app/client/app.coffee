@@ -19,52 +19,61 @@ exports.init = ->
         getSchema ns, ->
             $('body').trigger 'schema-ready'
             msg.append('done.').delay(2000).slideUp()
-            SS.server.app.login document.cookie, (status) ->
+            login (status) ->
                 ns.auth = status.success
-                (if status.success then bootUser else bootAnon)(ns)
+                (if status.success then initAuth else initAnon)(ns)
 
 
-bootAnon = ->
+initAnon = ->
     $('#login').show()
 
 
-bootUser = (ns) ->
-    SS.server.app.userProfile (data) ->
-        $('#logout').prepend("Welcome, #{data.profile.personaname}.&nbsp;").show()
+## initialize the app with a logged in user.  Show the welcome and
+## setup the callbacks for handling the user buttons.
+initAuth = (ns) ->
+    getProfile (profile) ->
+        $('#logout').prepend("Welcome, #{profile.personaname}.&nbsp;").show()
         $('#user').slideDown()
 
-
-        $('#backpack').bind 'lazy-load', (e) ->
+        $('#backpack').bind 'lazy-load', (e, cb) ->
             userbp = $ this
             bpshell = $ '.bpshell', userbp
             $('#user .bp .msg').text 'Loading...'
+            getProfile (profile) ->
+                getBackpack profile.steamid, ns, (backpack) ->
+                    putBackpack ns, bpshell, ->
+                        isotopeBackpack bpshell, () ->
+                            configBackpack $('#backpack'), $('#trades')
+                            initBackpackToolbar userbp, bpshell
+                            $('#user .bp .msg').text ''
+                            cb()
+                            bpshell.isotope()
 
-            getBackpack data.profile.steamid, ns, (backpack) ->
-                putBackpack ns, bpshell, ->
-                    layoutBackpack bpshell
-                    initBackpackToolbar userbp, bpshell
-                    $('#user .bp .msg').text ''
-
-
-        $('#trades').bind 'lazy-load', (e) ->
+        $('#trades').bind 'lazy-load', (e, cb) ->
                 trades = $ this
                 ch = $ '.chooser', trades
                 chshell = $ '.bpshell', ch
                 $('#user .ch .msg').text 'Loading...'
-
                 putChooser ns, chshell, ->
-                    layoutChooser chshell
-                    $('#user .ch .msg').text ''
+                    isotopeChooser chshell, () ->
+                        $('#user .ch .msg').text ''
+                        getTrades {}, (trades) ->
+                            putTrades ns, trades, $('#trades .tradeshell'), ->
+                                configBackpack $('#backpack'), $('#trades')
+                                configChooser $('#trades .chooser'), $('#trades')
+                                cb()
+                                later = ->
+                                    $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
+                                    ## this looks nice, but the similar call
+                                    ## against the backpack items does not!
+                                    $('.chooserw', chshell).isotope()
+                                setTimeout later, 500
 
-                return
-                SS.server.trades.userTrades {}, (trades) ->
-                    putTrades ns, trades, $('#trades'), ->
-                        configBackpack $('#backpack'), $('#trades')
 
-
+## create groups of choosable items at the given target.
 putChooser = (ns, target, cb) ->
     grp = ns.schema.ext.groups
-    m = SS.client.item.make
+    m = getItemMake()
 
     clone = (id, q) ->
         x = JSON.parse(JSON.stringify(ns.schema_items[id]))
@@ -86,46 +95,51 @@ putChooser = (ns, target, cb) ->
     cb()
 
 
-
-
+## create items from a backpack at the given target.
 putBackpack = (ns, target, cb) ->
-    m = SS.client.item.make
+    m = getItemMake()
     ts = ns.backpack_items
-    mk = (s) -> m(ns, ts[s], target, 'backpack')
-    mk(slot) for slot in [1..ns.backpack.result.num_backpack_slots]
+    mk = (s) -> m ns, ts[s], target, 'backpack'
+    mk slot for slot in [1..ns.backpack.result.num_backpack_slots]
     cb()
 
 
-layoutBackpack = (target) ->
+isotopeBackpack = (target, cb) ->
     mn = Number.MIN_VALUE
     cmp = (i, attr, which='item-defn', missing=Number.MAX_VALUE) ->
-        d = i.find('.item').data(which)
+        d = i.children('.item:first').data(which)
         if d
             d[attr]
         else
             missing
     target.isotope
         itemSelector: '.itemw'
-        layoutMode: 'fitRows'
-        animationEngine: if $.browser.mozilla then 'jquery' else 'best-available'
+        layoutMode: 'cellsByRow'
+        animationEngine: getAniEngine()
+        animationOptions:
+            duration: 750
         getSortData:
             quality:    (i) -> cmp i, 'quality'
             date:       (i) -> cmp i, 'id'
-            date_desc:  (i) -> cmp i, 'id',             'item-defn', mn
+            date_desc:  (i) -> cmp i, 'id',             'item-defn',   mn
             level:      (i) -> cmp i, 'level'
             level_desc: (i) -> cmp i, 'level',          'item-defn',   mn
             name:       (i) -> cmp i, 'item_name',      'schema-defn', 'ZZZ   '
             name_desc:  (i) -> cmp i, 'item_name',      'schema-defn', '   AAA'
             type:       (i) -> cmp i, 'item_type_name', 'schema-defn'
+    cb()
 
-layoutChooser = (target) ->
+
+
+isotopeChooser = (target, cb) ->
     for grp in $('.chooserw', target)
         $(grp).isotope
             itemSelector: '.itemw'
             layoutMode: 'fitRows'
-            animationEngine: if $.browser.mozilla then 'jquery' else 'best-available'
-    f = -> $('.chooserw', target).isotope()
-    setTimeout f, 100
+            animationEngine: getAniEngine()
+            animationOptions:
+                duration: 750
+    cb()
 
 
 initBackpackToolbar = (container, target) ->
@@ -144,10 +158,6 @@ initBackpackToolbar = (container, target) ->
         false
 
 
-
-
-
-
 putTrades = (ns, trades, target, cb) ->
     $('a.clear-trade', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
@@ -155,15 +165,18 @@ putTrades = (ns, trades, target, cb) ->
         p.replaceWith $('#trade-proto').tmpl({index:j}).data('tno', j)
         configBackpack $('#backpack'), $('#trades')
         configChooser $('#chooser'), $('#trades')
+        last = $('.trade', target)
         false
+
     $('a.set-trade', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
         have = ($(i).data('item-defn') for i in $('div.backpack', p))
         want = ($(i).data('item-defn') for i in $('div.chooser', p))
         if have and have.length
-            SS.server.trades.publish {have:have, want:want}, (status) ->
+            publishTrade {have:have, want:want}, (status) ->
                 console.log 'publishing status:', status
         false
+
     $('div.item.chooser', target).live 'click', (e) ->
         item = $(e.currentTarget)
         id = item.data('item-defn').defindex
@@ -182,6 +195,11 @@ putTrades = (ns, trades, target, cb) ->
     for i in [0..3]
         j = i + 1
         target.append $('#trade-proto').tmpl({index:j}).data('tno', j)
+        last = $('.trade:last', target)
+        $('.haves, .wants', last).isotope
+            itemSelector: '.itemw'
+            layoutMode: 'fitRows'
+            animationEngine: getAniEngine()
     cb()
 
 
@@ -195,10 +213,10 @@ configChooser = (source, target) ->
         id = a.data('item-defn').id
         r = b.clone(false, false)
         b.replaceWith c
-        SS.client.itemtip.hide()
+        hideItemTip()
         $('body').trigger 'trade-changed', t
         c.dblclick (e) ->
-            SS.client.itemtip.hide()
+            hideItemTip()
             c.replaceWith r
             r.droppable dropOpts
             $('body').trigger 'trade-changed', t
@@ -216,6 +234,8 @@ configChooser = (source, target) ->
         helper: 'clone'
         revert: 'invalid'
         cursor: 'move'
+        appendTo: 'body'
+        zIndex: 9002
         start: (e, ui) ->
             q = ui.helper.prevObject.data('item-defn').quality
             ui.helper.addClass "qual-background-#{q} ztop"
@@ -243,10 +263,10 @@ configBackpack = (source, target) ->
         id = a.data('item-defn').id
         r = b.clone(false, false)
         b.replaceWith c
-        SS.client.itemtip.hide()
+        hideItemTip()
         $('body').trigger 'trade-changed', t
         c.dblclick (e) ->
-            SS.client.itemtip.hide()
+            hideItemTip()
             c.replaceWith r
             r.droppable dropOpts
             ids = t.data 'ids'
@@ -267,9 +287,11 @@ configBackpack = (source, target) ->
         ## else alert or message or something
 
     dragOpts =
+        appendTo: 'body'
+        cursor: 'move'
         helper: 'clone'
         revert: 'invalid'
-        cursor: 'move'
+        zIndex: 9002
         start: (e, ui) ->
             q = ui.helper.prevObject.data('item-defn').quality
             ui.helper.addClass "qual-background-#{q} ztop"
@@ -305,13 +327,13 @@ tradeChanged = (e, tc) ->
         $('a.clear-trade', tc).slideUp()
 
 
-exports.getSchema = getSchema = (ns, cb) ->
+getSchema = (ns, cb) ->
     if ns.schema?
         cb ns.schema
     else
         $.getJSON '/schema', (s) ->
-            SS.client.util.makeSchema ns, s
-            cb ns.schema
+            cb makeSchema(ns, s)
+
 
 getProfile = (id64, cb) ->
     $.getJSON "/profile/#{id64}", cb
@@ -322,8 +344,7 @@ getBackpack = (id64, ns, cb) ->
         cb ns.backpack
     else
         $.getJSON "/items/#{id64}", (b) ->
-            SS.client.util.makeBackpack ns, b
-            cb ns.backpack
+            cb makeBackpack(ns, b)
 
 
 initJQ = ($) ->
@@ -336,44 +357,120 @@ initJQ = ($) ->
 
 initEvents = (ns) ->
     $('body').bind 'trade-changed', tradeChanged
-    $('div.item:not(:empty)').live 'mouseover', {namespace:ns}, SS.client.itemtip.show
-    $('div.item:not(:empty)').live 'mouseout', {namespace:ns}, SS.client.itemtip.hide
+    $('div.item:not(:empty)').live 'mouseover', {namespace:ns}, showItemTip
+    $('div.item:not(:empty)').live 'mouseout', {namespace:ns}, hideItemTip
 
     $('#user a').click ->
         self = $(this)
         target = $ self.attr('data-target')
+
+        v = (self.text().indexOf('Show') > -1)
+        s = if v then 'Show' else 'Hide'
+        r = if v then 'Hide' else 'Show'
+        self.text self.text().replace(s, r)
+
         if not target.attr 'data-load'
-            target.attr('data-load', true).trigger 'lazy-load'
-        target.slideToggle ->
-            v = target.is ':visible'
-            s = if v then 'Show' else 'Hide'
-            r = if v then 'Hide' else 'Show'
-            self.text( self.text().replace s, r )
+            target.attr('data-load', true).trigger 'lazy-load', () ->
+                target.slideDown()
+        else
+            target.slideToggle()
         false
 
 
     $('#channels .button-bar a').click ->
         link = $ this
         cname = link.attr('data-channel-name')
-        active = link.hasClass('channel-on')
-        link.toggleClass('channel-on').toggleClass('channel-off')
-        (if active then leaveChannel else joinChannel)(cname)
+        active = link.hasClass('on')
+        link.toggleClass('on').toggleClass('off')
+        (if active then leaveChannel else joinChannel)(cname, link.parent())
+        false
+
+    $('#channels .chshell .chsay input[type=text]').live 'keydown', (e) ->
+        if e.keyCode == 13
+            inp = $(e.currentTarget)
+            csh = inp.parents('.chshell')
+            cname = csh.data('cname')
+            text = inp.attr('value')
+            if text
+                sayChannel {cname:cname, text:text}, () ->
+                    inp.attr 'value', ''
+                e.preventDefault()
 
     SS.events.on 'sys-chan-msg', (msg) ->
-        console.log 'System Message:', msg, arguments
-        $("#channels .chshell.cname-#{msg.cname} .chtalk").append "<i>#{msg.msg}</i><br>"
+        talk = $ "#channels .chshell.cname-#{msg.cname} .chtalk"
+        if talk and talk[0]
+            talk.append makeSysMsg(msg)
+            talk[0].scrollTop = talk[0].scrollHeight
+
+    SS.events.on 'user-chan-msg', (msg) ->
+        talk = $ "#channels .chshell.cname-#{msg.cname} .chtalk"
+        if talk and talk[0]
+            talk.append makeUserMsg(msg)
+            talk[0].scrollTop = talk[0].scrollHeight
 
 
-leaveChannel = (name) ->
-    area = $ "#channels .chscroll .chshell.cname-#{name}"
+
+leaveChannel = (name, context) ->
+    area = $(".chshell.cname-#{name}", context)
     area.slideUp -> area.detach()
     SS.server.channels.leave name
 
 
-joinChannel = (name) ->
-    target = $ '#channels .chscroll'
-    target.append $('#channel-proto').tmpl {name:name, title:name}
-    newarea = $ "#channels .chscroll .chshell:last"
-    newarea.addClass("cname-#{name}").slideDown()
+joinChannel = (name, context) ->
+    context.append $('#channel-proto').tmpl {name:name, title:name}
+    newarea = $ '.chshell', context
+    newarea.addClass("cname-#{name}").data('cname', name).slideDown()
     SS.server.channels.join name
+    SS.server.channels.list name, (names) ->
+        for n in names
+            $('.chshell .chusers', context).append "IMG: #{n}<br>"
 
+
+makeSysMsg = (m) ->
+    t = new Date().toLocaleTimeString()
+    "<span class='timestamp'>#{t}</span> <span class='sys'>system: </span>#{m.who} has #{m.what} the channel.<br>"
+
+
+makeUserMsg = (m) ->
+    t = new Date().toLocaleTimeString()
+    "<span class='timestamp'>#{t}</span> <span class='user'>#{m.who}: </span>#{m.text}<br>"
+
+
+getAniEngine = ->
+    if $.browser.mozilla then 'jquery' else 'best-available'
+
+
+## local wrappers around the other client apis, and server apis.
+
+login = (cb) ->
+    SS.server.app.login document.cookie, cb
+
+
+sayChannel = (p, cb) ->
+    SS.server.channels.say p, cb
+
+getProfile = (cb) ->
+    SS.server.app.userProfile cb
+
+getTrades = (what, cb) ->
+    SS.server.trades.userTrades what, cb
+
+getItemMake = ->
+    SS.client.item.make
+
+publishTrade = (p, cb) ->
+    SS.server.trades.publish p, cb
+
+hideItemTip = () ->
+    SS.client.itemtip.hide()
+
+showItemTip = () ->
+    SS.client.itemtip.show()
+
+makeSchema = (ns, s) ->
+    SS.client.util.makeSchema ns, s
+    ns.schema
+
+makeBackpack = (ns, b) ->
+    SS.client.util.makeBackpack ns, b
+    ns.backpack

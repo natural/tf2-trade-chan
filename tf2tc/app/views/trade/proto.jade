@@ -1,60 +1,54 @@
-div.trade
+div.trade.mb1
 
-  table
-    tr
-      td
-        h3 Your Offerings
-        h4.null These are the items you will give in the trade.
-        div.row
-          div.itemw
-            div.item.have
-          div.itemw
-            div.item.have
-          div.itemw
-            div.item.have
-          div.itemw
-            div.item.have
-        div.row
-          div.itemw
-            div.item.have
-          div.itemw
-            div.item.have
-          div.itemw
-            div.item.have
-          div.itemw
-            div.item.have
-      td(rowspan=2, style='width:240px')
-        h2.mb05.text-center Trade #${index}
-        .text-center.mb1(style='height:35px')
-          a.set-trade.null.mr1.small-button(href='#') publish
-          a.clear-trade.null.mr1.small-button(href='#') clear
-
-        .mt2.mb05
-          h4 Notes:
-        .trade-notes
-          textarea
+    div.line.debug
+        div.unit.size1of2.debug
+            h2 Trade #${index}
+            a.set-trade.null.small-button(href='#') publish
+            a.clear-trade.null.small-button(href='#') clear
+        div.unit.lastUnit.size1of2
+            h4 Notes:
+            .trade-notes
+                textarea
 
 
-    tr
-      td
-        h3 Your Wishlist
-        h4.null These are the items you want to receive in the trade.
-        div.row
-          div.itemw
+    h3 Your Offerings
+    h4.null These are the items you will give in the trade.
+
+    div.haves
+        div.itemw
+            div.item.have
+        div.itemw
+            div.item.have
+        div.itemw
+            div.item.have
+        div.itemw
+            div.item.have
+        div.itemw
+            div.item.have
+        div.itemw
+            div.item.have
+        div.itemw
+            div.item.have
+        div.itemw
+            div.item.have
+
+    h3 Your Wishlist
+    h4.null These are the items you want to receive in the trade.
+
+    div.wants
+        div.itemw
             div.item.want
-          div.itemw
+        div.itemw
             div.item.want
-          div.itemw
+        div.itemw
             div.item.want
-          div.itemw
+        div.itemw
             div.item.want
-        div.row
-          div.itemw
+        div.itemw
             div.item.want
-          div.itemw
+        div.itemw
             div.item.want
-          div.itemw
+        div.itemw
             div.item.want
-          div.itemw
+        div.itemw
             div.item.want
-      td

@@ -1,55 +1,47 @@
 ## server-side app module
 #
-util = require('util')
-steam = require('./steam.coffee')
+util = require 'util'
+steam = require './steam.coffee'
 
 
 exports.actions =
     init: (cb) ->
         @getSession (session) ->
             session.on 'disconnect', clientDisconnect
-            clientConnect(session)
-
         cb "framework: #{SS.version}, websockets: okay, application: v07"
 
-    sendMessage: (params, cb) ->
-        SS.publish.user params.user, 'user_message', {source: @session.user_id, body: params.message}
-        cb true
-
-    bcastMessage: (params, cb) ->
-        SS.publish.broadcast 'group_message', {source: @session.user_id, body: params.message}
-        cb true
+    backpack: (cb) ->
+        @getSession (session) ->
+            if session.user.loggedIn()
+                uid = session.user_id
+                id64 = uid.split('/').pop()
+                steam.actions.items {id64:id64}, cb
+            else
+                cb {}
 
     login: (params, cb) ->
-        @session.authenticate 'local_auth', params, (response) =>
-            @session.setUserId(response.user_id) if response.success
-            cb(response)
+        @getSession (session) ->
+            session.authenticate 'local_auth', params, (response) =>
+                session.setUserId(response.user_id) if response.success
+                cb(response)
 
     logout: (cb) ->
-        @session.user.logout(cb)
-
-    userProfile: (cb) ->
-        if @session.user.loggedIn()
-            uid = @session.user_id
-            steam.actions.profile {id64: uid.split('/').pop()}, (profile) ->
-                cb {auth: true, user_id: uid, profile: profile}
-        else
-            cb {auth: false, user_id: null, profile: {}}
+        @getSession (session) ->
+            session.user.logout(cb)
+            session.setUserId(null)
 
     readProfile: (params, cb) ->
         steam.actions.profile params, cb
 
-    backpack: (cb) ->
-        if @session.user.loggedIn()
-            uid = @session.user_id
-            id64 = uid.split('/').pop()
-            steam.actions.items {id64:id64}, cb
-        else
-            cb {}
+    userProfile: (cb) ->
+        @getSession (session) ->
+            if session.user.loggedIn() and session.user_id
+                id64 = session.user_id.split('/').pop()
+                steam.actions.profile {id64: id64}, (profile) ->
+                    cb profile
+            else
+                cb {}
 
-
-clientConnect = (s) ->
-    util.log "CONNECT user_id=#{s.user_id}"
 
 
 clientDisconnect = (s) ->
