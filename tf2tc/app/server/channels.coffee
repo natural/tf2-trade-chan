@@ -1,50 +1,69 @@
-steam = require('./steam.coffee')
+utils = require './utils.coffee'
+steam = require './steam.coffee'
 
 
 exports.actions =
-    join: (cname, cb) ->
+    join: (params, cb) ->
+        name = params.name
         @getSession (session) ->
-            SS.server.app.userProfile (profile) ->
-                key = keys.channelUserList cname
-                username = getProfileName profile
-                R.rpush key, username, (err, okay) ->
+            msg = what:'joined', name:name
+            makeProfileMessage session, msg, (res) ->
+                session.channel.subscribe name
+                R.rpush keys.channelUserList(name), res.who, (err, okay) ->
                     if okay and not err
-                        data = who: username, what: 'joined', cname: cname
-                        session.channel.subscribe cname
-                        SS.publish.channel [cname], 'sys-chan-msg', data
+                        R.rpush keys.userChannels(res.id64), name
+                        SS.publish.channel [name], 'sys-chan-msg', res
+                        cb()
 
-
-
-    leave: (cname, cb) ->
+    leave: (params, cb) ->
+        name = params.name
         @getSession (session) ->
-            SS.server.app.userProfile (profile) ->
-                username = getProfileName profile
-                key = keys.channelUserList cname
-                R.lrem key, 0, username, (err, okay) ->
-                    data = who: username, what: 'left', cname: cname
-                    session.channel.unsubscribe cname
-                    SS.publish.channel [cname], 'sys-chan-msg', data
+            msg = what:'left', name:name
+            makeProfileMessage session, msg, (res) ->
+                session.channel.unsubscribe name
+                R.lrem keys.channelUserList(name), 0, res.who, (err, okay) ->
+                    R.lrem keys.userChannels(res.id64), 0, name
+                    SS.publish.channel [name], 'sys-chan-msg', res
+                    cb()
 
-    list: (cname, cb) ->
-        key = keys.channelUserList cname
-        R.lrange key, 0, -1, (err, val) ->
+    leaveAll: (params, cb) ->
+        id64 = utils.getId64 params.session
+        if id64
+            R.lrange "channels:#{id64}", 0, -1, (err, vals) ->
+                for name in vals
+                    exports.actions.leave name
+        cb()
+
+    list: (params, cb) ->
+        R.lrange keys.channelUserList(params.name), 0, -1, (err, val) ->
             cb val
 
     say: (params, cb) ->
-        cname = params.cname
-        text = params.text
         @getSession (session) ->
-            SS.server.app.userProfile (profile) ->
-                username = getProfileName profile
-                data = who: username, what: 'said', cname: cname, text: text
-                SS.publish.channel [cname], 'user-chan-msg', data
+            msg = what:'said', name:params.name, text:params.text
+            makeProfileMessage session, msg, (res) ->
+                SS.publish.channel [params.name], 'user-chan-msg', res
                 cb()
 
 
-getProfileName = (info) ->
-    if info.personaname then info.personaname else 'anon'
-
-
 keys =
+    userChannels: (id64) ->
+        "channels:#{id64}"
+
     channelUserList: (c) ->
         "cusers:#{c}"
+
+
+## we can't call SS.server.app.userProfile directly because that gets
+## some session wiring crossed, giving us the wrong profile as the
+## source of the message.
+makeProfileMessage = (session, data, cb) ->
+    if session.user.loggedIn() and session.user_id
+        id64 = utils.getId64 session
+        if id64
+            steam.actions.profile {id64: id64}, (profile) ->
+                username = profile.personaname
+                if username
+                    data.id64 = id64
+                    data.who = username
+                    cb data

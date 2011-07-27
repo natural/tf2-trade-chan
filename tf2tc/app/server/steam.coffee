@@ -2,10 +2,9 @@
 #
 
 http = require 'http'
-util = require 'util'
 libxmljs = require 'libxmljs'
 ext = require './schema_ext'
-
+utils = require './utils'
 
 exports.actions =
     schema: (cb) ->
@@ -51,10 +50,10 @@ get = (opts, parse, cb) ->
     key = "#{opts.host}#{opts.path}"
     R.get key, (err, val) ->
         if val
-            util.log "steam data hit #{key}"
+            utils.log "steam data cache hit #{key}"
             cb(if parse then parse val else val)
         else
-            util.log "steam data miss #{key}"
+            utils.log "steam data cache miss #{key}"
             req = http.get opts, (res) ->
                 res.setEncoding 'utf8'
                 chunks = []

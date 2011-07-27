@@ -1,6 +1,6 @@
 ## server-side app module
 #
-util = require 'util'
+utils = require './utils'
 steam = require './steam.coffee'
 
 
@@ -45,5 +45,7 @@ exports.actions =
 
 
 clientDisconnect = (s) ->
-    util.log "DISCONNECT user_id=#{s.user_id}"
-    s.user.logout()
+    utils.log "DISCONNECT user_id=#{s.user_id}"
+    dummy = user_id:s.user_id
+    SS.server.channels.leaveAll {session:dummy}, ->
+        s.user.logout()

@@ -1,6 +1,6 @@
 ## server-side module for trades
 #
-
+utils = require('./utils')
 
 exports.actions =
 
@@ -28,7 +28,7 @@ exports.actions =
 
             ## generate trade id
             nextTradeID uid, (tradeID) ->
-                console.log "TRADE ID #{tradeID} FOR USER #{uid}"
+                utils.log "TRADE ID #{tradeID} FOR USER #{uid}"
 
                 ## set the payload
                 setTradePayload tradeID, params, () ->
@@ -36,7 +36,7 @@ exports.actions =
                     ## for each have.defindex, place the trade id into each defindex:quality bucket
                     ks = keys.tradeBuckets have, tradeID
                     fillTradeBuckets ks, (status) ->
-                        console.log "ADD #{tradeID} TRADE TO BUCKETS #{ks} STATUS #{status}"
+                        utils.log "ADD #{tradeID} TRADE TO BUCKETS #{ks} STATUS #{status}"
 
                         ## for each have.defindex, publish the trade to each ???:quality channel
                         cb {success:true, tradeID:tradeID}

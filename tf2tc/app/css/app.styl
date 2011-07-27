@@ -37,12 +37,10 @@ font_sec = "TF2secondary"
 
 body, html
     height 100%
-    padding base_p
-
 
 body
-    color wht
-    background-color darken(pal_gray2, 30%)
+    color blk
+    background-color darken(#fff, 15%)
     font-family font_sec
     font-size 100%
 
@@ -218,78 +216,78 @@ div.quantity
 .small-button:active
     color lighten(blk, 50%)
 
+
 .button-bar .small-button
     margin-right 1em
     width (base_w * 10)
 
 
 
+#site
+    background-color wht
+    border-top (bord_w/2) solid darken(wht, 50%)
+    border-bottom bord_w solid blk
+    padding base_p base_p base_p base_w
 
+    .logo, .auth
+        vertical-align middle
 
+    .auth
+        text-align right
+        vertical-align middle
+        font-size 90%
+        img
+            vertical-align middle
 
+#logout, #login
+    margin-left base_w
+
+    .small-button
+        margin-left base_w
+        padding-left (base_w * 2)
+        padding-right (base_w * 2)
 
 #user
-    border-r(base_w)
-    border bord_w solid pal_gray1
-    background-color pal_gray2
-    padding base_w
-
+    border-bottom bord_w solid blk
+    padding base_w 0 base_w 0
 
 
 #backpack, #trades
-    color wht
     position relative
     overflow hidden
 
 #backpack
     margin-top base_w
 
-
 #channels
     padding base_w
-    a-width item_w * 11.5
+    background-color darken(#fff, 35%)
+    height 100%
 
 
-#user, #channels
-    margin 0 base_w base_w 0
-    background-color blk // darken(#a0a0a3, 10%)
-    border-r(base_w)
-    border bord_w solid pal_gray1
-
-
-#site
-    border-r(base_w)
-    padding base_w
-    border bord_w solid blk
+.topw
+    a-border-r(base_w)
+    a-border bord_w solid pal_gray2
+    a-background-color wht
+    a-padding base_w
+    a-margin-bottom base_w
+    padding-left base_w
     color blk
-    background-color wht
-
-#main
-    a-border 1px solid red
-
-
-#view
-    a-min-width 920px
-    a-border 1px solid green
-
-#site
-    a-border 1px solid blue
-
-.last
-    clear both
-
-
-
 
 
 .bpscroll, .tradescroll
     overflow-y scroll
     height item_h * 6
+    margin base_w
+    margin-left 0
+    background-color blk
+    color wht
     padding base_w
-    padding-left 0
-    border-top (bord_w/2) solid pal_gray1
-    border-bottom (bord_w/2) solid pal_gray1
-    margin-bottom base_w
+    border-r(base_p)
+    border-left bord_w solid pal_blue3
+    border-top bord_w solid pal_blue3
+    border-bottom bord_w solid pal_blue3
+
 
 .bpshell
     margin 0
@@ -305,8 +303,12 @@ div.quantity
 .mt05
     margin-top (base_w/2)
 
-.debug
+.debug, .debug1
     border 1px dotted red
+
+.debug2
+    border 1px dotted green
+
 
 .chscroll .on
     background-color pal_red2
@@ -326,13 +328,13 @@ div.quantity
     background-color pal_gray2
     color wht
     padding (base_w/2)
-    overflow-y scroll
+    overflow-y auto
     overflow-x hidden
 
 
 .chtalk
     height 18em
-    overflow-y scroll
+    overflow-y auto
     overflow-x hidden
     font-family monospace
     margin-right (base_w/2)

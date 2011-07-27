@@ -12,7 +12,7 @@ exports.ns = {}
 ## an initial authorization.
 exports.init = ->
     SS.server.app.init ->
-        msg = $('#message').text 'Loading schema...'
+        msg = $('#site .msg').text 'Loading schema...'
         ns = exports.ns
         initJQ jQuery
         initEvents ns
@@ -24,15 +24,16 @@ exports.init = ->
                 (if status.success then initAuth else initAnon)(ns)
 
 
+## initialize the app without a user.
 initAnon = ->
     $('#login').show()
 
 
-## initialize the app with a logged in user.  Show the welcome and
+## initialize the app with a logged in user; show the welcome and
 ## setup the callbacks for handling the user buttons.
 initAuth = (ns) ->
     getProfile (profile) ->
-        $('#logout').prepend("Welcome, #{profile.personaname}.&nbsp;").show()
+        $('#logout').prepend("Welcome, #{profile.personaname}.").show()
         $('#user').slideDown()
 
         $('#backpack').bind 'lazy-load', (e, cb) ->
@@ -42,7 +43,7 @@ initAuth = (ns) ->
             getProfile (profile) ->
                 getBackpack profile.steamid, ns, (backpack) ->
                     putBackpack ns, bpshell, ->
-                        isotopeBackpack bpshell, () ->
+                        isoBackpack bpshell, () ->
                             configBackpack $('#backpack'), $('#trades')
                             initBackpackToolbar userbp, bpshell
                             $('#user .bp .msg').text ''
@@ -55,7 +56,7 @@ initAuth = (ns) ->
                 chshell = $ '.bpshell', ch
                 $('#user .ch .msg').text 'Loading...'
                 putChooser ns, chshell, ->
-                    isotopeChooser chshell, () ->
+                    isoChooser chshell, () ->
                         $('#user .ch .msg').text ''
                         getTrades {}, (trades) ->
                             putTrades ns, trades, $('#trades .tradeshell'), ->
@@ -104,7 +105,7 @@ putBackpack = (ns, target, cb) ->
     cb()
 
 
-isotopeBackpack = (target, cb) ->
+isoBackpack = (target, cb) ->
     mn = Number.MIN_VALUE
     cmp = (i, attr, which='item-defn', missing=Number.MAX_VALUE) ->
         d = i.children('.item:first').data(which)
@@ -131,7 +132,7 @@ isotopeBackpack = (target, cb) ->
 
 
 
-isotopeChooser = (target, cb) ->
+isoChooser = (target, cb) ->
     for grp in $('.chooserw', target)
         $(grp).isotope
             itemSelector: '.itemw'
@@ -379,49 +380,54 @@ initEvents = (ns) ->
 
     $('#channels .button-bar a').click ->
         link = $ this
-        cname = link.attr('data-channel-name')
+        name = link.attr('data-channel-name')
         active = link.hasClass('on')
         link.toggleClass('on').toggleClass('off')
-        (if active then leaveChannel else joinChannel)(cname, link.parent())
+        (if active then leaveChannel else joinChannel)(name, link.parent())
         false
 
     $('#channels .chshell .chsay input[type=text]').live 'keydown', (e) ->
         if e.keyCode == 13
             inp = $(e.currentTarget)
             csh = inp.parents('.chshell')
-            cname = csh.data('cname')
+            name = csh.data('cname')
             text = inp.attr('value')
             if text
-                sayChannel {cname:cname, text:text}, () ->
+                sayChannel {name:name, text:text}, () ->
                     inp.attr 'value', ''
                 e.preventDefault()
 
-    SS.events.on 'sys-chan-msg', (msg) ->
-        talk = $ "#channels .chshell.cname-#{msg.cname} .chtalk"
+    SS.events.on 'sys-chan-msg', onTalk makeSysMsg
+    SS.events.on 'user-chan-msg', onTalk makeUserMsg
+    SS.events.on 'trade-chan-msg', (msg) ->
+        null
+
+
+onTalk = (fmt) ->
+    (msg) ->
+        console.log msg
+        talk = talkArea msg.name
         if talk and talk[0]
-            talk.append makeSysMsg(msg)
+            talk.append fmt(msg)
             talk[0].scrollTop = talk[0].scrollHeight
 
-    SS.events.on 'user-chan-msg', (msg) ->
-        talk = $ "#channels .chshell.cname-#{msg.cname} .chtalk"
-        if talk and talk[0]
-            talk.append makeUserMsg(msg)
-            talk[0].scrollTop = talk[0].scrollHeight
 
+talkArea = (name) ->
+    $ "#channels .chshell.cname-#{name} .chtalk"
 
 
 leaveChannel = (name, context) ->
     area = $(".chshell.cname-#{name}", context)
     area.slideUp -> area.detach()
-    SS.server.channels.leave name
+    SS.server.channels.leave name:name
 
 
 joinChannel = (name, context) ->
     context.append $('#channel-proto').tmpl {name:name, title:name}
     newarea = $ '.chshell', context
     newarea.addClass("cname-#{name}").data('cname', name).slideDown()
-    SS.server.channels.join name
-    SS.server.channels.list name, (names) ->
+    SS.server.channels.join name:name
+    SS.server.channels.list {name:name}, (names) ->
         for n in names
             $('.chshell .chusers', context).append "IMG: #{n}<br>"
 
@@ -433,18 +439,18 @@ makeSysMsg = (m) ->
 
 makeUserMsg = (m) ->
     t = new Date().toLocaleTimeString()
-    "<span class='timestamp'>#{t}</span> <span class='user'>#{m.who}: </span>#{m.text}<br>"
+    x = $("<span>#{m.text}</span>").text()
+    "<span class='timestamp'>#{t}</span> <span class='user'>#{m.who}: </span>#{x}<br>"
 
 
 getAniEngine = ->
     if $.browser.mozilla then 'jquery' else 'best-available'
 
 
-## local wrappers around the other client apis, and server apis.
+## local wrappers around the server and other client apis.
 
 login = (cb) ->
     SS.server.app.login document.cookie, cb
-
 
 sayChannel = (p, cb) ->
     SS.server.channels.say p, cb
@@ -461,11 +467,11 @@ getItemMake = ->
 publishTrade = (p, cb) ->
     SS.server.trades.publish p, cb
 
-hideItemTip = () ->
-    SS.client.itemtip.hide()
+hideItemTip = (e) ->
+    SS.client.itemtip.hide e
 
-showItemTip = () ->
-    SS.client.itemtip.show()
+showItemTip = (e) ->
+    SS.client.itemtip.show e
 
 makeSchema = (ns, s) ->
     SS.client.util.makeSchema ns, s

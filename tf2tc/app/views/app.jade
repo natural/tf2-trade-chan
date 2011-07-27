@@ -6,6 +6,8 @@ html(lang="en")
         != SocketStream
         title TF2 Trade Chan
     body
+
+
         #itemtip.null
             .name
             .level
@@ -19,52 +21,11 @@ html(lang="en")
             .untradable
             .ctrl
 
-        #main.line
-           #view.unit.size4of5
-
-                #user.null
-                    .button-bar.mb1.bp
-                        a(href="#", class="small-button", data-target="#backpack", data-loaded="") Show Backpack
-                        span.msg Click this button to show your backpack.  You use your backpack to make trades.
-                    #backpack.null
-                        .bptools.null
-                            include backpack_tools
-                        .bpscroll
-                            .bpshell
-
-                    .button-bar.ch
-                        a(href="#", class="small-button", data-target="#trades", data-loaded="") Show Trades
-                        span.msg  Click this button to show your trades.
-                    #trades.null
-                        .tradescroll.debug.unit.size1of2
-                            .tradeshell
-                        .chooser.debug.unit.lastUnit.size1of2
-                            .bptools.null
-                                include backpack_tools
-                            .bpscroll
-                                .bpshell
-
-
-                #channels
-                    .channels-help.mb1
-                        | Click on a channel name to join it.  You'll
-                        | see trades as they are added to the channel,
-                        | and you can chat with other channel members.
-
-                    .chscroll.button-bar
-                        .mb1
-                            a(href="#", class="small-button off", data-channel-name="commodities") Commodites
-                        .mb1
-                            a(href="#", class="small-button off", data-channel-name="promos") Promos
-                        .mb1
-                            a(href="#", class="small-button off", data-channel-name="unusual_hats") Unusual Hats
-                        div
-                            a(href="#", class="small-button off", data-channel-name="vintage_hats") Vintage Hats
-
-            #site.unit.size1of5.lastUnit
+        #site.line
+            .logo.unit.size1of2
                 h1 tf2 trade chan
-                #message
-
+            .auth.unit.size1of2.lastUnit
+                span.msg
                 span#login.null
                     | Safe and Secure Login with Steam
                     a(href='/authenticate')
@@ -72,5 +33,44 @@ html(lang="en")
                 span#logout.null
                     a.small-button(href='/logout') logout
 
+        #user.null
+            .topw
+                .button-bar.bp.mb1
+                    a(href="#", class="small-button", data-target="#backpack", data-loaded="") Show Backpack
+                    span.msg Click this button to show your backpack.  You use your backpack to make trades.
+                #backpack.null
+                    .bptools.null
+                        include backpack_tools
+                    .bpscroll
+                        .bpshell
+            .topw
+                .button-bar.ch
+                    a(href="#", class="small-button", data-target="#trades", data-loaded="") Show Trades
+                    span.msg  Click this button to show your trades.
+                #trades.null
+                    .tradescroll.unit.size1of2
+                        .tradeshell
+                    .chooser.unit.lastUnit.size1of2
+                        .bptools.null
+                            include backpack_tools
+                        .bpscroll
+                            .bpshell
 
+
+
+        #channels
+            .channels-help.mb1
+                | Click on a channel name to join it.  You'll
+                | see trades as they are added to the channel,
+                | and you can chat with other channel members.
+
+            .chscroll.button-bar
+                .mb1
+                    a(href="#", class="small-button off", data-channel-name="commodities") Commodites
+                .mb1
+                    a(href="#", class="small-button off", data-channel-name="promos") Promos
+                .mb1
+                    a(href="#", class="small-button off", data-channel-name="unusual_hats") Unusual Hats
+                div
+                    a(href="#", class="small-button off", data-channel-name="vintage_hats") Vintage Hats
 
