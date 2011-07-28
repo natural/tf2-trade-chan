@@ -21,6 +21,7 @@ border-r(n)
   -webkit-border-radius n
 
 
+
 box-shadow()
   vendor box-shadow, arguments
 
@@ -34,6 +35,15 @@ vertical-gradient(from, to)
   background-color to
   background-image -webkit-gradient(linear, left top, left bottom, from(from), to(to))
   background-image -moz-linear-gradient(top, from, to)
+
+
+trans(prop, len)
+  -moz-transition-duration  len
+  -moz-transition-property  prop
+  -webkit-transition-duration  len
+  -webkit-transition-property  prop
+  transition-duration len
+  transition-property prop
 
 
 qual(i, a, b)
@@ -240,4 +250,5 @@ eff(99) // earbuds
     -webkit-transition-property  -webkit-transform, opacity
     -moz-transition-property     -moz-transform, opacity
     transition-property          transform, opacity
+
 

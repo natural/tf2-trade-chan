@@ -46,6 +46,15 @@ exports.actions =
             cb(news)
 
 
+httpGet = (options, cb) ->
+    options.method = 'GET'
+    req = http.request(options, cb)
+    #req.connection.setTimeout 2*250
+    req.end()
+    req
+
+
+
 get = (opts, parse, cb) ->
     key = "#{opts.host}#{opts.path}"
     R.get key, (err, val) ->
@@ -54,18 +63,20 @@ get = (opts, parse, cb) ->
             cb(if parse then parse val else val)
         else
             utils.log "steam data cache miss #{key}"
-            req = http.get opts, (res) ->
+            req = httpGet opts, (res) ->
                 res.setEncoding 'utf8'
                 chunks = []
                 res.on 'data', (c) ->
                     chunks.push(c)
+                res.on 'end', (e) ->
+                    cb null
                 res.on 'end', () ->
                     if res.statusCode == 200
                         str = chunks.join ''
                         R.setex key, opts.ttl, str, (e, x) ->
                             cb(if parse then parse str else str)
                     else
-                        cb ''
+                        cb null
 
 
 
@@ -74,25 +85,25 @@ urls =
         host: 'api.steampowered.com'
         path: "/ITFItems_440/GetSchema/v0001/?format=json&language=en&key=#{key}"
         port: 80
-        ttl: 60*20
+        ttl: 60*60
 
     items: (id64, key) ->
         host: 'api.steampowered.com'
         path: "/ITFItems_440/GetPlayerItems/v0001/?key=#{key}&SteamID=#{id64}"
         port: 80
-        ttl: 60*2
+        ttl: 60*5
 
     profile: (id64, key) ->
         host: 'api.steampowered.com'
         path: "/ISteamUser/GetPlayerSummaries/v0001/?key=#{key}&steamids=#{id64}"
         port: 80
-        ttl: 60*2
+        ttl: 60*10
 
     status: (id64) ->
         host: 'steamcommunity.com'
         path: "/profiles/#{id64}/?xml=1"
         port: 80
-        ttl: 60*2
+        ttl: 60*5
 
     news: (count, max) ->
         host: 'api.steampowered.com'

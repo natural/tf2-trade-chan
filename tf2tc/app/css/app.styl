@@ -77,12 +77,6 @@ div.item
     margin-bottom 4px
 
 
-
-div.item:hover:not(:empty)
-    border 3px solid pal_blue2
-    background-color wht
-
-
 div.outline
     border bord_w solid lighten(pal_gray1, 75%)
     background-color darken(pal_gray1, 25%)
@@ -266,11 +260,6 @@ div.quantity
 
 
 .topw
-    a-border-r(base_w)
-    a-border bord_w solid pal_gray2
-    a-background-color wht
-    a-padding base_w
-    a-margin-bottom base_w
     padding-left base_w
     color blk
 
@@ -284,9 +273,7 @@ div.quantity
     color wht
     padding base_w
     border-r(base_p)
-    border-left bord_w solid pal_blue3
-    border-top bord_w solid pal_blue3
-    border-bottom bord_w solid pal_blue3
+
 
 
 .bpshell
@@ -296,6 +283,9 @@ div.quantity
 
 .mb1
     margin-bottom base_w
+
+.mb2
+    margin-bottom (base_w * 2)
 
 .mt1
     margin-top base_w
@@ -354,5 +344,75 @@ div.quantity
 .chtrade
     padding base_w
     border 1px solid pal_blue2
+
+
+
+
+.help
+    font-size 90%
+    font-family font_sec
+
+
+.trade
+    background-color blk
+    padding base_p*2
+    border-r(bord_w*2)
+    trans(background-color, 1s)
+
+    h3
+        color darken(wht, 40%)
+        margin-right base_p
+
+    .help
+        color darken(wht, 60%)
+        opacity(0)
+        trans(opacity, 1s)
+
+    .button-bar .small-button
+        margin-right 1em
+        width inherit
+
+    .FOOO
+        opacity(0)
+        -moz-transition opacity .5s linear, visibility .1s linear .5s
+        -webkit-transition opacity .5s linear, visibility .1s linear .5s
+        transition opacity .5s linear, visibility .1s linear .5s
+        visibility hidden
+
+    .button-bar
+        .small-button
+            background-color pal_gray1 !important
+
+        .small-button:hover
+            background-color pal_red3 !important
+
+
+.trade:hover
+    background-color #222
+    trans(background-color, 1s)
+
+    .help
+        opacity(1)
+        trans(opacity, 1s)
+
+FOOO
+    .button-bar
+        opacity(1)
+        visibility visible
+
+
+.trade-show-notes:not(:empty)
+    border 1px solid pal_gray1
+    padding base_p
+    font-family Andale Mono, monospace
+    font-size 90%
+    width 60%
+
+.trade-edit-notes textarea
+    height 8em
+    width 60%
+    font-family Andale Mono, monospace
+    font-size 90%
+
 
 

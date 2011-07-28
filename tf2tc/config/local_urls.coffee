@@ -92,6 +92,9 @@ expiry = (hours=24*7) ->
 
 
 maybe304 = (obj, server, request, response, mime='text/javascript') ->
+    if not obj
+        server.deliver response, 500, mime, ''
+        return
     str = JSON.stringify obj
     tag = hashlib.md5 str
     response.setHeader 'ETag', tag

@@ -160,22 +160,34 @@ initBackpackToolbar = (container, target) ->
 
 
 putTrades = (ns, trades, target, cb) ->
-    $('a.clear-trade', target).live 'click', (e) ->
+    $('a.trade-clear', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
         j = p.data('tno')
         p.replaceWith $('#trade-proto').tmpl({index:j}).data('tno', j)
         configBackpack $('#backpack'), $('#trades')
         configChooser $('#chooser'), $('#trades')
-        last = $('.trade', target)
+        $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
         false
 
-    $('a.set-trade', target).live 'click', (e) ->
+    $('a.trade-submit', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
         have = ($(i).data('item-defn') for i in $('div.backpack', p))
         want = ($(i).data('item-defn') for i in $('div.chooser', p))
         if have and have.length
             publishTrade {have:have, want:want}, (status) ->
                 console.log 'publishing status:', status
+        false
+
+    $('a.trade-notes', target).live 'click', (e) ->
+        p = $(e.currentTarget).parents('div.trade')
+        if $('.trade-edit-notes', p).is(':visible')
+            ## done editing
+            txt = $('.trade-edit-notes textarea', p).val()
+            $('.trade-show-notes', p).text(txt)
+        else
+            txt = $('.trade-show-notes', p).text()
+            $('.trade-edit-notes textarea', p).val(txt)
+        $('.trade-edit-notes, .trade-show-notes', p).slideToggle()
         false
 
     $('div.item.chooser', target).live 'click', (e) ->
@@ -197,6 +209,7 @@ putTrades = (ns, trades, target, cb) ->
         j = i + 1
         target.append $('#trade-proto').tmpl({index:j}).data('tno', j)
         last = $('.trade:last', target)
+        $('a.trade-submit, a.trade-clear', last).hide()
         $('.haves, .wants', last).isotope
             itemSelector: '.itemw'
             layoutMode: 'fitRows'
@@ -318,14 +331,14 @@ configBackpack = (source, target) ->
 tradeChanged = (e, tc) ->
     have = $ 'div.item.backpack:not(:empty)', tc
     if have.length
-        $('a.set-trade', tc).slideDown()
+        $('a.trade-submit', tc).slideDown()
     else
-        $('a.set-trade', tc).slideUp()
+        $('a.trade-submit', tc).slideUp()
     want = $ 'div.item.chooser:not(:empty)', tc
     if want.length or have.length
-        $('a.clear-trade', tc).slideDown()
+        $('a.trade-clear', tc).slideDown()
     else
-        $('a.clear-trade', tc).slideUp()
+        $('a.trade-clear', tc).slideUp()
 
 
 getSchema = (ns, cb) ->
@@ -365,16 +378,19 @@ initEvents = (ns) ->
         self = $(this)
         target = $ self.attr('data-target')
 
-        v = (self.text().indexOf('Show') > -1)
-        s = if v then 'Show' else 'Hide'
-        r = if v then 'Hide' else 'Show'
-        self.text self.text().replace(s, r)
+        changeText = ->
+            v = (self.text().indexOf('Show') > -1)
+            s = if v then 'Show' else 'Hide'
+            r = if v then 'Hide' else 'Show'
+            self.text self.text().replace(s, r)
 
         if not target.attr 'data-load'
             target.attr('data-load', true).trigger 'lazy-load', () ->
                 target.slideDown()
+                changeText()
         else
             target.slideToggle()
+            changeText()
         false
 
 

@@ -1,54 +1,62 @@
-div.trade.mb1
+.trade.mb1
 
-    div.line
-        div.unit.size1of2
-            h2 Trade #${index}
-            a.set-trade.null.small-button(href='#') publish
-            a.clear-trade.null.small-button(href='#') clear
-        div.unit.lastUnit.size1of2
-            h4 Notes:
-            .trade-notes
+    h1 Trade #${index}
+
+    .line
+        .unit
+            h3 Your Offerings
+        .unit.lastUnit
+            .help These are the items you will give in the trade.
+
+    .haves
+        .itemw
+            .item.have
+        .itemw
+            .item.have
+        .itemw
+            .item.have
+        .itemw
+            .item.have
+        .itemw
+            .item.have
+        .itemw
+            .item.have
+        .itemw
+            .item.have
+        .itemw
+            .item.have
+
+    .line.mt1
+        .unit
+            h3 Your Wishlist
+        .unit.lastUnit
+            .help These are the items you want to receive in the trade.
+
+    .wants
+        .itemw
+            .item.want
+        .itemw
+            .item.want
+        .itemw
+            .item.want
+        .itemw
+            .item.want
+        .itemw
+            .item.want
+        .itemw
+            .item.want
+        .itemw
+            .item.want
+        .itemw
+            .item.want
+
+    .mb2
+        .button-bar
+            a.trade-submit.small-button(href='#') publish
+            a.trade-clear.small-button(href='#') clear
+            a.trade-notes.small-button(href="#") Notes
+        .mt1
+            pre.trade-show-notes
+            .trade-edit-notes.null
                 textarea
 
-
-    h3 Your Offerings
-    h4.null These are the items you will give in the trade.
-
-    div.haves
-        div.itemw
-            div.item.have
-        div.itemw
-            div.item.have
-        div.itemw
-            div.item.have
-        div.itemw
-            div.item.have
-        div.itemw
-            div.item.have
-        div.itemw
-            div.item.have
-        div.itemw
-            div.item.have
-        div.itemw
-            div.item.have
-
-    h3 Your Wishlist
-    h4.null These are the items you want to receive in the trade.
-
-    div.wants
-        div.itemw
-            div.item.want
-        div.itemw
-            div.item.want
-        div.itemw
-            div.item.want
-        div.itemw
-            div.item.want
-        div.itemw
-            div.item.want
-        div.itemw
-            div.item.want
-        div.itemw
-            div.item.want
-        div.itemw
-            div.item.want
