@@ -29,6 +29,10 @@ exports.make = (ns, defn, target, type) ->
     item.addClass "untradable" if defn.flag_cannot_trade
     img = $ 'img', item
 
+    ## add text for offer items
+    offer = prop.offer()
+    img.before "<div class='deco offer'>#{defn.name}</div>" if offer
+
     ## name tag and/or desc tag icon
     tag = prop.tag()
     img.wrap "<div class='deco tag tag-#{tag}' />" if tag
@@ -109,6 +113,9 @@ exports.props = (ns, defn) ->
     useCount: ->
         if defn.defindex in (t.defindex for t in ns.schema_tools()) or defn.defindex in (t.defindex for t in ns.schema_actions())
             defn.quantity
+
+    offer: ->
+        defn.defindex < 0
 
 
 qualityName = (ns, id) ->

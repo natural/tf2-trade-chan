@@ -115,7 +115,7 @@ exports.makeSchema = (ns, sch) ->
 
 fakeOfferItemDefn = (i, d) ->
     defindex: i
-    image_url: "/images/offers/#{Math.abs(i)}.png"
+    image_url: '/images/offers.png'
     item_class: d.item_class
     item_description: d.item_description
     item_name: d.item_name

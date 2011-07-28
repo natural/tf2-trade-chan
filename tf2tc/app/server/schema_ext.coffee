@@ -17,7 +17,7 @@ GIFT=-1
 
 items =
     '-3':
-        name: 'Promo Offers'
+        name: 'Promos'
         _q: [C, V]
         _t: ALWAYS
         item_class: 'Offer'
@@ -26,7 +26,7 @@ items =
         item_type_name: 'Offer'
 
     '-2':
-        name: 'Hat Offers'
+        name: 'Hats'
         _q: [C, G, V, U]
         _t: ALWAYS
         item_class: 'Offer'
@@ -35,7 +35,7 @@ items =
         item_type_name: 'Offer'
 
     '-1':
-        name: 'Offers'
+        name: 'Open'
         _q: [C, S, G, V, U]
         _t: ALWAYS
         item_class: 'Offer'
