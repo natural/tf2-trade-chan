@@ -20,19 +20,28 @@ items =
         name: 'Promo Offers'
         _q: [C, V]
         _t: ALWAYS
-        image_url: '/images/offers.png'
+        item_class: 'Offer'
+        item_description: 'Use this when you want promo offers.'
+        item_name: 'Promo Offers'
+        item_type_name: 'Offer'
 
     '-2':
         name: 'Hat Offers'
         _q: [C, G, V, U]
         _t: ALWAYS
-        image_url: '/images/offers.png'
+        item_class: 'Offer'
+        item_description: 'Use this when you want hat offers.'
+        item_name: 'Hat Offers'
+        item_type_name: 'Offer'
 
     '-1':
         name: 'Offers'
         _q: [C, S, G, V, U]
         _t: ALWAYS
-        image_url: '/images/offers.png'
+        item_class: 'Offer'
+        item_description: 'Use this when you want other kinds of offers.'
+        item_name: 'Offers'
+        item_type_name: 'Offer'
 
     '0':
         name: 'TF_WEAPON_BAT'
@@ -4089,9 +4098,20 @@ quals = () ->
         m[k] = i._q
     m
 
+
+offerItems = ->
+    m = {}
+    for k in groups.offers
+        m[k] = items[k]
+    m
+
+
 exports.actions =
-    allGroups: () ->
+    allGroups: ->
         groups
 
-    qualCycle: () ->
+    qualCycle: ->
         quals()
+
+    offerItems: ->
+        offerItems()

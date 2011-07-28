@@ -15,6 +15,7 @@ exports.actions =
             sch.ext =
                 groups: ext.actions.allGroups()
                 quals: ext.actions.qualCycle()
+                offers: ext.actions.offerItems()
             ks = (Number(k) for k, j of imgFixes)
             for k, n of sch.result.items.item
                 if n.defindex in ks
@@ -47,57 +48,49 @@ exports.actions =
             cb(news)
 
 
-httpGet = (opts, cb) ->
-    request {uri:"http://#{opts.host}#{opts.path}", timeout:1000*5}, cb
-
+req = (opts, cb) ->
+    request {uri:opts.uri, timeout:opts.timeout}, cb
 
 
 get = (opts, parse, cb) ->
-    key = "#{opts.host}#{opts.path}"
-    R.get key, (err, val) ->
+    R.get opts.uri, (err, val) ->
         if val
-            utils.log "steam data cache hit #{key}"
+            utils.log "steam data cache hit #{opts.uri}"
             cb(if parse then parse val else val)
         else
-            utils.log "steam data cache miss #{key}"
-            httpGet opts, (err, response, body) ->
-                if not err and response.statusCode == 200
-                    R.setex key, opts.ttl, body, (e, x) ->
+            utils.log "steam data cache miss #{opts.uri}"
+            req opts, (err, res, body) ->
+                if not err and res.statusCode == 200
+                    R.setex opts.uri, opts.ttl, body, (e, x) ->
                         cb(if parse then parse body else body)
                 else
                     cb null
 
 
-
 urls =
     schema: (key) ->
-        host: 'api.steampowered.com'
-        path: "/ITFItems_440/GetSchema/v0001/?format=json&language=en&key=#{key}"
-        port: 80
+        timeout: 1000*5
         ttl: 60*60
+        uri: "http://api.steampowered.com/ITFItems_440/GetSchema/v0001/?format=json&language=en&key=#{key}"
 
     items: (id64, key) ->
-        host: 'api.steampowered.com'
-        path: "/ITFItems_440/GetPlayerItems/v0001/?key=#{key}&SteamID=#{id64}"
-        port: 80
+        timeout: 1000*5
         ttl: 60*5
+        uri: "http://api.steampowered.com/ITFItems_440/GetPlayerItems/v0001/?key=#{key}&SteamID=#{id64}"
 
     profile: (id64, key) ->
-        host: 'api.steampowered.com'
-        path: "/ISteamUser/GetPlayerSummaries/v0001/?key=#{key}&steamids=#{id64}"
-        port: 80
+        timeout: 1000*5
         ttl: 60*10
+        uri: "http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0001/?key=#{key}&steamids=#{id64}"
 
     status: (id64) ->
-        host: 'steamcommunity.com'
-        path: "/profiles/#{id64}/?xml=1"
-        port: 80
+        path: "http://steamcommunity.com/profiles/#{id64}/?xml=1"
+        timeout: 1000*5
         ttl: 60*5
 
     news: (count, max) ->
-        host: 'api.steampowered.com'
-        path: "/ISteamNews/GetNewsForApp/v0001/?appid=440&count=#{count}&maxlength=#{max}&format=json"
-        port: 80
+        path: "http://api.steampowered.com/ISteamNews/GetNewsForApp/v0001/?appid=440&count=#{count}&maxlength=#{max}&format=json"
+        timeout: 1000*5
         ttl: 60*15
 
 

@@ -95,8 +95,8 @@ exports.makeSchema = (ns, sch) ->
     for item in sch.result.items.item
         do (item) -> items[item.defindex] = item
 
-    for id in sch.ext.groups.offers
-        do (item) -> items[id] = fakeOfferItemDefn(id)
+    for id, defn of sch.ext.offers
+        do (item) -> items[id] = fakeOfferItemDefn(id, defn)
 
     ns.schema_attribs = attribs = {}
     for attr in sch.result.attributes.attribute
@@ -113,9 +113,12 @@ exports.makeSchema = (ns, sch) ->
     ns.schema_tools = ->   (i for i in sch.result.items.item when i.craft_class=='tool')
 
 
-fakeOfferItemDefn = (i) ->
-    defindex:i
-    item_class:''
-    item_type_name:''
-    image_url:'/images/offers.png' # make "/images/offers/#{Math.abs(i)}.png"
+fakeOfferItemDefn = (i, d) ->
+    defindex: i
+    image_url: "/images/offers/#{Math.abs(i)}.png"
+    item_class: d.item_class
+    item_description: d.item_description
+    item_name: d.item_name
+    item_type_name: d.item_type_name
+    name: d.name
 

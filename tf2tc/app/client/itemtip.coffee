@@ -21,7 +21,7 @@ exports.show = (e) ->
         vals.name =  "\"#{item.custom_name}\""
     else
         vals.name = sdef.item_name # if sdef.proper_name then sdef.name else sdef.item_name
-    vals.name = "#{ns.schema_qualities[item.quality]} " + vals.name if item.quality in [3, 5, 11]
+    vals.name = "#{ns.schema_qualities[item.quality]} " + vals.name if item.quality in [1, 3, 5, 11]
 
     # clear the quality classes and add the correct one
     $('.name', tt).resetQualityClasses("qual-text-#{item.quality}")
