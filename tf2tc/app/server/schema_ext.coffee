@@ -20,16 +20,19 @@ items =
         name: 'Promo Offers'
         _q: [C, V]
         _t: ALWAYS
+        image_url: '/images/offers.png'
 
     '-2':
         name: 'Hat Offers'
         _q: [C, G, V, U]
         _t: ALWAYS
+        image_url: '/images/offers.png'
 
     '-1':
         name: 'Offers'
         _q: [C, S, G, V, U]
         _t: ALWAYS
+        image_url: '/images/offers.png'
 
     '0':
         name: 'TF_WEAPON_BAT'
@@ -4078,7 +4081,7 @@ groups =
     genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
     genuine_hats: select (a, b) -> G in b._q and b.craft_class=='hat'
     untradables: select (a, b) -> b._t == NEVER
-
+    offers: select (a, b) -> (a < 0)
 
 quals = () ->
     m = {}

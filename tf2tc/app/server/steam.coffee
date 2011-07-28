@@ -3,6 +3,7 @@
 
 http = require 'http'
 libxmljs = require 'libxmljs'
+request = require 'request'
 ext = require './schema_ext'
 utils = require './utils'
 
@@ -46,12 +47,8 @@ exports.actions =
             cb(news)
 
 
-httpGet = (options, cb) ->
-    options.method = 'GET'
-    req = http.request(options, cb)
-    #req.connection.setTimeout 2*250
-    req.end()
-    req
+httpGet = (opts, cb) ->
+    request {uri:"http://#{opts.host}#{opts.path}", timeout:1000*5}, cb
 
 
 
@@ -63,20 +60,12 @@ get = (opts, parse, cb) ->
             cb(if parse then parse val else val)
         else
             utils.log "steam data cache miss #{key}"
-            req = httpGet opts, (res) ->
-                res.setEncoding 'utf8'
-                chunks = []
-                res.on 'data', (c) ->
-                    chunks.push(c)
-                res.on 'end', (e) ->
+            httpGet opts, (err, response, body) ->
+                if not err and response.statusCode == 200
+                    R.setex key, opts.ttl, body, (e, x) ->
+                        cb(if parse then parse body else body)
+                else
                     cb null
-                res.on 'end', () ->
-                    if res.statusCode == 200
-                        str = chunks.join ''
-                        R.setex key, opts.ttl, str, (e, x) ->
-                            cb(if parse then parse str else str)
-                    else
-                        cb null
 
 
 

@@ -87,6 +87,7 @@ putChooser = (ns, target, cb) ->
         for item in items
             m ns, item, t, 'chooser'
 
+    put (clone(x, 6) for x in grp.offers), add('Offers')
     put (clone(x, 6) for x in grp.commodities), add('Commodities')
     put (clone(x, 6) for x in grp.promos), add('Promos')
     put (clone(x, 3) for x in grp.vintage_hats), add('Vintage Hats')
@@ -416,8 +417,10 @@ initEvents = (ns) ->
     SS.events.on 'sys-chan-msg', onTalk makeSysMsg
     SS.events.on 'user-chan-msg', onTalk makeUserMsg
     SS.events.on 'trade-chan-msg', (msg) ->
-        null
-
+        if msg.what == 'add'
+            makeTradeMsg msg
+        else
+            remTradeMsg msg
 
 onTalk = (fmt) ->
     (msg) ->
@@ -457,6 +460,25 @@ makeUserMsg = (m) ->
     t = new Date().toLocaleTimeString()
     x = $("<span>#{m.text}</span>").text()
     "<span class='timestamp'>#{t}</span> <span class='user'>#{m.who}: </span>#{x}<br>"
+
+
+
+makeTradeMsg = (m) ->
+    p = $('#trade-message').tmpl m
+    p = putTradeUser p, m
+    putTradeItem p, m
+
+
+putTradeUser = (proto, msg) ->
+    proto
+
+
+putTradeItems = (proto, msg) ->
+    proto
+
+
+remTradeMsg = (m) ->
+    null
 
 
 getAniEngine = ->
