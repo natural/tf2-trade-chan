@@ -1,4 +1,5 @@
-## client app
+##
+# client app
 #
 
 
@@ -37,7 +38,7 @@ initAuth = (ns) ->
         $('#user').slideDown()
 
         $('#backpack').bind 'lazy-load', (e, cb) ->
-            userbp = $ this
+            userbp = $ @
             bpshell = $ '.bpshell', userbp
             $('#user .bp .msg').text 'Loading...'
             getProfile (profile) ->
@@ -51,7 +52,7 @@ initAuth = (ns) ->
                             bpshell.isotope()
 
         $('#trades').bind 'lazy-load', (e, cb) ->
-                trades = $ this
+                trades = $ @
                 ch = $ '.chooser', trades
                 chshell = $ '.bpshell', ch
                 $('#user .ch .msg').text 'Loading...'
@@ -148,14 +149,14 @@ initBackpackToolbar = (container, target) ->
     $('.bptools', container).fadeIn()
 
     $('.bpfilters', container).change ->
-        sel = $(':selected', this).attr 'data-filter'
+        sel = $(':selected', @).attr 'data-filter'
         if sel and sel.length
             target.isotope filter:sel
         false
 
     $('.bpsorts', container).change ->
-        sel = $(':selected', this).attr 'data-sort'
-        ord = $(':selected', this).attr 'data-desc'
+        sel = $(':selected', @).attr 'data-sort'
+        ord = $(':selected', @).attr 'data-desc'
         target.isotope sortBy:sel, sortAscending:not ord
         false
 
@@ -175,7 +176,7 @@ putTrades = (ns, trades, target, cb) ->
         have = ($(i).data('item-defn') for i in $('div.backpack', p))
         want = ($(i).data('item-defn') for i in $('div.chooser', p))
         if have and have.length
-            publishTrade {have:have, want:want}, (status) ->
+            publishTrade {have:have, want:want, tid:null}, (status) ->
                 console.log 'publishing status:', status
         false
 
@@ -206,11 +207,37 @@ putTrades = (ns, trades, target, cb) ->
         item.data('item-defn').quality = j
         item.trigger('mouseout').trigger('mouseover')
 
-    for i in [0..3]
-        j = i + 1
+    j = 0
+    if trades and trades.success
+        m = getItemMake()
+        for tid, trd of trades.trades
+            trd = JSON.parse(trd)
+            j += 1
+            target.append $('#trade-proto').tmpl({index:"TID:#{tid}"}).data('tno', tid)
+            last = $('.trade:last', target)
+            $('a.trade-submit', last).hide()
+            empties = (null for i in [0..7])
+
+            targ = $('.haves', last)
+            $('.itemw', targ).detach()
+            for have in trd.have.concat(empties)[0..7]
+                m ns, have, targ, 'have backpack'
+
+            targ = $('.wants', last)
+            $('.itemw', targ).detach()
+            for want in trd.want.concat(empties)[0..7]
+                m ns, want, targ, 'want chooser'
+
+            $('.haves, .wants', last).isotope
+                itemSelector: '.itemw'
+                layoutMode: 'fitRows'
+                animationEngine: getAniEngine()
+
+    for i in [0]
+        j += 1
         target.append $('#trade-proto').tmpl({index:j}).data('tno', j)
         last = $('.trade:last', target)
-        $('a.trade-submit, a.trade-clear', last).hide()
+        $('a.trade-submit, a.trade-delete', last).hide()
         $('.haves, .wants', last).isotope
             itemSelector: '.itemw'
             layoutMode: 'fitRows'
@@ -221,6 +248,7 @@ putTrades = (ns, trades, target, cb) ->
 configChooser = (source, target) ->
     sources = -> $('div.item:not(:empty):not(.untradable)', source)
     targets = -> $('div.item.want:empty', target)
+    existing = -> $('div.item.want:not(:empty)', target)
 
     copy = (a, b) ->
         c = a.clone(true, true).unbind()
@@ -235,6 +263,13 @@ configChooser = (source, target) ->
             c.replaceWith r
             r.droppable dropOpts
             $('body').trigger 'trade-changed', t
+
+    removeFromTrade = (e) ->
+        hideItemTip()
+        s = $ e.currentTarget
+        s.replaceWith SS.client.item.empty('want chooser')
+        s.droppable dropOpts
+        $('body').trigger 'trade-changed', s.parents('.trade')
 
     copyToTrade = (e) ->
         s = $ e.currentTarget
@@ -260,10 +295,11 @@ configChooser = (source, target) ->
         hoverClass: 'outline'
         drop: (e, ui) ->
             s = ui.helper.prevObject
-            copy s, $(this)
+            copy s, $(@)
 
     sources().unbind('dblclick').dblclick copyToTrade
     sources().draggable dragOpts
+    existing().unbind('dblclick').dblclick removeFromTrade
     targets().droppable dropOpts
 
 
@@ -316,13 +352,13 @@ configBackpack = (source, target) ->
         hoverClass: 'outline'
         drop: (e, ui) ->
             s = ui.helper.prevObject
-            t = $(this).parents('.trade')
+            t = $(@).parents('.trade')
             ids = t.data('ids') or []
             i = s.data('item-defn').id
             if not (i in ids)
                 ids.push i
                 t.data 'ids', ids
-                copy s, $(this)
+                copy s, $(@)
 
     sources().unbind('dblclick').dblclick copyToTrade
     sources().draggable dragOpts
@@ -337,9 +373,9 @@ tradeChanged = (e, tc) ->
         $('a.trade-submit', tc).slideUp()
     want = $ 'div.item.chooser:not(:empty)', tc
     if want.length or have.length
-        $('a.trade-clear', tc).slideDown()
+        $('a.trade-delete', tc).slideDown()
     else
-        $('a.trade-clear', tc).slideUp()
+        $('a.trade-delete', tc).slideUp()
 
 
 getSchema = (ns, cb) ->
@@ -364,10 +400,10 @@ getBackpack = (id64, ns, cb) ->
 
 initJQ = ($) ->
     $.fn.resetQualityClasses = (v) ->
-        this.each ->
+        @.each ->
             for q in [0..20]
-                $(this).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
-            $(this).addClass(v)
+                $(@).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
+            $(@).addClass(v)
 
 
 initEvents = (ns) ->
@@ -376,7 +412,7 @@ initEvents = (ns) ->
     $('div.item:not(:empty)').live 'mouseout', {namespace:ns}, hideItemTip
 
     $('#user a').click ->
-        self = $(this)
+        self = $ @
         target = $ self.attr('data-target')
 
         changeText = ->
@@ -396,7 +432,7 @@ initEvents = (ns) ->
 
 
     $('#channels .button-bar a').click ->
-        link = $ this
+        link = $ @
         name = link.attr('data-channel-name')
         active = link.hasClass('on')
         link.toggleClass('on').toggleClass('off')

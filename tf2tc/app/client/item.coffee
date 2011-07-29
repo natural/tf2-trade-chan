@@ -1,28 +1,32 @@
+##
+# item maker:
+#
+# this module exports a the function "make" to construct html
+# representations of tf2 game items.  it does so by creating a
+# container div, .itemw, and then nesting further divs and images
+# inside of it.
 
 
-exports.page = -> '<div class="page"></div>'
-
-
-exports.row = -> '<div class="row"></div>'
+exports.empty = (type) ->
+    "<div class='itemw'><div class='item #{type}' /></div>"
 
 
 exports.make = (ns, defn, target, type) ->
-    if defn
-        v = "<div class='itemw'>
-               <div class='item #{type}'>
-                 <img src='#{ns.schema_items[defn.defindex].image_url}' />
-               </div>
-             </div>"
-        target.append v
-    else
-        v = '<div class="itemw"><div class="item" /></div>'
-        target.append v
+    if not defn
+        target.append exports.empty(type)
         return
+    else
+        target.append "
+            <div class='itemw'>
+                <div class='item #{type}'>
+                    <img src='#{ns.schema_items[defn.defindex].image_url}' />
+                </div>
+            </div>"
 
-    prop = exports.props ns, defn
+    prop = props ns, defn
     sdefn = ns.schema_items[defn.defindex]
     itemw = $ 'div.itemw:last', target
-    item = $ 'div.item:last', target
+    item = $ 'div.item', itemw
     item.data 'item-defn', defn
     item.data 'schema-defn', sdefn
     item.addClass "qual-border-#{defn.quality or 6} qual-hover-#{defn.quality or 6}"
@@ -57,9 +61,8 @@ exports.make = (ns, defn, target, type) ->
     effect = prop.effect()
     img.wrap "<div class='deco effect effect-#{effect}' />" if effect
 
-    ## add some classes to the item wrapper (the parent .itemw) for
-    ## filtering.
-    c = [ qualityName(ns, defn.quality).toLowerCase() ]
+    ## add some classes to the item wrapper for filtering.
+    c = [qualityName(ns, defn.quality).toLowerCase()]
     if sdefn.item_class.match(/wear/)
         c.push 'wearable'
     else if sdefn.item_class.match(/weapon/)
@@ -70,15 +73,14 @@ exports.make = (ns, defn, target, type) ->
         c.push 'commodity'
     if sdefn.used_by_classes
         for x in sdefn.used_by_classes.class
-            if x
-                c.push x.toLowerCase()
+            c.push x.toLowerCase() if x
     else
         c.push 'allclass'
     itemw.addClass c.join(' ')
     itemw
 
 
-exports.props = (ns, defn) ->
+props = (ns, defn) ->
     selectAttr = (id) ->
         if defn.attributes
             x = (n for n in defn.attributes.attribute)

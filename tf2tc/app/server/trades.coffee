@@ -19,27 +19,34 @@ exports.actions =
 
     publish: (params, cb) ->
         @getSession (session) ->
-            if not @session.user.loggedIn()
+            if not session.user.loggedIn()
                 cb {success:false, tradeID:null}
 
-            have = params.have
-            want = params.want
-            uid = uidFromOpenID @session.user_id
+            uid = uidFromOpenID session.user_id
+            params.have = [p for p in params.have when p]
+            params.want = [p for p in params.want when p]
 
-            ## generate trade id
-            nextTradeID uid, (tradeID) ->
-                utils.log "TRADE ID #{tradeID} FOR USER #{uid}"
-
-                ## set the payload
-                setTradePayload tradeID, params, () ->
-
-                    ## for each have.defindex, place the trade id into each defindex:quality bucket
-                    ks = keys.tradeBuckets have, tradeID
+            setTrade = (id) ->
+                setTradePayload id, params, () ->
+                    ks = keys.tradeBuckets params.have, id
                     fillTradeBuckets ks, (status) ->
-                        utils.log "ADD #{tradeID} TRADE TO BUCKETS #{ks} STATUS #{status}"
+                        utils.log "ADD #{id} TRADE TO BUCKETS #{ks} STATUS #{status}"
+                        ## for each params.have.defindex, publish the trade to each ???:quality channel
+                    cb {success:true, tradeID:id}
 
-                        ## for each have.defindex, publish the trade to each ???:quality channel
-                        cb {success:true, tradeID:tradeID}
+            if params.tid
+                if params.have and params.have.length
+                    utils.log "update trade; id=#{params.tid}, user=#{uid}"
+                    setTrade params.tid
+                else
+                    delTrade = () ->
+                        utils.log "delete trade; id=#{params.tid}, user=#{uid}"
+                    delTrade()
+            else
+                ## generate new trade id
+                nextTradeID uid, (newId) ->
+                    utils.log "add trade; id=#{newId}, user=#{uid}"
+                    setTrade newId
 
 
 keys =

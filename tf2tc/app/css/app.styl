@@ -55,14 +55,6 @@ a, a:visited, a:active, a:hover
     text-decoration none
 
 
-div.row
-    height item_h + base_w
-
-
-div.row.bot
-   margin-bottom base_w * 1.5
-
-
 div.itemw
     a-display inline-block
 
@@ -265,6 +257,13 @@ div.offer
 #backpack, #trades
     position relative
     overflow hidden
+    margin-left (base_w*4)
+    margin-right (base_w*4)
+
+
+#trades .tradescroll
+    margin-right (base_w*4)
+
 
 #backpack
     margin-top base_w
@@ -302,6 +301,13 @@ div.offer
 
 .mb2
     margin-bottom (base_w * 2)
+
+.m2
+    margin (base_w * 2)
+
+.p2
+    padding (base_w * 2)
+
 
 .mt1
     margin-top base_w
@@ -388,13 +394,6 @@ div.offer
         margin-right 1em
         width inherit
 
-    .FOOO
-        opacity(0)
-        -moz-transition opacity .5s linear, visibility .1s linear .5s
-        -webkit-transition opacity .5s linear, visibility .1s linear .5s
-        transition opacity .5s linear, visibility .1s linear .5s
-        visibility hidden
-
     .button-bar
         .small-button
             background-color pal_gray1 !important
@@ -410,11 +409,6 @@ div.offer
     .help
         opacity(1)
         trans(opacity, 1s)
-
-FOOO
-    .button-bar
-        opacity(1)
-        visibility visible
 
 
 .trade-show-notes:not(:empty)
