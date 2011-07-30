@@ -1,9 +1,9 @@
 ## server-side module for trades
 #
-utils = require('./utils')
+utils = require './utils'
+
 
 exports.actions =
-
     ## pass in params.user to retrieve trades for a specific user; if
     ## params.user not given, callback receives trades for current
     ## session user.
@@ -11,111 +11,107 @@ exports.actions =
         @getSession (session) ->
             if not session.user.loggedIn()
                 cb {success:false, trades:null}
-            uid = uidFromOpenID (if params.user? then params.user else session.user_id)
-            getTradeUids uid, (ids) ->
-                getTrades (keys.trade(i) for i in ids), (trades) ->
+            uid = utils.uidFromOpenId (if params.user? then params.user else session.user_id)
+            getUserTrades uid, (ids) ->
+                getTrades ids, (trades) ->
                     cb {success:true, trades:trades}
 
 
     publish: (params, cb) ->
         @getSession (session) ->
             if not session.user.loggedIn()
-                cb {success:false, tradeID:null}
+                cb {success:false, tid:null}
 
-            uid = uidFromOpenID session.user_id
-            params.have = [p for p in params.have when p]
-            params.want = [p for p in params.want when p]
+            uid = utils.uidFromOpenId session.user_id
+            have = if params.have then (p for p in params.have when p) else []
+            want = if params.want then (p for p in params.want when p) else []
 
-            setTrade = (id) ->
-                setTradePayload id, params, () ->
-                    ks = keys.tradeBuckets params.have, id
-                    fillTradeBuckets ks, (status) ->
-                        utils.log "ADD #{id} TRADE TO BUCKETS #{ks} STATUS #{status}"
-                        ## for each params.have.defindex, publish the trade to each ???:quality channel
-                    cb {success:true, tradeID:id}
+            ## add trade
+            if not params.tid
+                newTradeId uid, (tid) ->
+                    setTrade tid, have, want, (okay) ->
+                        for item in have
+                            fillTradeBuckets item, tid, ->
+                        cb {success:true, tid:tid}
 
-            if params.tid
-                if params.have and params.have.length
-                    utils.log "update trade; id=#{params.tid}, user=#{uid}"
-                    setTrade params.tid
-                else
-                    delTrade = () ->
-                        utils.log "delete trade; id=#{params.tid}, user=#{uid}"
-                    delTrade()
+            ## delete trade
+            else if params.tid and not have.length
+                delTradeId uid, params.tid, (trade) ->
+                    have = JSON.parse(trade).have
+                    for item in have
+                        drainTradeBuckets item, params.tid, ->
+                    cb {success:true, tid:null}
+
+            ## update trade
             else
-                ## generate new trade id
-                nextTradeID uid, (newId) ->
-                    utils.log "add trade; id=#{newId}, user=#{uid}"
-                    setTrade newId
+                utils.log "UPD TRADE"
+                cb {success:false, tid:null}
 
 
-keys =
-    ## this key is used to generate trade ids.
-    global_trade: 'g:trade_counter'
-
-    ## given a user id, this creates a key for holding the list of
-    ## trades associated with the user.
-    userTrades: (uid) ->
-        "u:trades:#{uid}"
-
-    ## given a list of items and their trade id, this creates an array
-    ## of keys to various buckets (def + qual).  the array is mixed
-    ## with the trade id so it can be easily passed to R.mset.
-    tradeBuckets: (items, tradeID) ->
-        bs = []
-        for defn in items
-            q = if defn.quality? then defn.quality else defn.item_quality
-            bs.push "b:#{defn.defindex}:#{q}", tradeID
-        bs
-
-    ## given a trade id, this creates a key for it.
-    trade: (tid) ->
-        "t:#{tid}"
+getUserTrades = (uid, next) ->
+    k = keys.userTrades uid
+    R.lrange k, 0, -1, (err, ids) ->
+        next ids
 
 
-dekey =
-    trade: (key) ->
-        key.split(':').pop()
+getTrades = (tids, next) ->
+    ks = (keys.trade(i) for i in tids)
+    R.mget ks, (err, vals) ->
+        trades = {}
+        for id in tids
+            v = vals[tids.indexOf(id)]
+            trades[id.split(':').pop()] = v if v
+        next trades
 
 
-uidFromOpenID = (openid) ->
-    openid.split('/').pop()
-
-
-setTradePayload = (tid, data, next) ->
+setTrade = (tid, have, want, next) ->
     k = keys.trade tid
-    v = JSON.stringify data
+    v = JSON.stringify {have:have, want:want}
     R.set k, v, () ->
         next true ## set can't fail
 
 
-fillTradeBuckets = (keyvals, next) ->
-    R.mset keyvals, () ->
-        next true ## mset can't fail
+fillTradeBuckets = (item, tid, next) ->
+    for key in keys.tradeBuckets item
+        R.lpush key, tid, ->
+    next()
 
 
-nextTradeID = (uid, next) ->
-    R.incr keys.global_trade, (err, tid) ->
+drainTradeBuckets = (item, tid, next) ->
+    for key in keys.tradeBuckets item
+        R.lrem key, 0, tid, ->
+    next()
+
+
+newTradeId = (uid, next) ->
+    R.incr keys.globalTradeCounter, (err, tid) ->
         if not err and tid?
-            ## need to add hook to session disconnect to remove
-            ## the user trade key "tid:#{uid}"
-
-            ## push the tradeID to the user.trades key
+            ## assign the tid to the user
             R.lpush keys.userTrades(uid), tid, (e, v) ->
                 if not e and v?
                     next tid
 
 
-getTradeUids = (uid, next) ->
-    k = keys.userTrades uid
-    R.lrange k, 0, -1, (err, val) ->
-        next val
+delTradeId = (uid, tid, next) ->
+    getTrades [tid], (trades) ->
+        R.lrem keys.userTrades(uid), 0, tid, () ->
+            R.del keys.trade(tid), (err, count) ->
+                next trades[tid]
 
 
-getTrades = (ids, next) ->
-    R.mget ids, (err, vals) ->
-        trades = {}
-        for id in ids
-            v = vals[ids.indexOf(id)]
-            trades[id.split(':').pop()] = v if v
-        next trades
+keys =
+    ## this key is used to generate trade ids.
+    globalTradeCounter: 'globalTradeCounter'
+
+    ## given a trade id, this creates a key for it.
+    trade: (id) ->
+        "trade:#{id}"
+
+    ## given a user id, this creates a key for holding the list of
+    ## trades associated with the user.
+    userTrades: (id) ->
+        "user:#{id}:trades"
+
+    tradeBuckets: (defn) ->
+        q = if defn.quality? then defn.quality else defn.item_quality
+        ["itembucket:#{defn.defindex}:#{q}"]

@@ -162,13 +162,16 @@ initBackpackToolbar = (container, target) ->
 
 
 putTrades = (ns, trades, target, cb) ->
-    $('a.trade-clear', target).live 'click', (e) ->
+    console.log "PUT TRADES", trades
+
+    $('a.trade-delete', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
         j = p.data('tno')
-        p.replaceWith $('#trade-proto').tmpl({index:j}).data('tno', j)
-        configBackpack $('#backpack'), $('#trades')
-        configChooser $('#chooser'), $('#trades')
-        $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
+        deleteTrade j, (status) ->
+            p.replaceWith makeEmptyTrade(j)
+            configBackpack $('#backpack'), $('#trades')
+            configChooser $('#chooser'), $('#trades')
+            $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
         false
 
     $('a.trade-submit', target).live 'click', (e) ->
@@ -176,8 +179,9 @@ putTrades = (ns, trades, target, cb) ->
         have = ($(i).data('item-defn') for i in $('div.backpack', p))
         want = ($(i).data('item-defn') for i in $('div.chooser', p))
         if have and have.length
-            publishTrade {have:have, want:want, tid:null}, (status) ->
+            publishTrade {have:have, want:want}, (status) ->
                 console.log 'publishing status:', status
+                p.data('tno', status.tid) if status.success
         false
 
     $('a.trade-notes', target).live 'click', (e) ->
@@ -212,6 +216,7 @@ putTrades = (ns, trades, target, cb) ->
         m = getItemMake()
         for tid, trd of trades.trades
             trd = JSON.parse(trd)
+            console.log "TRADE", tid, trd
             j += 1
             target.append $('#trade-proto').tmpl({index:"TID:#{tid}"}).data('tno', tid)
             last = $('.trade:last', target)
@@ -233,17 +238,18 @@ putTrades = (ns, trades, target, cb) ->
                 layoutMode: 'fitRows'
                 animationEngine: getAniEngine()
 
-    for i in [0]
-        j += 1
-        target.append $('#trade-proto').tmpl({index:j}).data('tno', j)
-        last = $('.trade:last', target)
-        $('a.trade-submit, a.trade-delete', last).hide()
-        $('.haves, .wants', last).isotope
-            itemSelector: '.itemw'
-            layoutMode: 'fitRows'
-            animationEngine: getAniEngine()
+    target.append makeEmptyTrade(j+1)
     cb()
 
+
+makeEmptyTrade = (id) ->
+    trade = $('#trade-proto').tmpl({index:id}).data('tno', id)
+    $('a.trade-submit, a.trade-delete', trade).hide()
+    $('.haves, .wants', trade).isotope
+        itemSelector: '.itemw'
+        layoutMode: 'fitRows'
+        animationEngine: getAniEngine()
+    trade
 
 configChooser = (source, target) ->
     sources = -> $('div.item:not(:empty):not(.untradable)', source)
@@ -554,3 +560,7 @@ makeSchema = (ns, s) ->
 makeBackpack = (ns, b) ->
     SS.client.util.makeBackpack ns, b
     ns.backpack
+
+deleteTrade = (id, cb) ->
+    SS.server.trades.publish {have:null, want:null, tid:id}, cb
+
