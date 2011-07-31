@@ -4,18 +4,15 @@ utils = require './utils'
 
 
 exports.actions =
-    ## pass in params.user to retrieve trades for a specific user; if
-    ## params.user not given, callback receives trades for current
-    ## session user.
     userTrades: (params, cb) ->
         @getSession (session) ->
             if not session.user.loggedIn()
                 cb {success:false, trades:null}
-            uid = utils.uidFromOpenId (if params.user? then params.user else session.user_id)
-            getUserTrades uid, (ids) ->
-                getTrades ids, (trades) ->
-                    cb {success:true, trades:trades}
 
+            user = if params.user? then params.user else session.user_id
+            uid = utils.uidFromOpenId user
+            getUserTrades uid, (trades) ->
+                cb {success:true, trades:trades}
 
     publish: (params, cb) ->
         @getSession (session) ->
@@ -25,33 +22,57 @@ exports.actions =
             uid = utils.uidFromOpenId session.user_id
             have = if params.have then (p for p in params.have when p) else []
             want = if params.want then (p for p in params.want when p) else []
+            text = params.text or ''
 
-            ## add trade
             if not params.tid
-                newTradeId uid, (tid) ->
-                    setTrade tid, have, want, (okay) ->
-                        for item in have
-                            fillTradeBuckets item, tid, ->
-                        cb {success:true, tid:tid}
+                addTrade uid, have, want, text, (tid) ->
+                    cb {success:true, tid:tid}
 
-            ## delete trade
             else if params.tid and not have.length
-                delTradeId uid, params.tid, (trade) ->
-                    have = JSON.parse(trade).have
-                    for item in have
-                        drainTradeBuckets item, params.tid, ->
-                    cb {success:true, tid:null}
+                deleteTrade uid, params.tid, (trade) ->
+                    cb {success:true, tid:params.tid}
 
-            ## update trade
             else
-                utils.log "UPD TRADE"
-                cb {success:false, tid:null}
+                updateTrade params.tid, have, want, text, () ->
+                    cb {success:true, tid:params.tid}
+
+
+addTrade = (uid, have, want, text, next) ->
+    newTradeId uid, (tid) ->
+        putTradePayload tid, have, want, text, (okay) ->
+            for item in have
+                fillTradeBuckets item, tid, ->
+            next(tid)
+
+
+deleteTrade = (uid, tid, next) ->
+    getTrades [tid], (trades) ->
+        R.lrem keys.userTrades(uid), 0, tid, () ->
+            R.del keys.trade(tid), (err, count) ->
+                trade = trades[tid]
+                have = JSON.parse(trade).have
+                for item in have
+                    drainTradeBuckets item, tid, ->
+                next()
+
+
+updateTrade = (tid, have, want, text, next) ->
+    getTrades [tid], (trades) ->
+        trade = trades[tid]
+        ## drain the buckets for the old have list
+        for item in JSON.parse(trade).have
+            drainTradeBuckets item, tid, ->
+        putTradePayload tid, have, want, text, (okay) ->
+            for item in have
+                fillTradeBuckets item, tid, ->
+            next()
 
 
 getUserTrades = (uid, next) ->
     k = keys.userTrades uid
     R.lrange k, 0, -1, (err, ids) ->
-        next ids
+        getTrades ids, (trades) ->
+            next trades
 
 
 getTrades = (tids, next) ->
@@ -64,9 +85,9 @@ getTrades = (tids, next) ->
         next trades
 
 
-setTrade = (tid, have, want, next) ->
+putTradePayload = (tid, have, want, text, next) ->
     k = keys.trade tid
-    v = JSON.stringify {have:have, want:want}
+    v = JSON.stringify {have:have, want:want, text:text}
     R.set k, v, () ->
         next true ## set can't fail
 
@@ -86,17 +107,9 @@ drainTradeBuckets = (item, tid, next) ->
 newTradeId = (uid, next) ->
     R.incr keys.globalTradeCounter, (err, tid) ->
         if not err and tid?
-            ## assign the tid to the user
             R.lpush keys.userTrades(uid), tid, (e, v) ->
                 if not e and v?
                     next tid
-
-
-delTradeId = (uid, tid, next) ->
-    getTrades [tid], (trades) ->
-        R.lrem keys.userTrades(uid), 0, tid, () ->
-            R.del keys.trade(tid), (err, count) ->
-                next trades[tid]
 
 
 keys =

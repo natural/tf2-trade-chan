@@ -176,10 +176,12 @@ putTrades = (ns, trades, target, cb) ->
 
     $('a.trade-submit', target).live 'click', (e) ->
         p = $(e.currentTarget).parents('div.trade')
+        j = p.data('tno')
         have = ($(i).data('item-defn') for i in $('div.backpack', p))
         want = ($(i).data('item-defn') for i in $('div.chooser', p))
         if have and have.length
-            publishTrade {have:have, want:want}, (status) ->
+            console.log {have:have, want:want, tid:j}
+            publishTrade {have:have, want:want, tid:j}, (status) ->
                 console.log 'publishing status:', status
                 p.data('tno', status.tid) if status.success
         false
@@ -238,12 +240,12 @@ putTrades = (ns, trades, target, cb) ->
                 layoutMode: 'fitRows'
                 animationEngine: getAniEngine()
 
-    target.append makeEmptyTrade(j+1)
+    target.append makeEmptyTrade()
     cb()
 
 
-makeEmptyTrade = (id) ->
-    trade = $('#trade-proto').tmpl({index:id}).data('tno', id)
+makeEmptyTrade = () ->
+    trade = $('#trade-proto').tmpl({index:'NEW'}) ##.data('tno', id)
     $('a.trade-submit, a.trade-delete', trade).hide()
     $('.haves, .wants', trade).isotope
         itemSelector: '.itemw'
