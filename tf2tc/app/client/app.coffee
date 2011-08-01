@@ -57,9 +57,9 @@ initAuth = (ns) ->
                 chshell = $ '.bpshell', ch
                 $('#user .ch .msg').text 'Loading...'
                 putChooser ns, chshell, ->
-                    isoChooser chshell, () ->
+                    isoChooser chshell, ->
                         $('#user .ch .msg').text ''
-                        getTrades {}, (trades) ->
+                        getTrades (trades) ->
                             putTrades ns, trades, $('#trades .tradeshell'), ->
                                 configBackpack $('#backpack'), $('#trades')
                                 configChooser $('#trades .chooser'), $('#trades')
@@ -162,66 +162,18 @@ initBackpackToolbar = (container, target) ->
 
 
 putTrades = (ns, trades, target, cb) ->
-    console.log "PUT TRADES", trades
+    initTradeEvents ns, target
 
-    $('a.trade-delete', target).live 'click', (e) ->
-        p = $(e.currentTarget).parents('div.trade')
-        j = p.data('tno')
-        deleteTrade j, (status) ->
-            p.replaceWith makeEmptyTrade(j)
-            configBackpack $('#backpack'), $('#trades')
-            configChooser $('#chooser'), $('#trades')
-            $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
-        false
-
-    $('a.trade-submit', target).live 'click', (e) ->
-        p = $(e.currentTarget).parents('div.trade')
-        j = p.data('tno')
-        have = ($(i).data('item-defn') for i in $('div.backpack', p))
-        want = ($(i).data('item-defn') for i in $('div.chooser', p))
-        if have and have.length
-            console.log {have:have, want:want, tid:j}
-            publishTrade {have:have, want:want, tid:j}, (status) ->
-                console.log 'publishing status:', status
-                p.data('tno', status.tid) if status.success
-        false
-
-    $('a.trade-notes', target).live 'click', (e) ->
-        p = $(e.currentTarget).parents('div.trade')
-        if $('.trade-edit-notes', p).is(':visible')
-            ## done editing
-            txt = $('.trade-edit-notes textarea', p).val()
-            $('.trade-show-notes', p).text(txt)
-        else
-            txt = $('.trade-show-notes', p).text()
-            $('.trade-edit-notes textarea', p).val(txt)
-        $('.trade-edit-notes, .trade-show-notes', p).slideToggle()
-        false
-
-    $('div.item.chooser', target).live 'click', (e) ->
-        item = $(e.currentTarget)
-        id = item.data('item-defn').defindex
-        qualseq = ns.schema.ext.quals[id]
-        qualc = item.data('qual')
-        if qualc?
-            i = qualseq.indexOf(qualc)
-        else
-            i = 1
-        j = qualseq[(i+1) % qualseq.length]
-        item.data('qual', j)
-        item.resetQualityClasses("qual-border-#{j} qual-hover-#{j}")
-        item.data('item-defn').quality = j
-        item.trigger('mouseout').trigger('mouseover')
-
-    j = 0
     if trades and trades.success
         m = getItemMake()
         for tid, trd of trades.trades
             trd = JSON.parse(trd)
-            console.log "TRADE", tid, trd
-            j += 1
-            target.append $('#trade-proto').tmpl({index:"TID:#{tid}"}).data('tno', tid)
+            target.append $('#trade-proto').tmpl(tid:"##{tid}").data('trade-id', tid)
             last = $('.trade:last', target)
+            if trd.text
+                $('.trade-show-notes', last).text trd.text
+                $('.trade-edit-notes textarea', last).val trd.text
+
             $('a.trade-submit', last).hide()
             empties = (null for i in [0..7])
 
@@ -245,13 +197,14 @@ putTrades = (ns, trades, target, cb) ->
 
 
 makeEmptyTrade = () ->
-    trade = $('#trade-proto').tmpl({index:'NEW'}) ##.data('tno', id)
+    trade = $('#trade-proto').tmpl({prefix:'NEW'}) ##.data('trade-id', id)
     $('a.trade-submit, a.trade-delete', trade).hide()
     $('.haves, .wants', trade).isotope
         itemSelector: '.itemw'
         layoutMode: 'fitRows'
         animationEngine: getAniEngine()
     trade
+
 
 configChooser = (source, target) ->
     sources = -> $('div.item:not(:empty):not(.untradable)', source)
@@ -413,6 +366,61 @@ initJQ = ($) ->
                 $(@).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
             $(@).addClass(v)
 
+initTradeEvents = (ns, target) ->
+    parentTrade = (ev) ->
+        $(ev.currentTarget).parents('div.trade')
+
+    $('a.trade-delete', target).live 'click', (e) ->
+        p = parentTrade(e)
+        tid = p.data('trade-id')
+        deleteTrade "#{tid}", (status) ->
+            p.replaceWith makeEmptyTrade()
+            configBackpack $('#backpack'), $('#trades')
+            configChooser $('#chooser'), $('#trades')
+            $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
+        false
+
+    $('a.trade-submit', target).live 'click', (e) ->
+        p = parentTrade(e)
+        j = p.data('trade-id')
+        have = ($(i).data('item-defn') for i in $('div.backpack', p))
+        want = ($(i).data('item-defn') for i in $('div.chooser', p))
+        text = $('.trade-edit-notes textarea', p).val()
+        if have and have.length
+            publishTrade have:have, want:want, tid:j, text:text, (status) ->
+                p.data('trade-id', status.tid) if status.success
+                $('h1:first .main', p).text("Trade ##{status.tid}")
+                $('h1:first .status', p).text('Submitted!').delay(5000).fadeOut()
+                $('a.trade-submit', p).slideUp()
+        false
+
+    $('a.trade-notes', target).live 'click', (e) ->
+        p = parentTrade(e)
+        if $('.trade-edit-notes', p).is(':visible')
+            ## done editing
+            txt = $('.trade-edit-notes textarea', p).val()
+            $('.trade-show-notes', p).text(txt)
+        else
+            txt = $('.trade-show-notes', p).text()
+            $('.trade-edit-notes textarea', p).val(txt)
+        $('.trade-edit-notes, .trade-show-notes', p).slideToggle()
+        false
+
+    $('div.item.chooser', target).live 'click', (e) ->
+        item = $(e.currentTarget)
+        id = item.data('item-defn').defindex
+        qualseq = ns.schema.ext.quals[id]
+        qualc = item.data('qual')
+        if qualc?
+            i = qualseq.indexOf(qualc)
+        else
+            i = 1
+        j = qualseq[(i+1) % qualseq.length]
+        item.data('qual', j)
+        item.resetQualityClasses("qual-border-#{j} qual-hover-#{j}")
+        item.data('item-defn').quality = j
+        item.trigger('mouseout').trigger('mouseover')
+
 
 initEvents = (ns) ->
     $('body').bind 'trade-changed', tradeChanged
@@ -458,21 +466,20 @@ initEvents = (ns) ->
                     inp.attr 'value', ''
                 e.preventDefault()
 
-    SS.events.on 'sys-chan-msg', onTalk makeSysMsg
-    SS.events.on 'user-chan-msg', onTalk makeUserMsg
-    SS.events.on 'trade-chan-msg', (msg) ->
-        if msg.what == 'add'
-            makeTradeMsg msg
-        else
-            remTradeMsg msg
+    SS.events.on 'sys-msg', onTalk makeSysMsg
+    SS.events.on 'usr-msg', onTalk makeUserMsg
+    SS.events.on 'trd-msg', onTalk makeTradeMsg
+    SS.server.channels.join name:'blat'
 
 onTalk = (fmt) ->
     (msg) ->
         console.log msg
         talk = talkArea msg.name
         if talk and talk[0]
-            talk.append fmt(msg)
-            talk[0].scrollTop = talk[0].scrollHeight
+            val = fmt(msg)
+            if val
+                talk.append val
+                talk[0].scrollTop = talk[0].scrollHeight
 
 
 talkArea = (name) ->
@@ -506,8 +513,20 @@ makeUserMsg = (m) ->
     "<span class='timestamp'>#{t}</span> <span class='user'>#{m.who}: </span>#{x}<br>"
 
 
-
 makeTradeMsg = (m) ->
+    console.log "make trade msg:", m
+    if m.action == 'add'
+        console.log "add trade:", m
+    else if m.action == 'del'
+        console.log "del trade:", m
+    else if m.action == 'upd'
+        console.log "upd trade:", m
+    t = new Date().toLocaleTimeString()
+    "<span class='timestamp'>#{t}</span> <span class='trade'>trade: </span>?<br>"
+
+
+
+___makeTradeMsg = (m) ->
     p = $('#trade-message').tmpl m
     p = putTradeUser p, m
     putTradeItem p, m
@@ -540,8 +559,8 @@ sayChannel = (p, cb) ->
 getProfile = (cb) ->
     SS.server.app.userProfile cb
 
-getTrades = (what, cb) ->
-    SS.server.trades.userTrades what, cb
+getTrades = (cb) ->
+    SS.server.trades.userTrades {}, cb
 
 getItemMake = ->
     SS.client.item.make
@@ -564,5 +583,5 @@ makeBackpack = (ns, b) ->
     ns.backpack
 
 deleteTrade = (id, cb) ->
-    SS.server.trades.publish {have:null, want:null, tid:id}, cb
+    SS.server.trades.publish tid:id, cb
 

@@ -4090,7 +4090,8 @@ groups =
     genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
     genuine_hats: select (a, b) -> G in b._q and b.craft_class=='hat'
     untradables: select (a, b) -> b._t == NEVER
-    offers: select (a, b) -> (a < 0)
+    offers: select (a, b) -> (a < 0) and (b.item_class=='Offer')
+
 
 quals = () ->
     m = {}

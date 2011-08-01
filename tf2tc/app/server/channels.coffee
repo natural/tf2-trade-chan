@@ -12,7 +12,7 @@ exports.actions =
                 R.rpush keys.channelUserList(name), res.who, (err, okay) ->
                     if okay and not err
                         R.rpush keys.userChannels(res.id64), name
-                        SS.publish.channel [name], 'sys-chan-msg', res
+                        SS.publish.channel [name], keys.sysMsg, res
                         cb()
 
     leave: (params, cb) ->
@@ -23,7 +23,7 @@ exports.actions =
                 session.channel.unsubscribe name
                 R.lrem keys.channelUserList(name), 0, res.who, (err, okay) ->
                     R.lrem keys.userChannels(res.id64), 0, name
-                    SS.publish.channel [name], 'sys-chan-msg', res
+                    SS.publish.channel [name], keys.sysMsg, res
                     cb()
 
     leaveAll: (params, cb) ->
@@ -42,11 +42,14 @@ exports.actions =
         @getSession (session) ->
             msg = what:'said', name:params.name, text:params.text
             makeProfileMessage session, msg, (res) ->
-                SS.publish.channel [params.name], 'user-chan-msg', res
+                SS.publish.channel [params.name], keys.usrMsg, res
                 cb()
 
 
 keys =
+    sysMsg: 'sys-msg'
+    usrMsg: 'usr-msg'
+
     userChannels: (id64) ->
         "channels:#{id64}"
 
