@@ -25,72 +25,73 @@ exports.actions =
             have = if params.have then (p for p in params.have when p) else []
             want = if params.want then (p for p in params.want when p) else []
             text = params.text or ''
+            params.tid = "#{params.tid}" if params.tid
 
-            if not params.tid
-                addTrade uid, have, want, text, (tid) ->
-                    sendMessage tid, have, want, text, keys.add
-                    cb success:true, tid:tid
+            steam.actions.schema (schema) ->
+                if not params.tid
+                    addTrade schema, uid, have, want, text, (tid) ->
+                        sendMessage schema, tid, have, want, text, keys.add
+                        cb success:true, tid:tid
 
-            else if params.tid and not have.length
-                deleteTrade uid, params.tid, (trade) ->
-                    sendMessage params.tid, [], [], '', keys.del
-                    cb success:true, tid:params.tid
+                else if params.tid and not have.length
+                    deleteTrade schema, uid, params.tid, (trade) ->
+                        sendMessage schema, params.tid, trade.have, trade.want, trade.text, keys.del
+                        cb success:true, tid:params.tid
 
-            else
-                updateTrade params.tid, have, want, text, () ->
-                    sendMessage params.tid, have, want, text, keys.upd
-                    cb success:true, tid:params.tid
-
-
-addTrade = (uid, have, want, text, next) ->
-    steam.actions.schema (schema) ->
-        newTradeId uid, (tid) ->
-            putTradePayload tid, have, want, text, (okay) ->
-                for item in have
-                    fillTradeBuckets tid, item, keys.have, schema
-                for item in want
-                    fillTradeBuckets tid, item, keys.want, schema
-                next tid
+                else
+                    updateTrade schema, params.tid, have, want, text, () ->
+                        sendMessage schema, params.tid, have, want, text, keys.upd
+                        cb success:true, tid:params.tid
 
 
-deleteTrade = (uid, tid, next) ->
-    steam.actions.schema (schema) ->
-        getTrades [tid], (trades) ->
-            R.lrem keys.userTrades(uid), 0, tid, () ->
-                R.del keys.trade(tid), (err, count) ->
-                    trade = JSON.parse trades[tid]
-                    for item in trade.have
-                        drainTradeBuckets tid, item, keys.have, schema
-                    for item in trade.want
-                        drainTradeBuckets tid, item, keys.want, schema
-                    next()
+addTrade = (schema, uid, have, want, text, next) ->
+    newTradeId uid, (tid) ->
+        putTradePayload tid, have, want, text, (okay) ->
+            for item in have
+                fillTradeBuckets schema, tid, item, keys.have
+            for item in want
+                fillTradeBuckets schema, tid, item, keys.want
+            next tid
 
 
-updateTrade = (tid, have, want, text, next) ->
-    steam.actions.schema (schema) ->
-        getTrades [tid], (trades) ->
-            trade = JSON.parse trades[tid]
-
-            ## drain the old buckets
-            for item in trade.have
-                drainTradeBuckets tid, item, keys.have, schema
-            for item in trade.want
-                drainTradeBuckets tid, item, keys.want, schema
-
-            putTradePayload tid, have, want, text, (okay) ->
-                for item in have
-                    fillTradeBuckets tid, item, keys.have, schema
-                for item in want
-                    fillTradeBuckets tid, item, keys.want, schema
-                next()
+deleteTrade = (schema, uid, tid, next) ->
+    getTrades [tid], (trades) ->
+        R.lrem keys.userTrades(uid), 0, tid, () ->
+            R.del keys.trade(tid), (err, count) ->
+                trade = JSON.parse trades[tid]
+                for item in trade.have
+                    drainTradeBuckets schema, tid, item, keys.have
+                for item in trade.want
+                    drainTradeBuckets schema, tid, item, keys.want
+                next trade
 
 
-sendMessage = (tid, have, want, text, action) ->
-    cns = keys.tradeChannels have, want
+updateTrade = (schema, tid, have, want, text, next) ->
+    getTrades [tid], (trades) ->
+        trade = JSON.parse trades[tid]
+
+        ## drain the old buckets
+        for item in trade.have
+            drainTradeBuckets schema, tid, item, keys.have
+        for item in trade.want
+            drainTradeBuckets schema, tid, item, keys.want
+
+        putTradePayload tid, have, want, text, (okay) ->
+            for item in have
+                fillTradeBuckets schema, tid, item, keys.have
+            for item in want
+                fillTradeBuckets schema, tid, item, keys.want
+            next()
+
+
+sendMessage = (schema, tid, have, want, text, action) ->
+    cns = keys.tradeChannels schema, have, want
     msg = tid:tid, have:have, want:want, text:text, action:action
     for cn in cns
-        msg.name = cn
-        SS.publish.channel [cn], 'trd-msg', msg
+        do(cn) ->
+            msg.name = cn
+            msg.channels = cns
+            SS.publish.channel [cn], 'trd-msg', msg
 
 
 getUserTrades = (uid, next) ->
@@ -117,13 +118,13 @@ putTradePayload = (tid, have, want, text, next) ->
         next true ## set can't fail
 
 
-fillTradeBuckets = (tid, item, which, schema) ->
-    for key in keys.tradeBuckets item, which, schema
+fillTradeBuckets = (schema, tid, item, which) ->
+    for key in keys.tradeBuckets schema, item, which
         R.lpush key, tid, ->
 
 
-drainTradeBuckets = (tid, item, which, schema) ->
-    for key in keys.tradeBuckets item, which, schema
+drainTradeBuckets = (schema, tid, item, which) ->
+    for key in keys.tradeBuckets schema, item, which
         R.lrem key, 0, tid, ->
 
 
@@ -135,7 +136,18 @@ newTradeId = (uid, next) ->
                     next tid
 
 
-extGroups = ext.actions.allGroups()
+extGroups = ext.direct.allGroups()
+
+
+extPred =
+    commodities: (s, d) -> "#{d.defindex}" in extGroups.commodities
+    promos: (s, d) -> "#{d.defindex}" in extGroups.promos
+    metal: (s, d) -> "#{d.defindex}" in extGroups.metal
+    vintage_weapons: (s, d) -> "#{d.defindex}" in extGroups.vintage_weapons and d.quality == 3
+    vintage_hats: (s, d) -> "#{d.defindex}" in extGroups.vintage_hats and d.quality == 3
+    genuine_weapons: (s, d) -> "#{d.defindex}" in extGroups.genuine_weapons and d.quality == 1
+    genuine_hats: (s, d) -> "#{d.defindex}" in extGroups.genuine_hats and d.quality == 1
+    unusual_hats: (s, d) -> d.item_type_name == 'TF_Wearable_hat' and d.quality == 5
 
 
 keys =
@@ -149,28 +161,23 @@ keys =
     trade: (tid) ->
         "trade:#{tid}"
 
-    tradeBuckets: (def, dir, schema) ->
+    tradeBuckets: (sch, def, dir) ->
         quality = if def.quality? then def.quality else def.item_quality
-        buckets = ["bucket:#{dir}:#{quality}:#{def.defindex}"]
-        for name, seq of extGroups
-            if "#{def.defindex}" in seq
+        buckets = {}
+        buckets["bucket:#{dir}:#{quality}:#{def.defindex}"] = 1
+        for name, pred of extPred
+            if pred sch, def
                 quality = if def.quality then def.quality else 6
-                buckets.push "bucket:#{dir}:#{quality}:#{name}"
-        buckets
+                buckets["bucket:#{dir}:#{quality}:#{name}"] = 1
+        (name for name of buckets)
 
-    tradeChannels: (have, want) ->
-        channels = ['blat']
-        for name, seq of extGroups
-            ## this test is too simple for the 'have' items; must
-            ## check quality and type for inclusion into the various
-            ## channels.  same is true of tradeBuckets function above.
-            for def in have
-                if "#{def.defindex}" in seq
-                    channels.push name
-            for def in want
-                if "#{def.defindex}" in seq
-                    channels.push name
-        channels
+    tradeChannels: (sch, have, want) ->
+        channels = blat:1
+        for def in have.concat want
+            for name, pred of extPred
+                if pred sch, def
+                    channels[name] = 1
+        (name for name of channels)
 
     tradeCounter: 'tf2tc:sys:gtc'
 

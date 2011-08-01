@@ -197,7 +197,7 @@ putTrades = (ns, trades, target, cb) ->
 
 
 makeEmptyTrade = () ->
-    trade = $('#trade-proto').tmpl({prefix:'NEW'}) ##.data('trade-id', id)
+    trade = $('#trade-proto').tmpl({prefix:'NEW'})
     $('a.trade-submit, a.trade-delete', trade).hide()
     $('.haves, .wants', trade).isotope
         itemSelector: '.itemw'
@@ -373,24 +373,27 @@ initTradeEvents = (ns, target) ->
     $('a.trade-delete', target).live 'click', (e) ->
         p = parentTrade(e)
         tid = p.data('trade-id')
-        deleteTrade "#{tid}", (status) ->
-            p.replaceWith makeEmptyTrade()
-            configBackpack $('#backpack'), $('#trades')
-            configChooser $('#chooser'), $('#trades')
-            $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
+        deleteTrade tid, (status) ->
+            p.children('div').slideUp()
+            $('h1:first .main', p).text('')
+            $('h1:first .status', p).text('Deleted!').fadeIn().delay(2000).fadeOut 'fast', () ->
+                p.replaceWith makeEmptyTrade()
+                configBackpack $('#backpack'), $('#trades')
+                configChooser $('#chooser'), $('#trades')
+                $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
         false
 
     $('a.trade-submit', target).live 'click', (e) ->
         p = parentTrade(e)
-        j = p.data('trade-id')
+        tid = p.data('trade-id')
         have = ($(i).data('item-defn') for i in $('div.backpack', p))
         want = ($(i).data('item-defn') for i in $('div.chooser', p))
         text = $('.trade-edit-notes textarea', p).val()
         if have and have.length
-            publishTrade have:have, want:want, tid:j, text:text, (status) ->
+            publishTrade have:have, want:want, tid:tid, text:text, (status) ->
                 p.data('trade-id', status.tid) if status.success
                 $('h1:first .main', p).text("Trade ##{status.tid}")
-                $('h1:first .status', p).text('Submitted!').delay(5000).fadeOut()
+                $('h1:first .status', p).text(if tid then 'Updated!' else 'Submitted!').delay(5000).fadeOut()
                 $('a.trade-submit', p).slideUp()
         false
 
@@ -469,11 +472,11 @@ initEvents = (ns) ->
     SS.events.on 'sys-msg', onTalk makeSysMsg
     SS.events.on 'usr-msg', onTalk makeUserMsg
     SS.events.on 'trd-msg', onTalk makeTradeMsg
-    SS.server.channels.join name:'blat'
+
 
 onTalk = (fmt) ->
     (msg) ->
-        console.log msg
+        console.log 'onTalk:', msg
         talk = talkArea msg.name
         if talk and talk[0]
             val = fmt(msg)
@@ -582,6 +585,9 @@ makeBackpack = (ns, b) ->
     SS.client.util.makeBackpack ns, b
     ns.backpack
 
-deleteTrade = (id, cb) ->
-    SS.server.trades.publish tid:id, cb
+deleteTrade = (tid, cb) ->
+    if tid
+        SS.server.trades.publish tid:tid, cb
+    else
+        cb()
 

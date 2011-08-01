@@ -24,6 +24,7 @@ html(lang="en")
         #site.line
             .logo.unit.size1of2
                 h1 tf2 trade chan
+
             .auth.unit.size1of2.lastUnit
                 span.msg
                 span#login.null
@@ -37,8 +38,17 @@ html(lang="en")
             .topw
                 .button-bar.bp.mb1
                     a(href="#", class="small-button", data-target="#backpack", data-loaded="") Show Backpack
-                    span.msg Click this button to show your backpack.  You use your backpack to make trades.
+                    span.msg
+                    span.null Click this button to show your backpack.  You use your backpack to make trades.
                 #backpack.null
+                    .mb1
+
+                        | This is your backpack.  You can use the
+                        | filter and sort controls to view it
+                        | differently.  When you open the trade window
+                        | below, you can drag items from your backpack
+                        | into your trades.
+
                     .bptools.null
                         include backpack_tools
                     .bpscroll
@@ -46,11 +56,16 @@ html(lang="en")
             .topw
                 .button-bar.ch
                     a(href="#", class="small-button", data-target="#trades", data-loaded="") Show Trades
-                    span.msg  Click this button to show your trades.
+                    span.msg
+                    span.null Click this button to show your trades.
                 #trades.null
-                    .tradescroll.unit.size1of2
+                    .mt1
+                        | These are your trades.  Drag items from your backpack that you want
+                        | to put up for trade.  Drag items from the item selector on the left
+                        | to the wishlist area.  Then click little buttons.
+                    .tradescroll.unit.size3of5
                         .tradeshell
-                    .chooser.unit.lastUnit.size1of2
+                    .chooser.unit.lastUnit.size2of5
                         .bptools.null
                             include backpack_tools
                         .bpscroll

@@ -4108,6 +4108,17 @@ offerItems = ->
 
 
 exports.actions =
+    allGroups: (cb) ->
+        cb groups
+
+    qualCycle: (cb) ->
+        cb quals()
+
+    offerItems: (cb) ->
+        cb offerItems()
+
+
+exports.direct =
     allGroups: ->
         groups
 
@@ -4116,3 +4127,6 @@ exports.actions =
 
     offerItems: ->
         offerItems()
+
+    items: () ->
+        items

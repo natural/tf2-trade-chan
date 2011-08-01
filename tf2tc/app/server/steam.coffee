@@ -13,9 +13,9 @@ exports.actions =
         schemaTweak = (d) ->
             sch = JSON.parse d
             sch.ext =
-                groups: ext.actions.allGroups()
-                quals: ext.actions.qualCycle()
-                offers: ext.actions.offerItems()
+                groups: ext.direct.allGroups()
+                quals: ext.direct.qualCycle()
+                offers: ext.direct.offerItems()
             ks = (Number(k) for k, j of imgFixes)
             for k, n of sch.result.items.item
                 if n.defindex in ks
