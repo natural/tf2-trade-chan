@@ -28,6 +28,8 @@ exports.actions =
             params.tid = "#{params.tid}" if params.tid
 
             steam.actions.schema (schema) ->
+                schema.ext.items = makeSchemaItemMap(schema)
+
                 if not params.tid
                     addTrade schema, uid, have, want, text, (tid) ->
                         sendMessage schema, tid, have, want, text, keys.add
@@ -42,6 +44,13 @@ exports.actions =
                     updateTrade schema, params.tid, have, want, text, () ->
                         sendMessage schema, params.tid, have, want, text, keys.upd
                         cb success:true, tid:params.tid
+
+
+makeSchemaItemMap = (s) ->
+    items = {}
+    for item in s.result.items.item
+        do (item) -> items[item.defindex] = item
+    items
 
 
 addTrade = (schema, uid, have, want, text, next) ->
@@ -147,7 +156,11 @@ extPred =
     vintage_hats: (s, d) -> "#{d.defindex}" in extGroups.vintage_hats and d.quality == 3
     genuine_weapons: (s, d) -> "#{d.defindex}" in extGroups.genuine_weapons and d.quality == 1
     genuine_hats: (s, d) -> "#{d.defindex}" in extGroups.genuine_hats and d.quality == 1
-    unusual_hats: (s, d) -> d.item_type_name == 'TF_Wearable_hat' and d.quality == 5
+    unusual_hats: (s, d) ->
+        try
+            s.ext.items[d.defindex].item_class == 'tf_wearable' and d.quality == 5
+        catch e
+            false
 
 
 keys =

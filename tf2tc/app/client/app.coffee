@@ -1,37 +1,36 @@
 ##
-# client app
+# app.coffee, our client-side app
 #
 
 
-## this is the namespace for the schema, backpack, and various stuff.
-## yes, it's a singleton, but we really don't use it that way.
+# this is the namespace for the schema, backpack, and various stuff.
+# yes, it's a singleton, but we really don't use it that way.
 exports.ns = {}
 
 
-## this is the framework hook for initializing the app in the browser.
-## the routine initializes the app, fetches the schema, and attempts
-## an initial authorization.
+# this is the framework hook for initializing the app in the browser.
+# the routine initializes the app, fetches the schema, and attempts
+# an initial authorization.
 exports.init = ->
     SS.server.app.init ->
         msg = $('#site .msg').text 'Loading schema...'
-        ns = exports.ns
         initJQ jQuery
-        initEvents ns
-        getSchema ns, ->
+        initEvents exports.ns
+        getSchema exports.ns, ->
             $('body').trigger 'schema-ready'
             msg.append('done.').delay(2000).slideUp()
             login (status) ->
-                ns.auth = status.success
-                (if status.success then initAuth else initAnon)(ns)
+                exports.ns.auth = status.success
+                (if status.success then initAuth else initAnon)(exports.ns)
 
 
-## initialize the app without a user.
+# initialize the app without a user.
 initAnon = ->
     $('#login').show()
 
 
-## initialize the app with a logged in user; show the welcome and
-## setup the callbacks for handling the user buttons.
+# initialize the app with a logged in user; show the welcome and
+# setup the callbacks for handling the user buttons.
 initAuth = (ns) ->
     getProfile (profile) ->
         $('#logout').prepend("Welcome, #{profile.personaname}.").show()
@@ -66,39 +65,68 @@ initAuth = (ns) ->
                                 cb()
                                 later = ->
                                     $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
-                                    ## this looks nice, but the similar call
-                                    ## against the backpack items does not!
+                                    # this looks nice, but the similar call
+                                    # against the backpack items does not!
                                     $('.chooserw', chshell).isotope()
                                 setTimeout later, 500
 
 
-## create groups of choosable items at the given target.
-putChooser = (ns, target, cb) ->
-    grp = ns.schema.ext.groups
-    m = getItemMake()
-
-    clone = (id, q) ->
-        x = JSON.parse(JSON.stringify(ns.schema_items[id]))
-        x.quality = q
-        x
-    add = (title) ->
-        target.append $('#chooser-proto').tmpl title:title
-        $('.chooserw:last', target)
-    put = (items, t) ->
-        for item in items
-            m ns, item, t, 'chooser'
-
-    put (clone(x, 6) for x in grp.offers), add('Offers')
-    put (clone(x, 6) for x in grp.commodities), add('Commodities')
-    put (clone(x, 6) for x in grp.promos), add('Promos')
-    put (clone(x, 3) for x in grp.vintage_hats), add('Vintage Hats')
-    put (clone(x, 1) for x in grp.genuine_hats), add('Genuine Hats')
-    put (clone(x, 3) for x in grp.vintage_weapons), add('Vintage Weapons')
-    put (clone(x, 1) for x in grp.genuine_weapons), add('Genuine Weapons')
-    cb()
+# initialize jquery with our little plugins.
+initJQ = ($) ->
+    $.fn.resetQualityClasses = (v) ->
+        @.each ->
+            for q in [0..20]
+                $(@).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
+            $(@).addClass(v)
 
 
-## create items from a backpack at the given target.
+# initialize some fixed, well-known selectors with event handers.
+initEvents = (ns) ->
+    $('body').bind 'trade-changed', tradeChanged
+    $('div.item:not(:empty)').live 'mouseover', namespace:ns, showItemTip
+    $('div.item:not(:empty)').live 'mouseout', namespace:ns, hideItemTip
+
+    $('#user a').click ->
+        self = $ @
+        target = $ self.attr('data-target')
+        togg = ->
+            target.slideToggle()
+            v = (self.text().indexOf('Show') > -1)
+            s = if v then 'Show' else 'Hide'
+            r = if v then 'Hide' else 'Show'
+            self.text self.text().replace(s, r)
+        if not target.attr 'data-load'
+            target.attr('data-load', '1').trigger 'lazy-load', togg
+        else
+            togg()
+        false
+
+
+    $('#channels .button-bar a').click ->
+        link = $ @
+        name = link.attr('data-channel-name')
+        active = link.hasClass('on')
+        link.toggleClass('on').toggleClass('off')
+        (if active then leaveChannel else joinChannel)(name, link.parent())
+        false
+
+    $('#channels .chshell .chsay input[type=text]').live 'keydown', (e) ->
+        if e.keyCode == 13
+            inp = $ e.currentTarget
+            csh = inp.parents '.chshell'
+            name = csh.data 'cname'
+            text = inp.attr 'value'
+            if text
+                sayChannel channel:name, text:text, () ->
+                    inp.attr 'value', ''
+                e.preventDefault()
+
+    SS.events.on 'sys-msg', onTalk makeSysMsg
+    SS.events.on 'usr-msg', onTalk makeUserMsg
+    SS.events.on 'trd-msg', onTalk makeTradeMsg
+
+
+# create items from a backpack at the given target.
 putBackpack = (ns, target, cb) ->
     m = getItemMake()
     ts = ns.backpack_items
@@ -107,6 +135,24 @@ putBackpack = (ns, target, cb) ->
     cb()
 
 
+initBackpackToolbar = (container, target) ->
+    $('.bptools', container).fadeIn()
+
+    $('.bpfilters', container).change ->
+        sel = $(':selected', @).attr 'data-filter'
+        if sel and sel.length
+            target.isotope filter:sel
+        false
+
+    $('.bpsorts', container).change ->
+        sel = $(':selected', @).attr 'data-sort'
+        ord = $(':selected', @).attr 'data-desc'
+        target.isotope sortBy:sel, sortAscending:not ord
+        false
+
+
+# configure the backpack items at the target for isotope layout,
+# filtering, and sorting.
 isoBackpack = (target, cb) ->
     mn = Number.MIN_VALUE
     cmp = (i, attr, which='item-defn', missing=Number.MAX_VALUE) ->
@@ -132,8 +178,33 @@ isoBackpack = (target, cb) ->
             type:       (i) -> cmp i, 'item_type_name', 'schema-defn'
     cb()
 
+# create groups of choosable items at the given target.
+putChooser = (ns, target, cb) ->
+    grp = ns.schema.ext.groups
+    m = getItemMake()
+
+    clone = (id, q) ->
+        x = JSON.parse(JSON.stringify(ns.schema_items[id]))
+        x.quality = q
+        x
+    add = (title) ->
+        target.append $('#chooser-proto').tmpl title:title
+        $('.chooserw:last', target)
+    put = (items, t) ->
+        for item in items
+            m ns, item, t, 'chooser'
+
+    put (clone(x, 6) for x in grp.offers), add('Offers')
+    put (clone(x, 6) for x in grp.commodities), add('Commodities')
+    put (clone(x, 6) for x in grp.promos), add('Promos')
+    put (clone(x, 3) for x in grp.vintage_hats), add('Vintage Hats')
+    put (clone(x, 1) for x in grp.genuine_hats), add('Genuine Hats')
+    put (clone(x, 3) for x in grp.vintage_weapons), add('Vintage Weapons')
+    put (clone(x, 1) for x in grp.genuine_weapons), add('Genuine Weapons')
+    cb()
 
 
+# configure the chooser groups at the target for isotope layout.
 isoChooser = (target, cb) ->
     for grp in $('.chooserw', target)
         $(grp).isotope
@@ -145,20 +216,14 @@ isoChooser = (target, cb) ->
     cb()
 
 
-initBackpackToolbar = (container, target) ->
-    $('.bptools', container).fadeIn()
-
-    $('.bpfilters', container).change ->
-        sel = $(':selected', @).attr 'data-filter'
-        if sel and sel.length
-            target.isotope filter:sel
-        false
-
-    $('.bpsorts', container).change ->
-        sel = $(':selected', @).attr 'data-sort'
-        ord = $(':selected', @).attr 'data-desc'
-        target.isotope sortBy:sel, sortAscending:not ord
-        false
+makeEmptyTrade = () ->
+    trade = $('#trade-proto').tmpl({prefix:'NEW'})
+    $('a.trade-submit, a.trade-delete', trade).hide()
+    $('.haves, .wants', trade).isotope
+        itemSelector: '.itemw'
+        layoutMode: 'fitRows'
+        animationEngine: getAniEngine()
+    trade
 
 
 putTrades = (ns, trades, target, cb) ->
@@ -167,7 +232,7 @@ putTrades = (ns, trades, target, cb) ->
     if trades and trades.success
         m = getItemMake()
         for tid, trd of trades.trades
-            trd = JSON.parse(trd)
+            trd = JSON.parse trd
             target.append $('#trade-proto').tmpl(tid:"##{tid}").data('trade-id', tid)
             last = $('.trade:last', target)
             if trd.text
@@ -196,14 +261,6 @@ putTrades = (ns, trades, target, cb) ->
     cb()
 
 
-makeEmptyTrade = () ->
-    trade = $('#trade-proto').tmpl({prefix:'NEW'})
-    $('a.trade-submit, a.trade-delete', trade).hide()
-    $('.haves, .wants', trade).isotope
-        itemSelector: '.itemw'
-        layoutMode: 'fitRows'
-        animationEngine: getAniEngine()
-    trade
 
 
 configChooser = (source, target) ->
@@ -239,7 +296,7 @@ configChooser = (source, target) ->
             a = $ avail[0]
             t = $ 'div.item.want:empty:first', a
             copy s, t
-        ## else alert or message or something
+        # else alert or message or something
 
     dragOpts =
         helper: 'clone'
@@ -296,7 +353,7 @@ configBackpack = (source, target) ->
             ids.push i
             a.data 'ids', ids
             copy s, t
-        ## else alert or message or something
+        # else alert or message or something
 
     dragOpts =
         appendTo: 'body'
@@ -327,56 +384,32 @@ configBackpack = (source, target) ->
 
 
 tradeChanged = (e, tc) ->
+    existing = $(tc).data 'trade-id'
     have = $ 'div.item.backpack:not(:empty)', tc
     if have.length
-        $('a.trade-submit', tc).slideDown()
+        $('a.trade-submit', tc).text(if existing then 'Update' else 'Submit').slideDown()
     else
         $('a.trade-submit', tc).slideUp()
     want = $ 'div.item.chooser:not(:empty)', tc
     if want.length or have.length
-        $('a.trade-delete', tc).slideDown()
+        $('a.trade-delete', tc).text(if existing then 'Close' else 'Clear').slideDown()
     else
         $('a.trade-delete', tc).slideUp()
 
 
-getSchema = (ns, cb) ->
-    if ns.schema?
-        cb ns.schema
-    else
-        $.getJSON '/schema', (s) ->
-            cb makeSchema(ns, s)
 
-
-getProfile = (id64, cb) ->
-    $.getJSON "/profile/#{id64}", cb
-
-
-getBackpack = (id64, ns, cb) ->
-    if ns.backpack?
-        cb ns.backpack
-    else
-        $.getJSON "/items/#{id64}", (b) ->
-            cb makeBackpack(ns, b)
-
-
-initJQ = ($) ->
-    $.fn.resetQualityClasses = (v) ->
-        @.each ->
-            for q in [0..20]
-                $(@).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
-            $(@).addClass(v)
 
 initTradeEvents = (ns, target) ->
     parentTrade = (ev) ->
-        $(ev.currentTarget).parents('div.trade')
+        $(ev.currentTarget).parents 'div.trade'
 
     $('a.trade-delete', target).live 'click', (e) ->
-        p = parentTrade(e)
+        p = parentTrade e
         tid = p.data('trade-id')
         deleteTrade tid, (status) ->
             p.children('div').slideUp()
-            $('h1:first .main', p).text('')
-            $('h1:first .status', p).text('Deleted!').fadeIn().delay(2000).fadeOut 'fast', () ->
+            $('h1:first .main', p).text ''
+            $('h1:first .status', p).text(if tid then 'Closed!' else 'Cleared!').fadeIn().delay(2000).fadeOut 'fast', () ->
                 p.replaceWith makeEmptyTrade()
                 configBackpack $('#backpack'), $('#trades')
                 configChooser $('#chooser'), $('#trades')
@@ -384,8 +417,8 @@ initTradeEvents = (ns, target) ->
         false
 
     $('a.trade-submit', target).live 'click', (e) ->
-        p = parentTrade(e)
-        tid = p.data('trade-id')
+        p = parentTrade e
+        tid = p.data 'trade-id'
         have = ($(i).data('item-defn') for i in $('div.backpack', p))
         want = ($(i).data('item-defn') for i in $('div.chooser', p))
         text = $('.trade-edit-notes textarea', p).val()
@@ -395,12 +428,13 @@ initTradeEvents = (ns, target) ->
                 $('h1:first .main', p).text("Trade ##{status.tid}")
                 $('h1:first .status', p).text(if tid then 'Updated!' else 'Submitted!').delay(5000).fadeOut()
                 $('a.trade-submit', p).slideUp()
+                $('a.trade-delete', p).text('Close')
         false
 
     $('a.trade-notes', target).live 'click', (e) ->
         p = parentTrade(e)
         if $('.trade-edit-notes', p).is(':visible')
-            ## done editing
+            # done editing
             txt = $('.trade-edit-notes textarea', p).val()
             $('.trade-show-notes', p).text(txt)
         else
@@ -410,74 +444,25 @@ initTradeEvents = (ns, target) ->
         false
 
     $('div.item.chooser', target).live 'click', (e) ->
-        item = $(e.currentTarget)
+        item = $ e.currentTarget
         id = item.data('item-defn').defindex
         qualseq = ns.schema.ext.quals[id]
-        qualc = item.data('qual')
+        qualc = item.data 'qual'
         if qualc?
-            i = qualseq.indexOf(qualc)
+            i = qualseq.indexOf qualc
         else
             i = 1
         j = qualseq[(i+1) % qualseq.length]
-        item.data('qual', j)
-        item.resetQualityClasses("qual-border-#{j} qual-hover-#{j}")
+        item.data 'qual', j
+        item.resetQualityClasses "qual-border-#{j} qual-hover-#{j}"
         item.data('item-defn').quality = j
-        item.trigger('mouseout').trigger('mouseover')
-
-
-initEvents = (ns) ->
-    $('body').bind 'trade-changed', tradeChanged
-    $('div.item:not(:empty)').live 'mouseover', {namespace:ns}, showItemTip
-    $('div.item:not(:empty)').live 'mouseout', {namespace:ns}, hideItemTip
-
-    $('#user a').click ->
-        self = $ @
-        target = $ self.attr('data-target')
-
-        changeText = ->
-            v = (self.text().indexOf('Show') > -1)
-            s = if v then 'Show' else 'Hide'
-            r = if v then 'Hide' else 'Show'
-            self.text self.text().replace(s, r)
-
-        if not target.attr 'data-load'
-            target.attr('data-load', true).trigger 'lazy-load', () ->
-                target.slideDown()
-                changeText()
-        else
-            target.slideToggle()
-            changeText()
-        false
-
-
-    $('#channels .button-bar a').click ->
-        link = $ @
-        name = link.attr('data-channel-name')
-        active = link.hasClass('on')
-        link.toggleClass('on').toggleClass('off')
-        (if active then leaveChannel else joinChannel)(name, link.parent())
-        false
-
-    $('#channels .chshell .chsay input[type=text]').live 'keydown', (e) ->
-        if e.keyCode == 13
-            inp = $(e.currentTarget)
-            csh = inp.parents('.chshell')
-            name = csh.data('cname')
-            text = inp.attr('value')
-            if text
-                sayChannel {name:name, text:text}, () ->
-                    inp.attr 'value', ''
-                e.preventDefault()
-
-    SS.events.on 'sys-msg', onTalk makeSysMsg
-    SS.events.on 'usr-msg', onTalk makeUserMsg
-    SS.events.on 'trd-msg', onTalk makeTradeMsg
+        item.trigger('mouseout').trigger 'mouseover'
 
 
 onTalk = (fmt) ->
     (msg) ->
         console.log 'onTalk:', msg
-        talk = talkArea msg.name
+        talk = talkArea msg.channel
         if talk and talk[0]
             val = fmt(msg)
             if val
@@ -489,20 +474,35 @@ talkArea = (name) ->
     $ "#channels .chshell.cname-#{name} .chtalk"
 
 
-leaveChannel = (name, context) ->
-    area = $(".chshell.cname-#{name}", context)
+leaveChannel = (channel, context) ->
+    area = $(".chshell.cname-#{channel}", context)
     area.slideUp -> area.detach()
-    SS.server.channels.leave name:name
+    SS.server.channels.leave channel:channel
 
 
-joinChannel = (name, context) ->
-    context.append $('#channel-proto').tmpl {name:name, title:name}
+joinChannel = (channel, context) ->
+    context.append $('#channel-proto').tmpl {name:channel, title:channel}
     newarea = $ '.chshell', context
-    newarea.addClass("cname-#{name}").data('cname', name).slideDown()
-    SS.server.channels.join name:name
-    SS.server.channels.list {name:name}, (names) ->
-        for n in names
-            $('.chshell .chusers', context).append "IMG: #{n}<br>"
+    newarea.addClass("cname-#{channel}").data('cname', channel).slideDown()
+    SS.server.channels.join channel:channel
+    SS.server.channels.list channel:channel, (players) ->
+        for player in players
+            do (player) ->
+                readProfile player, (profile) ->
+                    console.log "PROFILE + STATUS:", profile
+                    p = $('#channel-player').tmpl()
+                    $('.chshell .chusers', context).append p
+                    $('a', p).attr 'href', "http://steamcommunity.com/profiles/#{player}"
+
+                    name = $('.name', p)
+                    name.text profile.personaname
+                    name.addClass "#{profile.state}"
+                    name.fadeIn()
+
+                    img = $('img.avatar', p)
+                    img.addClass "#{profile.state}"
+                    img.attr 'src', profile.avatar
+                    img.fadeIn()
 
 
 makeSysMsg = (m) ->
@@ -525,33 +525,14 @@ makeTradeMsg = (m) ->
     else if m.action == 'upd'
         console.log "upd trade:", m
     t = new Date().toLocaleTimeString()
-    "<span class='timestamp'>#{t}</span> <span class='trade'>trade: </span>?<br>"
-
-
-
-___makeTradeMsg = (m) ->
-    p = $('#trade-message').tmpl m
-    p = putTradeUser p, m
-    putTradeItem p, m
-
-
-putTradeUser = (proto, msg) ->
-    proto
-
-
-putTradeItems = (proto, msg) ->
-    proto
-
-
-remTradeMsg = (m) ->
-    null
+    "<span class='timestamp'>#{t}</span> <span class='trade #{m.action}'>trade id: #{m.tid}</span><br>"
 
 
 getAniEngine = ->
     if $.browser.mozilla then 'jquery' else 'best-available'
 
 
-## local wrappers around the server and other client apis.
+# local wrappers around the server and other client apis.
 
 login = (cb) ->
     SS.server.app.login document.cookie, cb
@@ -591,3 +572,29 @@ deleteTrade = (tid, cb) ->
     else
         cb()
 
+getSchema = (ns, cb) ->
+    if ns.schema?
+        cb ns.schema
+    else
+        $.getJSON '/schema', (s) ->
+            cb makeSchema(ns, s)
+
+
+readProfile = (id64, cb) ->
+    SS.server.app.readProfile id64:id64, (p) ->
+        SS.server.app.readStatus id64:id64, (s) ->
+            p.state = s.state
+            p.stateMessage = s.stateMessage
+            cb p
+
+
+getBackpack = (id64, ns, cb) ->
+    if ns.backpack?
+        cb ns.backpack
+    else
+        $.getJSON "/items/#{id64}", (b) ->
+            cb makeBackpack(ns, b)
+
+
+#getProfile = (id64, cb) ->
+#    $.getJSON "/profile/#{id64}", cb

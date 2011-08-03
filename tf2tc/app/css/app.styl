@@ -268,10 +268,11 @@ div.offer
 #backpack
     margin-top base_w
 
+
 #channels
     padding base_w
     background-color darken(#fff, 35%)
-    height 100%
+    not-height 100%
 
 
 .topw
@@ -324,37 +325,51 @@ div.offer
     border 1px dotted green
 
 
+// channel stuff
+
+
 .chscroll .on
     background-color pal_red2
 
+
 .chscroll .off
     background-color pal_red1
+
+
+.chchat
+    border 1px solid pal_gray1
+    background-color pal_gray2
+    border-r(base_p)
+    color wht
+    padding (base_p)
+    margin-right base_p
+
+
+// the div with the list of channel users
+.chusers
+    overflow-x hidden
+    overflow-y scroll !important
+    height 200px
+    margin-left base_p
 
 .chsay
     border 1px solid blue
 
     input[type=text]
         border 1px solid green
-        width 100%
+        width 95%
+        padding base_p
+        font-family monospace
 
-.chchat
-    border 1px solid pal_gray1
-    background-color pal_gray2
-    color wht
-    padding (base_w/2)
-    overflow-y auto
-    overflow-x hidden
 
 
 .chtalk
-    height 18em
-    overflow-y auto
     overflow-x hidden
     font-family monospace
     margin-right (base_w/2)
 
     .sys
-        color pal_red2
+        color lighten(pal_gray1, 75%)
 
     .timestamp
         color pal_gray1
@@ -364,6 +379,26 @@ div.offer
 
     .timestamp:after
         content "]"
+
+    span.trade
+        font-weight bold
+        color pal_orange3
+
+    span.trade.del
+        color pal_red3
+        &:before
+            content "removed "
+
+    span.trade.add
+        color pal_blue2
+        &:before
+            content "created "
+
+    span.trade.upd
+        color pal_brown3
+        &:before
+            content "changed "
+
 
 .chtrade
     padding base_w
@@ -377,7 +412,7 @@ div.offer
     font-family font_sec
 
 
-.trade
+div.trade
     background-color blk
     padding base_p*2
     border-r(bord_w*2)
@@ -404,7 +439,7 @@ div.offer
             background-color pal_red3 !important
 
 
-.trade:hover
+div.trade:hover
     background-color #222
     trans(background-color, 1s)
 
@@ -428,6 +463,28 @@ div.offer
 
 
 
-.trade h1 span.status
+div.trade h1 span.status
     color pal_red3
     padding-left base_w
+
+
+
+
+
+img.status
+    border 2px solid
+    border-r(0.15em)
+
+img.in-game, span.in-game
+    border-color #B1FB50 !important
+    color #B1FB50
+
+img.online, span.online
+    border-color #6FBDFF !important
+    color #6FBDFF
+
+img.offline, span.offline
+    border-color #898989 !important
+    color #898989
+
+

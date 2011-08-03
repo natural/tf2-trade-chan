@@ -4,45 +4,45 @@ steam = require './steam.coffee'
 
 exports.actions =
     join: (params, cb) ->
-        name = params.name
+        channel = params.channel
         @getSession (session) ->
-            msg = what:'joined', name:name
+            msg = what:'joined', channel:channel
             makeProfileMessage session, msg, (res) ->
-                session.channel.subscribe name
-                R.rpush keys.channelUserList(name), res.who, (err, okay) ->
+                session.channel.subscribe channel
+                R.rpush keys.channelUserList(channel), res.id64, (err, okay) ->
                     if okay and not err
-                        R.rpush keys.userChannels(res.id64), name
-                        SS.publish.channel [name], keys.sysMsg, res
+                        R.rpush keys.userChannels(res.id64), channel
+                        SS.publish.channel [channel], keys.sysMsg, res
                         cb()
 
     leave: (params, cb) ->
-        name = params.name
+        channel = params.channel
         @getSession (session) ->
-            msg = what:'left', name:name
+            msg = what:'left', channel:channel
             makeProfileMessage session, msg, (res) ->
-                session.channel.unsubscribe name
-                R.lrem keys.channelUserList(name), 0, res.who, (err, okay) ->
-                    R.lrem keys.userChannels(res.id64), 0, name
-                    SS.publish.channel [name], keys.sysMsg, res
+                session.channel.unsubscribe channel
+                R.lrem keys.channelUserList(channel), 0, res.id64, (err, okay) ->
+                    R.lrem keys.userChannels(res.id64), 0, channel
+                    SS.publish.channel [channel], keys.sysMsg, res
                     cb()
 
     leaveAll: (params, cb) ->
         id64 = utils.getId64 params.session
         if id64
-            R.lrange "channels:#{id64}", 0, -1, (err, vals) ->
-                for name in vals
-                    exports.actions.leave name
+            R.lrange "channels:#{id64}", 0, -1, (err, channels) ->
+                for channel in channels
+                    exports.actions.leave channel:channel
         cb()
 
     list: (params, cb) ->
-        R.lrange keys.channelUserList(params.name), 0, -1, (err, val) ->
+        R.lrange keys.channelUserList(params.channel), 0, -1, (err, val) ->
             cb val
 
     say: (params, cb) ->
         @getSession (session) ->
-            msg = what:'said', name:params.name, text:params.text
+            msg = what:'said', channel:params.channel, text:params.text
             makeProfileMessage session, msg, (res) ->
-                SS.publish.channel [params.name], keys.usrMsg, res
+                SS.publish.channel [params.channel], keys.usrMsg, res
                 cb()
 
 
@@ -64,7 +64,7 @@ makeProfileMessage = (session, data, cb) ->
     if session.user.loggedIn() and session.user_id
         id64 = utils.getId64 session
         if id64
-            steam.actions.profile {id64: id64}, (profile) ->
+            steam.actions.profile id64:id64, (profile) ->
                 username = profile.personaname
                 if username
                     data.id64 = id64

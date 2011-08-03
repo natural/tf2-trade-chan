@@ -1,14 +1,18 @@
 .chshell.null
-    div.line.mt05
 
-        div.chchat.unit.size1of2
-            div.debug.unit.size3of4
-                div.chtalk
-                div.chsay.debug
-                    input(type="text")
+    table(width="100%")
+        tr
+            td(width="50%")
+                .chchat
+                    table(width="100%")
+                        tr
+                            td(width="65%")
+                                .chtalk(style="height:200px")
+                                .chsay
+                                    input(type="text")
+                            td(width="35%")
+                                .chusers.debug2
 
-            div.chusers.debug.unit.lastUnit.size1of4
-
-        div.chtrade.unit.lastUnit.size1of2
-            | trades for this chan
-
+            td(width="50%")
+                .chtrade
+                    h2 trades for this chan

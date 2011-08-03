@@ -84,9 +84,9 @@ urls =
         uri: "http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0001/?key=#{key}&steamids=#{id64}"
 
     status: (id64) ->
-        path: "http://steamcommunity.com/profiles/#{id64}/?xml=1"
         timeout: 1000*5
         ttl: 60*5
+        uri: "http://steamcommunity.com/profiles/#{id64}/?xml=1"
 
     news: (count, max) ->
         path: "http://api.steampowered.com/ISteamNews/GetNewsForApp/v0001/?appid=440&count=#{count}&maxlength=#{max}&format=json"
@@ -95,13 +95,24 @@ urls =
 
 
 statusKeys = (v) ->
-    x = libxmljs.parseXmlString(v)
-    name: x.get('//steamID').text()
-    state: x.get('//onlineState').text()
-    avatarFull: x.get('//avatarFull').text()
-    avatarIcon: x.get('//avatarIcon').text()
-    avatarMedium: x.get('//avatarMedium').text()
-    stateMessage: x.get('//stateMessage').text()
+    d =
+        name:''
+        state:''
+        avatarFull:''
+        avatarIcon:''
+        avatarMedium:''
+        stateMessage:''
+    try
+        x = libxmljs.parseXmlString(v)
+        d.name = x.get('//steamID').text()
+        d.state = x.get('//onlineState').text()
+        d.avatarFull = x.get('//avatarFull').text()
+        d.avatarIcon = x.get('//avatarIcon').text()
+        d.avatarMedium = x.get('//avatarMedium').text()
+        d.stateMessage = x.get('//stateMessage').text()
+    catch e
+        null
+    d
 
 
 imgFixes =

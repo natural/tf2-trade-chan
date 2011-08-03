@@ -15,7 +15,7 @@ exports.actions =
             if session.user.loggedIn()
                 uid = session.user_id
                 id64 = uid.split('/').pop()
-                steam.actions.items {id64:id64}, cb
+                steam.actions.items id64:id64, cb
             else
                 cb {}
 
@@ -30,6 +30,9 @@ exports.actions =
             session.user.logout(cb)
             session.setUserId(null)
 
+    readStatus: (params, cb) ->
+        steam.actions.status params, cb
+
     readProfile: (params, cb) ->
         steam.actions.profile params, cb
 
@@ -37,7 +40,7 @@ exports.actions =
         @getSession (session) ->
             if session.user.loggedIn() and session.user_id
                 id64 = session.user_id.split('/').pop()
-                steam.actions.profile {id64: id64}, (profile) ->
+                steam.actions.profile id64: id64, (profile) ->
                     cb profile
             else
                 cb {}
@@ -47,5 +50,5 @@ exports.actions =
 clientDisconnect = (s) ->
     utils.log "DISCONNECT user_id=#{s.user_id}"
     dummy = user_id:s.user_id
-    SS.server.channels.leaveAll {session:dummy}, ->
+    SS.server.channels.leaveAll session:dummy, ->
         s.user.logout()

@@ -90,7 +90,7 @@ exports.makeBackpack = (ns, bp) ->
 
 exports.makeSchema = (ns, sch) ->
     ns.schema = sch
-    ns.schema_items = items = {} # schema item mapping by defindex
+    ns.schema_items = items = {} # schema item mapping by defindex, client side
 
     for item in sch.result.items.item
         do (item) -> items[item.defindex] = item
