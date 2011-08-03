@@ -121,9 +121,25 @@ initEvents = (ns) ->
                     inp.attr 'value', ''
                 e.preventDefault()
 
-    SS.events.on 'sys-msg', onTalk makeSysMsg
-    SS.events.on 'usr-msg', onTalk makeUserMsg
-    SS.events.on 'trd-msg', onTalk makeTradeMsg
+    SS.events.on 'sys-msg', (msg) ->
+        # for sys-msg and usr-msg, objects look like:
+        #
+        #     channel:'vintage_hats', id64:'76...', what:'joined', 'who':'pnatural'
+        #
+        getChannelArea(msg.channel).trigger "channel-#{msg.what}", msg
+
+    SS.events.on 'usr-msg', (msg) ->
+        getChannelArea(msg.channel).trigger "channel-#{msg.what}", msg
+
+    SS.events.on 'trd-msg', (msg) ->
+        # for trd-msg, objects look like:
+        #
+        #     action:'add', channels:['vintage_hats', ...'],
+        #     have:[...], want:[...], text:'wut?', tid:123
+        #
+        console.log 'trd-msg', msg
+        getChannelArea(msg.channel).trigger "trade-#{msg.action}", msg
+
 
 
 # create items from a backpack at the given target.
@@ -459,19 +475,6 @@ initTradeEvents = (ns, target) ->
         item.trigger('mouseout').trigger 'mouseover'
 
 
-onTalk = (fmt) ->
-    (msg) ->
-        console.log 'onTalk:', msg
-        talk = talkArea msg.channel
-        if talk and talk[0]
-            val = fmt(msg)
-            if val
-                talk.append val
-                talk[0].scrollTop = talk[0].scrollHeight
-
-
-talkArea = (name) ->
-    $ "#channels .chshell.cname-#{name} .chtalk"
 
 
 leaveChannel = (channel, context) ->
@@ -481,33 +484,92 @@ leaveChannel = (channel, context) ->
 
 
 joinChannel = (channel, context) ->
-    context.append $('#channel-proto').tmpl {name:channel, title:channel}
-    newarea = $ '.chshell', context
-    newarea.addClass("cname-#{channel}").data('cname', channel).slideDown()
-    SS.server.channels.join channel:channel
+    newarea = $('#channel-proto').tmpl name:channel, title:channel
+    context.append newarea
+
+    newarea.addClass "cname-#{channel}"
+    newarea.data 'cname', channel
+    newarea.slideDown()
+
+    talk = $ '.chtalk', newarea
+    addTalk = (v) ->
+        if v
+            talk.append v
+            talk[0].scrollTop = talk[0].scrollHeight
+
+    addStatus = (player) ->
+        readProfileStatus player, (profile) ->
+            p = $('#channel-player').tmpl()
+            $('.chshell .chusers', context).append p
+            $('a', p).attr 'href', "http://steamcommunity.com/profiles/#{player}"
+            p.addClass("id64-#{player}")
+
+            name = $('.name', p)
+            name.text profile.personaname
+            name.addClass "#{profile.state}"
+            name.fadeIn()
+
+            img = $('img.avatar', p)
+            img.addClass "#{profile.state}"
+            img.attr 'src', profile.avatar
+            img.fadeIn()
+
+    delStatus = (player) ->
+        $(".id64-#{player}:nth(0)").fadeOut().detach()
+
+    newarea.bind 'channel-joined', (e, m) ->
+        addTalk makeSysMsg(m)
+        addStatus m.id64
+
+    newarea.bind 'channel-left', (e, m) ->
+        addTalk makeSysMsg(m)
+        delStatus m.id64
+
+    newarea.bind 'channel-said', (e, m) ->
+        addTalk makeUserMsg(m)
+
+    newarea.bind 'trade-add', (e, m) ->
+        console.log 'trade added:', m, ' this channel is', channel
+
+    newarea.bind 'trade-del', (e, m) ->
+        console.log 'trade deleted:', m, ' this channel is', channel
+
+    newarea.bind 'trade-upd', (e, m) ->
+        console.log 'trade updated:', m, ' this channel is', channel
+
+
     SS.server.channels.list channel:channel, (players) ->
         for player in players
             do (player) ->
-                readProfile player, (profile) ->
-                    console.log "PROFILE + STATUS:", profile
-                    p = $('#channel-player').tmpl()
-                    $('.chshell .chusers', context).append p
-                    $('a', p).attr 'href', "http://steamcommunity.com/profiles/#{player}"
+                addStatus player
+        # do this after adding the current players so that we don't
+        # also add the current player (that's handled by the system
+        # message event when the join is done).
+        SS.server.channels.join channel:channel
 
-                    name = $('.name', p)
-                    name.text profile.personaname
-                    name.addClass "#{profile.state}"
-                    name.fadeIn()
 
-                    img = $('img.avatar', p)
-                    img.addClass "#{profile.state}"
-                    img.attr 'src', profile.avatar
-                    img.fadeIn()
+getChannelArea = (name) ->
+    $ "#channels .chshell.cname-#{name}"
+
+
+getTalkArea = (name) ->
+    $ '.chtalk', getChannelArea(name)
+
+
+onTalk = (fmt) ->
+    (msg) ->
+        console.log 'onTalk:', msg
+        talk = getTalkArea msg.channel
+        if talk and talk[0]
+            val = fmt(msg)
+            if val
+                talk.append val
+                talk[0].scrollTop = talk[0].scrollHeight
 
 
 makeSysMsg = (m) ->
     t = new Date().toLocaleTimeString()
-    "<span class='timestamp'>#{t}</span> <span class='sys'>system: </span>#{m.who} has #{m.what} the channel.<br>"
+    "<span class='timestamp'>#{t}</span> <span class='sys'>system: #{m.who} has #{m.what} the channel.</span><br>"
 
 
 makeUserMsg = (m) ->
@@ -580,10 +642,10 @@ getSchema = (ns, cb) ->
             cb makeSchema(ns, s)
 
 
-readProfile = (id64, cb) ->
+readProfileStatus = (id64, cb) ->
     SS.server.app.readProfile id64:id64, (p) ->
         SS.server.app.readStatus id64:id64, (s) ->
-            p.state = s.state
+            p.state = if s and s.state then s.state else null
             p.stateMessage = s.stateMessage
             cb p
 

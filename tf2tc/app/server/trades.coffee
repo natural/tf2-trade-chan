@@ -98,7 +98,7 @@ sendMessage = (schema, tid, have, want, text, action) ->
     msg = tid:tid, have:have, want:want, text:text, action:action
     for cn in cns
         do(cn) ->
-            msg.name = cn
+            msg.channel = cn
             msg.channels = cns
             SS.publish.channel [cn], 'trd-msg', msg
 
