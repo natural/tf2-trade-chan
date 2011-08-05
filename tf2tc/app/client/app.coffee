@@ -15,10 +15,9 @@ exports.init = ->
     SS.server.app.init ->
         msg = $('#site .msg').text 'Loading schema...'
         initJQ jQuery
-        initEvents exports.ns
         getSchema exports.ns, ->
-            $('body').trigger 'schema-ready'
             msg.append('done.').delay(2000).slideUp()
+            initEvents exports.ns
             login (status) ->
                 exports.ns.auth = status.success
                 (if status.success then initAuth else initAnon)(exports.ns)
@@ -88,25 +87,25 @@ initEvents = (ns) ->
 
     $('#user a').click ->
         self = $ @
-        target = $ self.attr('data-target')
-        togg = ->
-            target.slideToggle()
+        targ = $ self.attr('data-target')
+        togl = ->
+            targ.slideToggle()
             v = (self.text().indexOf('Show') > -1)
             s = if v then 'Show' else 'Hide'
             r = if v then 'Hide' else 'Show'
             self.text self.text().replace(s, r)
-        if not target.attr 'data-load'
-            target.attr('data-load', '1').trigger 'lazy-load', togg
+        if not targ.attr 'data-load'
+            targ.attr('data-load', '1').trigger 'lazy-load', togl
         else
-            togg()
+            togl()
         false
 
 
     $('#channels .button-bar a').click ->
         link = $ @
-        name = link.attr('data-channel-name')
-        active = link.hasClass('on')
-        link.toggleClass('on').toggleClass('off')
+        name = link.attr 'data-channel-name'
+        active = link.hasClass 'on'
+        link.toggleClass('on').toggleClass 'off'
         (if active then leaveChannel else joinChannel)(name, link.parent())
         false
 
@@ -114,40 +113,41 @@ initEvents = (ns) ->
         if e.keyCode == 13
             inp = $ e.currentTarget
             csh = inp.parents '.chshell'
-            name = csh.data 'cname'
-            text = inp.attr 'value'
-            if text
-                sayChannel channel:name, text:text, () ->
+            chn = csh.data 'cname'
+            txt = inp.attr 'value'
+            if txt
+                sayChannel channel:chn, text:txt, ->
                     inp.attr 'value', ''
                 e.preventDefault()
 
-    SS.events.on 'sys-msg', (msg) ->
-        # for sys-msg and usr-msg, objects look like:
-        #
-        #     channel:'vintage_hats', id64:'76...', what:'joined', 'who':'pnatural'
-        #
-        getChannelArea(msg.channel).trigger "channel-#{msg.what}", msg
+    $('#trades .chooser .chooser-group a').live 'click', ->
+        link = $ @
+        #console.log "chooser click", link, link.parents('.chooser-group')
+        key = link.parents('.chooser-group').attr 'data-key'
+        console.log 'chooser click', key, link
 
-    SS.events.on 'usr-msg', (msg) ->
-        getChannelArea(msg.channel).trigger "channel-#{msg.what}", msg
 
-    SS.events.on 'trd-msg', (msg) ->
-        # for trd-msg, objects look like:
-        #
-        #     action:'add', channels:['vintage_hats', ...'],
-        #     have:[...], want:[...], text:'wut?', tid:123
-        #
-        console.log 'trd-msg', msg
-        getChannelArea(msg.channel).trigger "trade-#{msg.action}", msg
+    SS.events.on 'sys-msg', (m) ->
+        getChannelArea(m.channel).trigger "channel-#{m.what}", m
+
+    SS.events.on 'usr-msg', (m) ->
+        getChannelArea(m.channel).trigger "channel-#{m.what}", m
+
+    SS.events.on 'trd-msg', (m) ->
+        getChannelArea(m.channel).trigger "trade-#{m.action}", m
 
 
 
 # create items from a backpack at the given target.
 putBackpack = (ns, target, cb) ->
     m = getItemMake()
-    ts = ns.backpack_items
-    mk = (s) -> m ns, ts[s], target, 'backpack'
-    mk slot for slot in [1..ns.backpack.result.num_backpack_slots]
+
+    unp = (i) -> m ns, ns.backpack_items_unplaced[i], target, 'backpack'
+    unp j for j in [0..ns.backpack_items_unplaced.length-1]
+
+    put = (s) -> m ns, ns.backpack_items[s], target, 'backpack'
+    put slot for slot in [1..ns.backpack.result.num_backpack_slots]
+
     cb()
 
 
@@ -194,6 +194,7 @@ isoBackpack = (target, cb) ->
             type:       (i) -> cmp i, 'item_type_name', 'schema-defn'
     cb()
 
+
 # create groups of choosable items at the given target.
 putChooser = (ns, target, cb) ->
     grp = ns.schema.ext.groups
@@ -203,20 +204,38 @@ putChooser = (ns, target, cb) ->
         x = JSON.parse(JSON.stringify(ns.schema_items[id]))
         x.quality = q
         x
+
     add = (title) ->
-        target.append $('#chooser-proto').tmpl title:title
-        $('.chooserw:last', target)
+        ch = $('#chooser-proto').tmpl title:title
+        target.append ch
+        $('span', ch).hide()
+        $('.chooserw', ch)
+
     put = (items, t) ->
-        for item in items
-            m ns, item, t, 'chooser'
+        m ns, item, t, 'chooser' for item in items
 
     put (clone(x, 6) for x in grp.offers), add('Offers')
     put (clone(x, 6) for x in grp.commodities), add('Commodities')
     put (clone(x, 6) for x in grp.promos), add('Promos')
-    put (clone(x, 3) for x in grp.vintage_hats), add('Vintage Hats')
-    put (clone(x, 1) for x in grp.genuine_hats), add('Genuine Hats')
-    put (clone(x, 3) for x in grp.vintage_weapons), add('Vintage Weapons')
-    put (clone(x, 1) for x in grp.genuine_weapons), add('Genuine Weapons')
+
+
+    addb = (key, title) ->
+        ch = $('#chooser-proto').tmpl title:title
+        target.append ch
+        $('h3', ch).hide()
+        ch.attr('data-key', key)
+        $('.chooserw', ch)
+
+    putb = () ->
+        null
+
+    putb addb('hats', 'All Hats')
+    putb addb('vintage_hats', 'Vintage Hats')
+    putb addb('genuine_hats', 'Genuine Hats')
+    putb addb('weapons', 'All Weapons')
+    putb addb('vintage_weapons', 'Vintage Weapons')
+    putb addb('genuine_weapons', 'Genuine Weapons')
+
     cb()
 
 
@@ -484,14 +503,15 @@ leaveChannel = (channel, context) ->
 
 
 joinChannel = (channel, context) ->
-    newarea = $('#channel-proto').tmpl name:channel, title:channel
-    context.append newarea
+    chan = $('#channel-proto').tmpl name:channel, title:channel
+    context.append chan
 
-    newarea.addClass "cname-#{channel}"
-    newarea.data 'cname', channel
-    newarea.slideDown()
+    chan.addClass "cname-#{channel}"
+    chan.data 'cname', channel
+    chan.slideDown()
 
-    talk = $ '.chtalk', newarea
+    talk = $ '.chtalk', chan
+
     addTalk = (v) ->
         if v
             talk.append v
@@ -517,28 +537,63 @@ joinChannel = (channel, context) ->
     delStatus = (player) ->
         $(".id64-#{player}:nth(0)").fadeOut().detach()
 
-    newarea.bind 'channel-joined', (e, m) ->
+    addTrade = (trade) ->
+        m = getItemMake()
+        ns = exports.ns
+        target = $('.chtrade', chan)
+        tid = trade.tid
+        ## need different prototype, no buttons, appropriate notes.
+        target.append $('#trade-proto').tmpl(tid:"##{tid}").data('trade-id', tid)
+        last = $('.trade:last', target)
+        last.addClass "trade-#{tid}"
+        if trade.text
+            $('.trade-show-notes', last).text trade.text
+            $('.trade-edit-notes textarea', last).val trade.text
+
+        $('a.trade-submit', last).hide()
+        empties = (null for i in [0..7])
+
+        targ = $('.haves', last)
+        $('.itemw', targ).detach()
+        for have in trade.have.concat(empties)[0..7]
+            m ns, have, targ, 'have backpack'
+
+        targ = $('.wants', last)
+        $('.itemw', targ).detach()
+        for want in trade.want.concat(empties)[0..7]
+            m ns, want, targ, 'want chooser'
+
+        $('.haves, .wants', last).isotope
+            itemSelector: '.itemw'
+            layoutMode: 'fitRows'
+            animationEngine: getAniEngine()
+
+    delTrade = (tid) ->
+        $(".trade-#{tid}", chan).fadeOut().delay(2000).detach()
+
+    chan.bind 'channel-joined', (e, m) ->
         addTalk makeSysMsg(m)
         addStatus m.id64
 
-    newarea.bind 'channel-left', (e, m) ->
+    chan.bind 'channel-left', (e, m) ->
         addTalk makeSysMsg(m)
         delStatus m.id64
 
-    newarea.bind 'channel-said', (e, m) ->
+    chan.bind 'channel-said', (e, m) ->
         addTalk makeUserMsg(m)
 
-    newarea.bind 'trade-add', (e, m) ->
-        console.log 'trade added:', m, ' this channel is', channel
+    chan.bind 'trade-add', (e, m) ->
+        #console.log 'trade added:', m, ' this channel is', channel
+        addTrade m
 
-    newarea.bind 'trade-del', (e, m) ->
-        console.log 'trade deleted:', m, ' this channel is', channel
+    chan.bind 'trade-del', (e, m) ->
+        #console.log 'trade deleted:', m, ' this channel is', channel
+        delTrade m.tid
 
-    newarea.bind 'trade-upd', (e, m) ->
+    chan.bind 'trade-upd', (e, m) ->
         console.log 'trade updated:', m, ' this channel is', channel
 
-
-    SS.server.channels.list channel:channel, (players) ->
+    SS.server.channels.listUsers channel:channel, (players) ->
         for player in players
             do (player) ->
                 addStatus player
@@ -546,6 +601,16 @@ joinChannel = (channel, context) ->
         # also add the current player (that's handled by the system
         # message event when the join is done).
         SS.server.channels.join channel:channel
+
+    getAndShowTrades = () ->
+        SS.server.channels.listTrades channel:channel, (trades) ->
+            for trade in (trades or [])
+                do (trade) ->
+                    addTrade JSON.parse(trade)
+
+    which = if exports.ns.auth then '.chsay' else '.chanon'
+    $(which, chan).fadeIn()
+    setTimeout getAndShowTrades, 1000
 
 
 getChannelArea = (name) ->

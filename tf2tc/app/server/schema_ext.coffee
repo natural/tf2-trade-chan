@@ -1,21 +1,76 @@
-C=6  ## common, aka unique
-G=1  ## genuine
-N=0  ## normal
-S=11 ## strange
-U=5  ## unusual
-V=3   ## vintage
+
+
+exports.actions =
+    allGroups: (cb) ->
+        cb exports.direct.allGroups()
+
+    qualCycle: (cb) ->
+        cb exports.direct.qualCycle()
+
+    offerItems: (cb) ->
+        cb exports.direct.offerItems()
+
+
+exports.direct =
+    allGroups: ->
+        groups exports.items
+
+    qualCycle: ->
+        quals exports.items
+
+    offerItems: ->
+        offerItems exports.items
+
+    items: () ->
+        exports.items
+
+
+groups = (items) ->
+    select = (pred) ->
+        k for k, i of items when pred(k, i)
+
+    commodities: select (a, b) -> a in ['5000', '5001', '5002', '5021']
+    promos: select (a, b) -> a in ['126', '143', '162', '161', '160']
+    metal: select (a, b) -> b.item_type_name=='Craft Item' and b.craft_class=='craft_bar'
+    vintage_weapons: select (a, b) -> V in b._q and b.craft_class=='weapon'
+    vintage_hats: select (a, b) -> V in b._q and b.craft_class=='hat'
+    genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
+    genuine_hats: select (a, b) -> G in b._q and b.craft_class=='hat'
+    untradables: select (a, b) -> b._t == NEVER
+    offers: select (a, b) -> (a < 0) and (b.item_class=='Offer')
+
+
+quals = (items) ->
+    m = {}
+    m[k] = i._q for k, i of items
+    m
+
+
+offerItems = (items) ->
+    m = {}
+    m[k] = items[k] for k in groups(items).offers
+    m
+
+
+C=6  # common, aka unique
+G=1  # genuine
+N=0  # normal
+S=11 # strange
+U=5  # unusual
+V=3  # vintage
 
 NEVER=0
 ALWAYS=1
 GIFT=-1
 
-## this function returns a mapping of schema items to very simple item
-## definitions.  these simplified definitions contain the '_q'
-## property, which is a list of known qualities that the item can
-## have, and the '_t' property, which is a value that denotes how the item can
-## be traded.
 
-items =
+# this is a mapping of schema items to very simple item
+# definitions.  these simplified definitions contain the '_q'
+# property, which is a list of known qualities that the item can
+# have, and the '_t' property, which is a value that denotes how the item can
+# be traded.
+
+exports.items =
     '-3':
         name: 'Promos'
         _q: [C, V]
@@ -4076,57 +4131,291 @@ items =
         _q: [C]
         _t: NEVER
 
+    '439':
+        name: "Lord Cockswain's Pith Helmet"
+        _q: [C]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "Lord Cockswain's Pith Helmet"
+        item_type_name: "TF_Wearable_Hat"
 
-select = (pred) ->
-    k for k, i of items when pred(k, i)
+    '440':
+        name: "Lord Cockswain's Novelty Mutton Chops and Pipe"
+        _q: [C]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "Lord Cockswain's Novelty Mutton Chops and Pipe"
+        item_type_name: "TF_Wearable_FacialHair"
 
+    '441':
+        name: "The Cow Mangler 5000"
+        _q: [C]
+        _t: ALWAYS
+        item_class: "tf_weapon_particle_cannon"
+        item_description: ''
+        item_name: "Cow Mangler 5000"
+        item_type_name: "Focused Wave Projector"
 
-groups =
-    commodities: select (a, b) -> a in ['5000', '5001', '5002', '5021']
-    promos: select (a, b) -> a in ['126', '143', '162', '161', '160']
-    metal: select (a, b) -> b.item_type_name=='Craft Item' and b.craft_class=='craft_bar'
-    vintage_weapons: select (a, b) -> V in b._q and b.craft_class=='weapon'
-    vintage_hats: select (a, b) -> V in b._q and b.craft_class=='hat'
-    genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
-    genuine_hats: select (a, b) -> G in b._q and b.craft_class=='hat'
-    untradables: select (a, b) -> b._t == NEVER
-    offers: select (a, b) -> (a < 0) and (b.item_class=='Offer')
+    '442':
+        name: "The Righteous Bison"
+        _q: [C, G]
+        _t: ALWAYS
+        item_class: "tf_weapon_raygun"
+        item_description: ""
+        item_name: "Righteous Bison"
+        item_type_name: "Indivisible Particle Smasher"
 
+    '443':
+        name: "Dr. Grordbort's Crest"
+        _q: [C]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: "A symbol of service in the Venusian legions."
+        item_name: "Dr. Grordbort's Crest"
+        item_type_name: "Badge"
 
-quals = () ->
-    m = {}
-    for k, i of items
-        m[k] = i._q
-    m
+    '496':
+        name: "TournamentMedal - GWJ Winners"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_GWJ_1st"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
+    '497':
+        name: "TournamentMedal - GWJ Runnerups"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_GWJ_2nd"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
-offerItems = ->
-    m = {}
-    for k in groups.offers
-        m[k] = items[k]
-    m
+    '498':
+        name: "TournamentMedal - GWJ Participants"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_GWJ_3rd"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
+    '499':
+        name: "TournamentMedal - ETF2LHL Winners"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_ETF2LHL_1st"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
-exports.actions =
-    allGroups: (cb) ->
-        cb groups
+    '500':
+        name: "TournamentMedal - ETF2LHL 2nd"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_ETF2LHL_2nd"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
-    qualCycle: (cb) ->
-        cb quals()
+    '501':
+        name: "TournamentMedal - ETF2LHL 3rd"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_ETF2LHL_3rd"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
-    offerItems: (cb) ->
-        cb offerItems()
+    '502':
+        name: "TournamentMedal - ETF2LHL Participants"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_ETF2LHL_4th"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
+    '503':
+        name: "TournamentMedal - UGCHL Participants"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHL_Participant"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
-exports.direct =
-    allGroups: ->
-        groups
+    '504':
+        name: "TournamentMedal - UGCHLDiv1 Winners"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHLDiv1_1st"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
-    qualCycle: ->
-        quals()
+    '505':
+        name: "TournamentMedal - UGCHLDiv1 2nd"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHLDiv1_2nd"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
-    offerItems: ->
-        offerItems()
+    '506':
+        name: "TournamentMedal - UGCHLDiv1 3rd"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHLDiv1_3rd"
+        item_type_name: "TF_Wearable_TournamentMedal"
 
-    items: () ->
-        items
+    '507':
+        name: "TournamentMedal - UGCHLDiv2 Winners"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHLDiv2_1st"
+        item_type_name: "TF_Wearable_TournamentMedal"
+
+    '508':
+        name: "TournamentMedal - UGCHLDiv2 2nd"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHLDiv2_2nd"
+        item_type_name: "TF_Wearable_TournamentMedal"
+
+    '509':
+        name: "TournamentMedal - UGCHLDiv2 3rd"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHLDiv2_3rd"
+        item_type_name: "TF_Wearable_TournamentMedal"
+
+    '510':
+        name: "TournamentMedal - UGCHLDiv3 Winners"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHLDiv3_1st"
+        item_type_name: "TF_Wearable_TournamentMedal"
+
+    '511':
+        name: "TournamentMedal - UGCHLDiv3 2nd"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHLDiv3_2nd"
+        item_type_name: "TF_Wearable_TournamentMedal"
+
+    '512':
+        name: "TournamentMedal - UGCHLDiv3 3rd"
+        _q: [C]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "TF_TournamentMedal_UGCHLDiv3_3rd"
+        item_type_name: "TF_Wearable_TournamentMedal"
+
+    '513':
+        name: "The Original"
+        _q: [C, G]
+        _t: ALWAYS
+        item_class: "tf_weapon_rocketlauncher"
+        item_description: ''
+        item_name: "Original"
+        item_type_name: "Rocket Launcher"
+
+    '514':
+        name: "Mask of the Shaman"
+        _q: [C, G]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: "An invincibility mask made by the Ancients. It hasn’t worked in a long, long time."
+        item_name: "Mask of the Shaman"
+        item_type_name: "TF_Wearable_Mask"
+
+    '515':
+        name: "Pilotka"
+        _q: [C, G]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: ''
+        item_name: "Pilotka"
+        item_type_name: "TF_Wearable_Hat"
+
+    '516':
+        name: "Stahlhelm"
+        _q: [C, G]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: ''
+        item_name: "Stahlhelm"
+        item_type_name: "TF_Wearable_Hat"
+
+    '517':
+        name: "Tamrielic Relic"
+        _q: [C, G]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: "Designed to inspire fear, the dragons this helm was based on were less than impressed."
+        item_name: "Tamrielic Relic"
+        item_type_name: "TF_Wearable_Hat"
+
+    '518':
+        name: "The Anger"
+        _q: [C, G]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: ''
+        item_name: "Anger"
+        item_type_name: "TF_Wearable_Hat"
+
+    '519':
+        name: "Pip-Boy"
+        _q: [C, G]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: "Using modern super-deluxe resolution graphics!"
+        item_name: "Pip-Boy"
+        item_type_name: "TF_Wearable_Armband"
+
+    '520':
+        name: "Wingstick"
+        _q: [C, G]
+        _t: ALWAYS
+        item_class: "tf_wearable"
+        item_description: ''
+        item_name: "Wingstick"
+        item_type_name: "TF_Wearable_Wingstick"
+
+    '2034':
+        name: "Dr. Grordbort's Victory Pack"
+        _q: [C]
+        _t: NEVER
+        item_class: "bundle"
+        item_description: "Grab the whole pack of Dr. Grordbort items, designed by WETA Workshop!"
+        item_name: "Dr. Grordbort's Victory Pack"
+        item_type_name: "Item Bundle"
+
+    '2035':
+        name: "Dr. Grordbort ComicCon Promo Code"
+        _q: [C]
+        _t: NEVER
+        item_class: "bundle"
+        item_description: ""
+        item_name: "TF_Bundle_DrGComicCon"
+        item_type_name: "Item Bundle"
+

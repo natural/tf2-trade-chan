@@ -8,9 +8,12 @@ steam = require './steam.coffee'
 exports.actions =
     join: (params, cb) ->
         @getSession (session) ->
+            channel = params.channel
+            session.channel.subscribe channel
+
             if not session.user.loggedIn() or not session.user_id
                 return
-            channel = params.channel
+
             profileMessage utils.getId64(session), what:'joined', channel:channel, (msg) ->
                 session.channel.subscribe channel
                 R.rpush keys.userList(channel), msg.id64, (err, okay) ->
@@ -21,11 +24,13 @@ exports.actions =
 
     leave: (params, cb) ->
         @getSession (session) ->
+            channel = params.channel
+            session.channel.unsubscribe channel
+
             if not session.user.loggedIn() or not session.user_id
                 return
-            channel = params.channel
             profileMessage utils.getId64(session), what:'left', channel:channel, (msg) ->
-                session.channel.unsubscribe channel
+
                 R.lrem keys.userList(channel), 0, msg.id64, (err, okay) ->
                     R.lrem keys.currentChannels(msg.id64), 0, channel
                     SS.publish.channel [channel], keys.sysMsg, msg
@@ -45,9 +50,15 @@ exports.actions =
                                 SS.publish.channel [channel], keys.sysMsg, msg
         cb()
 
-    list: (params, cb) ->
+    listUsers: (params, cb) ->
         R.lrange keys.userList(params.channel), 0, -1, (err, val) ->
             cb val
+
+    listTrades: (params, cb) ->
+        R.lrange keys.tradeList(params.channel), 0, -1, (err, tids) ->
+            keys = tids.map (i) -> "trade:#{i}"
+            R.mget keys, (err, trades) ->
+                cb trades
 
     say: (params, cb) ->
         @getSession (session) ->
@@ -68,6 +79,9 @@ keys =
 
     userList: (c) ->
         "channel:users:#{c}"
+
+    tradeList: (c) ->
+        "channel:trades:#{c}"
 
 
 # we can't call SS.server.app.userProfile directly because that gets

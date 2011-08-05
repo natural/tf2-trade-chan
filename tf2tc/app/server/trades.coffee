@@ -78,7 +78,6 @@ deleteTrade = (schema, uid, tid, next) ->
 updateTrade = (schema, tid, have, want, text, next) ->
     getTrades [tid], (trades) ->
         trade = JSON.parse trades[tid]
-
         ## drain the old buckets
         for item in trade.have
             drainTradeBuckets schema, tid, item, keys.have
@@ -122,8 +121,8 @@ getTrades = (tids, next) ->
 
 putTradePayload = (tid, have, want, text, next) ->
     k = keys.trade tid
-    v = JSON.stringify {have:have, want:want, text:text}
-    R.set k, v, () ->
+    v = JSON.stringify {have:have, want:want, text:text, tid:tid}
+    R.set k, v, ->
         next true ## set can't fail
 
 
@@ -178,10 +177,13 @@ keys =
         quality = if def.quality? then def.quality else def.item_quality
         buckets = {}
         buckets["bucket:#{dir}:#{quality}:#{def.defindex}"] = 1
+
         for name, pred of extPred
             if pred sch, def
                 quality = if def.quality then def.quality else 6
                 buckets["bucket:#{dir}:#{quality}:#{name}"] = 1
+                ## if dir is keys.have
+                buckets["channel:trades:#{name}"] = 1
         (name for name of buckets)
 
     tradeChannels: (sch, have, want) ->

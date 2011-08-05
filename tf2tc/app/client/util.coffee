@@ -84,8 +84,13 @@ exports.attrFormat = (def, val) ->
 exports.makeBackpack = (ns, bp) ->
     ns.backpack = bp
     ns.backpack_items = items = {} # backpack item mapping by defindex
+    ns.backpack_items_unplaced = unplaced = []
     for item in bp.result.items.item
-        do (item) -> items[item.inventory & 0xFFFF] = item
+        do (item) ->
+            if item.inventory
+                items[item.inventory & 0xFFFF] = item
+            else
+                unplaced.push item
 
 
 exports.makeSchema = (ns, sch) ->

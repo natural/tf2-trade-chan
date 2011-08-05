@@ -1,0 +1,46 @@
+#!/usr/bin/env coffee
+
+global.SS = require '../config/app.coffee'
+global.R = require('redis').createClient()
+
+print_item = (idx, itm) ->
+    """
+    '#{idx}':
+        name: \"#{itm.name}\"
+        _q: [C]
+        _t: ALWAYS
+        item_class: "#{itm.item_class}"
+        item_description: "#{itm.item_description}"
+        item_name: "#{itm.item_name}"
+        item_type_name: "#{itm.item_type_name}"
+
+    """
+
+make_item = (def) ->
+    name: def.name
+    item_class: def.item_class
+    item_type_name: def.item_type_name
+    craft_class: def.craft_class or null
+    _q: []
+    _v: 1
+
+
+main = ->
+    steam = require '../app/server/steam.coffee'
+    steam.actions.schema (schema) ->
+        items = {}
+        for item in schema.result.items.item
+            items[item.defindex] = item
+
+        ext = require '../app/server/schema_ext.coffee'
+        existing = (k for k, v of ext.direct.items())
+
+        for id, defn of items
+            if "#{id}" not in existing
+                console.log print_item( id, defn )
+
+        R.quit()
+
+main()
+
+
