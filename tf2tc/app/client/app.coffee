@@ -13,8 +13,8 @@ exports.ns = {}
 # an initial authorization.
 exports.init = ->
     SS.server.app.init ->
-        msg = $('#site .msg').text 'Loading schema...'
         initJQ jQuery
+        msg = $('#site .msg').text 'Loading schema...'
         getSchema exports.ns, ->
             msg.append('done.').delay(2000).slideUp()
             initEvents exports.ns
@@ -42,8 +42,7 @@ initAuth = (ns) ->
             getProfile (profile) ->
                 getBackpack profile.steamid, ns, (backpack) ->
                     putBackpack ns, bpshell, ->
-                        isoBackpack bpshell, () ->
-                            configBackpack $('#backpack'), $('#trades')
+                        isoBackpack bpshell, ->
                             initBackpackToolbar userbp, bpshell
                             $('#user .bp .msg').text ''
                             cb()
@@ -59,8 +58,6 @@ initAuth = (ns) ->
                         $('#user .ch .msg').text ''
                         getTrades (trades) ->
                             putTrades ns, trades, $('#trades .tradeshell'), ->
-                                configBackpack $('#backpack'), $('#trades')
-                                configChooser $('#trades .chooser'), $('#trades')
                                 cb()
                                 later = ->
                                     $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
@@ -74,17 +71,66 @@ initAuth = (ns) ->
 initJQ = ($) ->
     $.fn.resetQualityClasses = (v) ->
         @.each ->
-            for q in [0..20]
-                $(@).removeClass("qual-border-#{q} qual-hover-#{q} qual-text-#{q}")
-            $(@).addClass(v)
+            for q of exports.ns.schema_qualities
+                $(@).removeClass "qual-border-#{q} qual-hover-#{q} qual-text-#{q}"
+            $(@).addClass v
+
+    $.fn.addTalk = (v) ->
+        @.each ->
+            if v
+                $(@).append v
+                @.scrollTop = @.scrollHeight
+
+    $.fn.tradableItems = ->
+        $ 'div.item:not(:empty):not(.untradable)', @
 
 
 # initialize some fixed, well-known selectors with event handers.
 initEvents = (ns) ->
-    $('body').bind 'trade-changed', tradeChanged
-    $('div.item:not(:empty)').live 'mouseover', namespace:ns, showItemTip
-    $('div.item:not(:empty)').live 'mouseout', namespace:ns, hideItemTip
 
+    # bind the trade changed event to the singular handler
+    $(document).bind 'trade-changed', tradeChanged
+
+    # bind the display of backpack items to the double-click-copy and
+    # drag-copy actions
+    $(document).bind 'new-backpack-items', target:'#trades', (event, source) ->
+        target = $ event.data.target
+        targets = $('div.item.have:empty', target).droppable bca.dropOpts()
+        $(source)
+            .tradableItems()
+            .bind('dblclick', {target:target, selector:'div.item.have:empty:first'}, bca.copyToTrade)
+            .draggable(bca.dragOpts())
+
+    # bind the display of trade slots to the double-click-copy and
+    # drag-copy actions (from backpack to trade)
+    $(document).bind 'new-trade-slots', source:'#backpack', (event, target) ->
+        targets = $ 'div.item.have:empty', target
+        targets.droppable bca.dropOpts()
+        $(event.data.source)
+            .tradableItems()
+            .bind('dblclick', {target:target, selector:'div.item.have:empty:first'}, bca.copyToTrade)
+            .draggable(bca.dragOpts())
+
+    # bind the display of chooser items to the double-click-copy and
+    # drag-copy actions (from chooser to trade)
+    $(document).bind 'new-chooser-items', target:'#trades', (event, source) ->
+        later = ->
+            target = $ event.data.target
+            targets = $('div.item.want:empty', target).droppable cca.dropOpts()
+            $(source)
+                .tradableItems()
+                .bind('dblclick', {target:target, selector:'div.item.want:empty:first'}, cca.copyToTrade)
+                .draggable(cca.dragOpts())
+        setTimeout later, 100
+
+
+    # live bind the mouse hover events to the show/hide item tip
+    # handlers
+    $('div.item:not(:empty)')
+        .live('mouseover', namespace:ns, showItemTip)
+        .live('mouseout',  namespace:ns, hideItemTip)
+
+    # bind the backpack/trade toggle click events
     $('#user a').click ->
         self = $ @
         targ = $ self.attr('data-target')
@@ -100,7 +146,7 @@ initEvents = (ns) ->
             togl()
         false
 
-
+    # bind the channel join/leave toggle click events
     $('#channels .button-bar a').click ->
         link = $ @
         name = link.attr 'data-channel-name'
@@ -109,45 +155,69 @@ initEvents = (ns) ->
         (if active then leaveChannel else joinChannel)(name, link.parent())
         false
 
+    # live bind the chat text entry fields to the chat channel publish
+    # handler
     $('#channels .chshell .chsay input[type=text]').live 'keydown', (e) ->
         if e.keyCode == 13
             inp = $ e.currentTarget
-            csh = inp.parents '.chshell'
-            chn = csh.data 'cname'
             txt = inp.attr 'value'
             if txt
+                csh = inp.parents '.chshell'
+                chn = csh.data 'cname'
                 sayChannel channel:chn, text:txt, ->
                     inp.attr 'value', ''
                 e.preventDefault()
 
+    # live bind the chooser show/hide toggle click events
     $('#trades .chooser .chooser-group a').live 'click', ->
         link = $ @
-        #console.log "chooser click", link, link.parents('.chooser-group')
-        key = link.parents('.chooser-group').attr 'data-key'
-        console.log 'chooser click', key, link
+        chgrp = link.parents '.chooser-group'
+        chwrp = $ '.chooserw', chgrp
+        key = chgrp.attr 'data-key'
 
+        if not chgrp.attr 'lazy-load'
+            chgrp.attr 'lazy-load', true
+            chwrp.isotope 'destroy'
+            chwrp.fadeIn()
 
+            m = getItemPut()
+            for item in exports.ns.schema_groups()[key]()
+                m ns, item, chwrp, 'want chooser'
+
+            chwrp.isotope isoOpts(itemSelector:'.itemw', layoutMode:'fitRows')
+            $(document).trigger('new-chooser-items', chwrp)
+        else
+            chwrp.fadeToggle()
+        link.text if link.text() == 'Hide' then 'Show' else 'Hide'
+        false
+
+    # bind server message events to handlers that re-emit the events
+    # to handlers bound to local dom elements.
     SS.events.on 'sys-msg', (m) ->
         getChannelArea(m.channel).trigger "channel-#{m.what}", m
-
     SS.events.on 'usr-msg', (m) ->
         getChannelArea(m.channel).trigger "channel-#{m.what}", m
-
     SS.events.on 'trd-msg', (m) ->
         getChannelArea(m.channel).trigger "trade-#{m.action}", m
 
 
-
 # create items from a backpack at the given target.
 putBackpack = (ns, target, cb) ->
-    m = getItemMake()
+    put = getItemPut()
+    items = []
 
-    unp = (i) -> m ns, ns.backpack_items_unplaced[i], target, 'backpack'
-    unp j for j in [0..ns.backpack_items_unplaced.length-1]
+    unplaced = ns.backpack_items_unplaced
+    if unplaced.length
+        putUnplaced = (i) ->
+            items.push put(ns, unplaced[i], target, 'backpack')
+        putUnplaced j for j in [0..unplaced.length-1]
 
-    put = (s) -> m ns, ns.backpack_items[s], target, 'backpack'
-    put slot for slot in [1..ns.backpack.result.num_backpack_slots]
+    inventory = ns.backpack_items
+    putInventory = (s) ->
+        items.push  put(ns, inventory[s], target, 'backpack')
 
+    putInventory j for j in [1..ns.backpack.result.num_backpack_slots]
+    $(document).trigger 'new-backpack-items', target
     cb()
 
 
@@ -173,16 +243,10 @@ isoBackpack = (target, cb) ->
     mn = Number.MIN_VALUE
     cmp = (i, attr, which='item-defn', missing=Number.MAX_VALUE) ->
         d = i.children('.item:first').data(which)
-        if d
-            d[attr]
-        else
-            missing
-    target.isotope
+        if d then d[attr] else missing
+    target.isotope isoOpts(
         itemSelector: '.itemw'
         layoutMode: 'cellsByRow'
-        animationEngine: getAniEngine()
-        animationOptions:
-            duration: 750
         getSortData:
             quality:    (i) -> cmp i, 'quality'
             date:       (i) -> cmp i, 'id'
@@ -192,13 +256,14 @@ isoBackpack = (target, cb) ->
             name:       (i) -> cmp i, 'item_name',      'schema-defn', 'ZZZ   '
             name_desc:  (i) -> cmp i, 'item_name',      'schema-defn', '   AAA'
             type:       (i) -> cmp i, 'item_type_name', 'schema-defn'
+    )
     cb()
 
 
 # create groups of choosable items at the given target.
 putChooser = (ns, target, cb) ->
     grp = ns.schema.ext.groups
-    m = getItemMake()
+    m = getItemPut()
 
     clone = (id, q) ->
         x = JSON.parse(JSON.stringify(ns.schema_items[id]))
@@ -206,35 +271,37 @@ putChooser = (ns, target, cb) ->
         x
 
     add = (title) ->
-        ch = $('#chooser-proto').tmpl title:title
-        target.append ch
+        ch = $('#chooser-proto').tmpl(title:title).appendTo(target)
         $('span', ch).hide()
-        $('.chooserw', ch)
+        $ '.chooserw', ch
 
     put = (items, t) ->
         m ns, item, t, 'chooser' for item in items
+        $(document).trigger 'new-chooser-items', t
 
     put (clone(x, 6) for x in grp.offers), add('Offers')
     put (clone(x, 6) for x in grp.commodities), add('Commodities')
     put (clone(x, 6) for x in grp.promos), add('Promos')
 
-
     addb = (key, title) ->
-        ch = $('#chooser-proto').tmpl title:title
-        target.append ch
+        ch = $('#chooser-proto').tmpl(title:title).appendTo(target)
         $('h3', ch).hide()
         ch.attr('data-key', key)
-        $('.chooserw', ch)
+        $ '.chooserw', ch
 
     putb = () ->
         null
 
-    putb addb('hats', 'All Hats')
     putb addb('vintage_hats', 'Vintage Hats')
     putb addb('genuine_hats', 'Genuine Hats')
-    putb addb('weapons', 'All Weapons')
+
     putb addb('vintage_weapons', 'Vintage Weapons')
     putb addb('genuine_weapons', 'Genuine Weapons')
+
+    putb addb('hats', 'All Hats')
+    putb addb('weapons', 'All Weapons')
+    putb addb('tools', 'Tools, Paints, etc.')
+    putb addb('all', 'Everything')
 
     cb()
 
@@ -242,22 +309,14 @@ putChooser = (ns, target, cb) ->
 # configure the chooser groups at the target for isotope layout.
 isoChooser = (target, cb) ->
     for grp in $('.chooserw', target)
-        $(grp).isotope
-            itemSelector: '.itemw'
-            layoutMode: 'fitRows'
-            animationEngine: getAniEngine()
-            animationOptions:
-                duration: 750
+        $(grp).isotope isoOpts(itemSelector:'.itemw', layoutMode:'fitRows')
     cb()
 
 
 makeEmptyTrade = () ->
     trade = $('#trade-proto').tmpl({prefix:'NEW'})
     $('a.trade-submit, a.trade-delete', trade).hide()
-    $('.haves, .wants', trade).isotope
-        itemSelector: '.itemw'
-        layoutMode: 'fitRows'
-        animationEngine: getAniEngine()
+    $('.haves, .wants', trade).isotope isoOpts(itemSelector:'.itemw', layoutMode:'fitRows')
     trade
 
 
@@ -265,7 +324,7 @@ putTrades = (ns, trades, target, cb) ->
     initTradeEvents ns, target
 
     if trades and trades.success
-        m = getItemMake()
+        m = getItemPut()
         for tid, trd of trades.trades
             trd = JSON.parse trd
             target.append $('#trade-proto').tmpl(tid:"##{tid}").data('trade-id', tid)
@@ -286,136 +345,11 @@ putTrades = (ns, trades, target, cb) ->
             $('.itemw', targ).detach()
             for want in trd.want.concat(empties)[0..7]
                 m ns, want, targ, 'want chooser'
-
-            $('.haves, .wants', last).isotope
-                itemSelector: '.itemw'
-                layoutMode: 'fitRows'
-                animationEngine: getAniEngine()
+            $('.haves, .wants', last).isotope isoOpts(itemSelector:'.itemw', layoutMode:'fitRows')
 
     target.append makeEmptyTrade()
+    $(document).trigger 'new-trade-slots', target
     cb()
-
-
-
-
-configChooser = (source, target) ->
-    sources = -> $('div.item:not(:empty):not(.untradable)', source)
-    targets = -> $('div.item.want:empty', target)
-    existing = -> $('div.item.want:not(:empty)', target)
-
-    copy = (a, b) ->
-        c = a.clone(true, true).unbind()
-        t = b.parents '.trade'
-        id = a.data('item-defn').id
-        r = b.clone(false, false)
-        b.replaceWith c
-        hideItemTip()
-        $('body').trigger 'trade-changed', t
-        c.dblclick (e) ->
-            hideItemTip()
-            c.replaceWith r
-            r.droppable dropOpts
-            $('body').trigger 'trade-changed', t
-
-    removeFromTrade = (e) ->
-        hideItemTip()
-        s = $ e.currentTarget
-        s.replaceWith SS.client.item.empty('want chooser')
-        s.droppable dropOpts
-        $('body').trigger 'trade-changed', s.parents('.trade')
-
-    copyToTrade = (e) ->
-        s = $ e.currentTarget
-        avail = (x for x in $('.trade', target))
-        if avail
-            a = $ avail[0]
-            t = $ 'div.item.want:empty:first', a
-            copy s, t
-        # else alert or message or something
-
-    dragOpts =
-        helper: 'clone'
-        revert: 'invalid'
-        cursor: 'move'
-        appendTo: 'body'
-        zIndex: 9002
-        start: (e, ui) ->
-            q = ui.helper.prevObject.data('item-defn').quality
-            ui.helper.addClass "qual-background-#{q} ztop"
-
-    dropOpts =
-        accept: 'div.item.chooser'
-        hoverClass: 'outline'
-        drop: (e, ui) ->
-            s = ui.helper.prevObject
-            copy s, $(@)
-
-    sources().unbind('dblclick').dblclick copyToTrade
-    sources().draggable dragOpts
-    existing().unbind('dblclick').dblclick removeFromTrade
-    targets().droppable dropOpts
-
-
-
-configBackpack = (source, target) ->
-    sources = -> $('div.item:not(:empty):not(.untradable)', source)
-    targets = -> $('div.item.have:empty', target)
-
-    copy = (a, b) ->
-        c = a.clone(true, true).unbind()
-        t = b.parents '.trade'
-        id = a.data('item-defn').id
-        r = b.clone(false, false)
-        b.replaceWith c
-        hideItemTip()
-        $('body').trigger 'trade-changed', t
-        c.dblclick (e) ->
-            hideItemTip()
-            c.replaceWith r
-            r.droppable dropOpts
-            ids = t.data 'ids'
-            ids.splice ids.indexOf(id), 1
-            $('body').trigger 'trade-changed', t
-
-    copyToTrade = (e) ->
-        s = $ e.currentTarget
-        i = s.data('item-defn').id
-        avail = (x for x in $('.trade', target) when i not in ($(x).data('ids') or []))
-        if avail
-            a = $ avail[0]
-            t = $ 'div.item.have:empty:first', a
-            ids = a.data('ids') or []
-            ids.push i
-            a.data 'ids', ids
-            copy s, t
-        # else alert or message or something
-
-    dragOpts =
-        appendTo: 'body'
-        cursor: 'move'
-        helper: 'clone'
-        revert: 'invalid'
-        zIndex: 9002
-        start: (e, ui) ->
-            q = ui.helper.prevObject.data('item-defn').quality
-            ui.helper.addClass "qual-background-#{q} ztop"
-
-    dropOpts =
-        accept: 'div.item.backpack'
-        hoverClass: 'outline'
-        drop: (e, ui) ->
-            s = ui.helper.prevObject
-            t = $(@).parents('.trade')
-            ids = t.data('ids') or []
-            i = s.data('item-defn').id
-            if not (i in ids)
-                ids.push i
-                t.data 'ids', ids
-                copy s, $(@)
-
-    sources().unbind('dblclick').dblclick copyToTrade
-    sources().draggable dragOpts
-    targets().droppable dropOpts
 
 
 tradeChanged = (e, tc) ->
@@ -432,8 +366,6 @@ tradeChanged = (e, tc) ->
         $('a.trade-delete', tc).slideUp()
 
 
-
-
 initTradeEvents = (ns, target) ->
     parentTrade = (ev) ->
         $(ev.currentTarget).parents 'div.trade'
@@ -446,8 +378,6 @@ initTradeEvents = (ns, target) ->
             $('h1:first .main', p).text ''
             $('h1:first .status', p).text(if tid then 'Closed!' else 'Cleared!').fadeIn().delay(2000).fadeOut 'fast', () ->
                 p.replaceWith makeEmptyTrade()
-                configBackpack $('#backpack'), $('#trades')
-                configChooser $('#chooser'), $('#trades')
                 $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
         false
 
@@ -488,34 +418,29 @@ initTradeEvents = (ns, target) ->
         else
             i = 1
         j = qualseq[(i+1) % qualseq.length]
+        ### WRONG: this affects too many items, i.e., the static items
+        ### in the chooser
         item.data 'qual', j
         item.resetQualityClasses "qual-border-#{j} qual-hover-#{j}"
         item.data('item-defn').quality = j
         item.trigger('mouseout').trigger 'mouseover'
-
-
+        false
 
 
 leaveChannel = (channel, context) ->
-    area = $(".chshell.cname-#{channel}", context)
-    area.slideUp -> area.detach()
+    $(".chshell.cname-#{channel}", context).slideUp(-> $(@).detach())
     SS.server.channels.leave channel:channel
 
 
 joinChannel = (channel, context) ->
-    chan = $('#channel-proto').tmpl name:channel, title:channel
-    context.append chan
-
-    chan.addClass "cname-#{channel}"
-    chan.data 'cname', channel
-    chan.slideDown()
+    chan = $('#channel-proto')
+               .tmpl(name:channel, title:channel)
+               .appendTo(context)
+               .addClass("cname-#{channel}")
+               .data('cname', channel)
+               .slideDown()
 
     talk = $ '.chtalk', chan
-
-    addTalk = (v) ->
-        if v
-            talk.append v
-            talk[0].scrollTop = talk[0].scrollHeight
 
     addStatus = (player) ->
         readProfileStatus player, (profile) ->
@@ -538,7 +463,7 @@ joinChannel = (channel, context) ->
         $(".id64-#{player}:nth(0)").fadeOut().detach()
 
     addTrade = (trade) ->
-        m = getItemMake()
+        m = getItemPut()
         ns = exports.ns
         target = $('.chtrade', chan)
         tid = trade.tid
@@ -563,24 +488,22 @@ joinChannel = (channel, context) ->
         for want in trade.want.concat(empties)[0..7]
             m ns, want, targ, 'want chooser'
 
-        $('.haves, .wants', last).isotope
-            itemSelector: '.itemw'
-            layoutMode: 'fitRows'
-            animationEngine: getAniEngine()
+        $('.haves, .wants', last).isotope isoOpts(itemSelector:'.itemw', layoutMode:'fitRows')
+
 
     delTrade = (tid) ->
         $(".trade-#{tid}", chan).fadeOut().delay(2000).detach()
 
     chan.bind 'channel-joined', (e, m) ->
-        addTalk makeSysMsg(m)
+        talk.addTalk makeSysMsg(m)
         addStatus m.id64
 
     chan.bind 'channel-left', (e, m) ->
-        addTalk makeSysMsg(m)
+        talk.addTalk makeSysMsg(m)
         delStatus m.id64
 
     chan.bind 'channel-said', (e, m) ->
-        addTalk makeUserMsg(m)
+        talk.addTalk makeUserMsg(m)
 
     chan.bind 'trade-add', (e, m) ->
         #console.log 'trade added:', m, ' this channel is', channel
@@ -619,17 +542,6 @@ getChannelArea = (name) ->
 
 getTalkArea = (name) ->
     $ '.chtalk', getChannelArea(name)
-
-
-onTalk = (fmt) ->
-    (msg) ->
-        console.log 'onTalk:', msg
-        talk = getTalkArea msg.channel
-        if talk and talk[0]
-            val = fmt(msg)
-            if val
-                talk.append val
-                talk[0].scrollTop = talk[0].scrollHeight
 
 
 makeSysMsg = (m) ->
@@ -675,6 +587,9 @@ getTrades = (cb) ->
 
 getItemMake = ->
     SS.client.item.make
+
+getItemPut = ->
+    SS.client.item.put
 
 publishTrade = (p, cb) ->
     SS.server.trades.publish p, cb
@@ -723,5 +638,111 @@ getBackpack = (id64, ns, cb) ->
             cb makeBackpack(ns, b)
 
 
-#getProfile = (id64, cb) ->
-#    $.getJSON "/profile/#{id64}", cb
+isoOpts = (o) ->
+    opts =
+        animationEngine: getAniEngine()
+        animationOptions:
+            duration: 750
+    opts[k] = v for k, v of o
+    opts
+
+
+## why isn't this used?
+##getProfile = (id64, cb) ->
+##    $.getJSON "/profile/#{id64}", cb
+
+
+bca = # backpack copy actions
+    copy: (a, b) ->
+        c = a.clone(true, true).unbind()
+        t = b.parents '.trade'
+        id = a.data('item-defn').id
+        r = b.clone(false, false)
+        b.replaceWith c
+        hideItemTip()
+        $(document).trigger 'trade-changed', t
+        c.dblclick (e) ->
+            hideItemTip()
+            c.replaceWith r
+            r.droppable bca.dropOpts()
+            ids = t.data 'ids'
+            ids.splice ids.indexOf(id), 1
+            $(document).trigger 'trade-changed', t
+
+    copyToTrade: (e) ->
+        s = $ e.currentTarget
+        i = s.data('item-defn').id
+        avail = (x for x in $('.trade', e.data.target) when i not in ($(x).data('ids') or []))
+        if avail
+            a = $ avail[0]
+            t = $ e.data.selector, a
+            ids = a.data('ids') or []
+            ids.push i
+            a.data 'ids', ids
+            bca.copy s, t
+            # else alert or message or something
+
+    dragOpts: ->
+        appendTo: 'body'
+        cursor: 'move'
+        helper: 'clone'
+        revert: 'invalid'
+        zIndex: 9002
+        start: (e, ui) ->
+            q = ui.helper.prevObject.data('item-defn').quality
+            ui.helper.addClass "qual-background-#{q} ztop"
+
+    dropOpts: ->
+        accept: 'div.item.backpack'
+        hoverClass: 'outline'
+        drop: (e, ui) ->
+            s = ui.helper.prevObject
+            t = $(@).parents('.trade')
+            ids = t.data('ids') or []
+            i = s.data('item-defn').id
+            if not (i in ids)
+                ids.push i
+                t.data 'ids', ids
+                bca.copy s, $(@)
+
+
+cca =  # chooser copy actions
+    copy: (a, b) ->
+        c = a.clone(true, true).unbind()
+        t = b.parents '.trade'
+        id = a.data('item-defn').id
+        r = b.clone(false, false)
+        b.replaceWith c
+        hideItemTip()
+        $(document).trigger 'trade-changed', t
+        c.dblclick (e) ->
+            hideItemTip()
+            c.replaceWith r
+            r.droppable cca.dropOpts()
+            $(document).trigger 'trade-changed', t
+
+    copyToTrade: (e) ->
+        s = $ e.currentTarget
+        avail = (x for x in $('.trade', e.data.target))
+        if avail and avail.length
+            a = $ avail[0]
+            t = $ 'div.item.want:empty:first', a
+            cca.copy s, t
+        # else alert or message or something
+
+    dragOpts: ->
+        helper: 'clone'
+        revert: 'invalid'
+        cursor: 'move'
+        appendTo: 'body'
+        zIndex: 9002
+        start: (e, ui) ->
+            q = ui.helper.prevObject.data('item-defn').quality
+            ui.helper.addClass "qual-background-#{q} ztop"
+
+    dropOpts: ->
+        accept: 'div.item.chooser'
+        hoverClass: 'outline'
+        drop: (e, ui) ->
+            s = ui.helper.prevObject
+            cca.copy s, $(@)

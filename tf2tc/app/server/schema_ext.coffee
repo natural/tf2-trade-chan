@@ -30,15 +30,19 @@ groups = (items) ->
         k for k, i of items when pred(k, i)
 
     commodities: select (a, b) -> a in ['5000', '5001', '5002', '5021']
-    promos: select (a, b) -> a in ['126', '143', '162', '161', '160']
-    metal: select (a, b) -> b.item_type_name=='Craft Item' and b.craft_class=='craft_bar'
-    vintage_weapons: select (a, b) -> V in b._q and b.craft_class=='weapon'
-    vintage_hats: select (a, b) -> V in b._q and b.craft_class=='hat'
-    genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
     genuine_hats: select (a, b) -> G in b._q and b.craft_class=='hat'
-    untradables: select (a, b) -> b._t == NEVER
-    offers: select (a, b) -> (a < 0) and (b.item_class=='Offer')
+    genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
+    hats: select (a, b) -> b.item_class=='tf_wearable' and b._t == ALWAYS
 
+    metal: select (a, b) -> b.item_type_name=='Craft Item' and b.craft_class=='craft_bar'
+    offers: select (a, b) -> (a < 0) and (b.item_class=='Offer')
+    promos: select (a, b) -> a in ['126', '143', '162', '161', '160']
+    tools: select (a, b) -> b.item_class=='tool' and b._t == ALWAYS
+    tradables: select (a, b) -> b._t == ALWAYS
+    untradables: select (a, b) -> b._t == NEVER
+    vintage_hats: select (a, b) -> V in b._q and b.craft_class=='hat'
+    vintage_weapons: select (a, b) -> V in b._q and b.craft_class=='weapon'
+    weapons: select (a, b) -> b.craft_class=='weapon' and b._t == ALWAYS
 
 quals = (items) ->
     m = {}
@@ -760,7 +764,7 @@ exports.items =
         item_type_name: 'CheatDetector'
         craft_class: null
         _q: [C]
-        _t: ALWAYS
+        _t: NEVER
 
     '123':
         name: 'CheatDetectedMajor'

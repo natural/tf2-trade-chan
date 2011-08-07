@@ -11,21 +11,26 @@ exports.empty = (type) ->
     "<div class='itemw'><div class='item #{type}' /></div>"
 
 
-exports.make = (ns, defn, target, type) ->
+exports.put = (ns, defn, target, type) ->
+    x = exports.make ns, defn, type
+    target.append x
+    x
+
+
+exports.make = (ns, defn, type) ->
     if not defn
-        target.append exports.empty(type)
-        return
-    else
-        target.append "
-            <div class='itemw'>
-                <div class='item #{type}'>
-                    <img src='#{ns.schema_items[defn.defindex].image_url}' />
-                </div>
-            </div>"
+        return $ exports.empty(type)
+
+    itemw = $ "
+    <div class='itemw'>
+        <div class='item #{type}'>
+            <img src='#{ns.schema_items[defn.defindex].image_url}' />
+        </div>
+    </div>"
 
     prop = props ns, defn
     sdefn = ns.schema_items[defn.defindex]
-    itemw = $ 'div.itemw:last', target
+
     item = $ 'div.item', itemw
     item.data 'item-defn', defn
     item.data 'schema-defn', sdefn

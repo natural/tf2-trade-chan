@@ -116,6 +116,21 @@ exports.makeSchema = (ns, sch) ->
 
     ns.schema_actions = -> (i for i in sch.result.items.item when i.item_slot=='action')
     ns.schema_tools = ->   (i for i in sch.result.items.item when i.craft_class=='tool')
+    ns.schema_groups = ->
+        grp = ns.schema.ext.groups
+        clone = (id, q) ->
+            x = JSON.parse(JSON.stringify(ns.schema_items[id]))
+            x.quality = q
+            x
+        all: ->             (clone x, 6 for x in grp.tradables)
+        genuine_hats: ->    (clone x, 1 for x in grp.genuine_hats)
+        genuine_weapons: -> (clone x, 1 for x in grp.genuine_weapons)
+        hats: ->            (clone x, 6 for x in grp.hats)
+        tools: ->           (clone x, 6 for x in grp.tools)
+        vintage_hats: ->    (clone x, 3 for x in grp.vintage_hats)
+        vintage_weapons: -> (clone x, 3 for x in grp.vintage_weapons)
+        weapons: ->         (clone x, 6 for x in grp.weapons)
+
 
 
 fakeOfferItemDefn = (i, d) ->
