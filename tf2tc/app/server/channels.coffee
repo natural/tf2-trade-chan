@@ -10,8 +10,14 @@ exports.actions =
         @getSession (session) ->
             channel = params.channel
             session.channel.subscribe channel
+            keys = [session.user.loggedIn(), session.user_id]
+            session.getUserId (uid) ->
+                keys.push uid
 
-            if not session.user.loggedIn() or not session.user_id
+            console.log "JOIN CHANNEL: #{channel}"
+            console.log "SESSION: #{keys}"
+
+            if not session.user_id
                 return
 
             profileMessage utils.getId64(session), what:'joined', channel:channel, (msg) ->
@@ -27,7 +33,7 @@ exports.actions =
             channel = params.channel
             session.channel.unsubscribe channel
 
-            if not session.user.loggedIn() or not session.user_id
+            if not session.user_id
                 return
             profileMessage utils.getId64(session), what:'left', channel:channel, (msg) ->
 
@@ -62,7 +68,7 @@ exports.actions =
 
     say: (params, cb) ->
         @getSession (session) ->
-            if not session.user.loggedIn() or not session.user_id
+            if not session.user_id
                 return
             msg = what:'said', channel:params.channel, text:params.text
             profileMessage utils.getId64(session), msg, (res) ->

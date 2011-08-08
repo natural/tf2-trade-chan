@@ -61,8 +61,6 @@ initAuth = (ns) ->
                                 cb()
                                 later = ->
                                     $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
-                                    # this looks nice, but the similar call
-                                    # against the backpack items does not!
                                     $('.chooserw', chshell).isotope()
                                 setTimeout later, 500
 
@@ -129,6 +127,12 @@ initEvents = (ns) ->
     $('div.item:not(:empty)')
         .live('mouseover', namespace:ns, showItemTip)
         .live('mouseout',  namespace:ns, hideItemTip)
+
+    # bind the logout button to this local helper
+    $('#logout a').click ->
+        document.cookie = 'session_id='
+        document.cookie = 'id64='
+        window.location.reload()
 
     # bind the backpack/trade toggle click events
     $('#user a').click ->
@@ -265,8 +269,8 @@ putChooser = (ns, target, cb) ->
     grp = ns.schema.ext.groups
     m = getItemPut()
 
-    clone = (id, q) ->
-        x = JSON.parse(JSON.stringify(ns.schema_items[id]))
+    copy = (id, q) ->
+        x = clone ns.schema_items[id]
         x.quality = q
         x
 
@@ -279,9 +283,9 @@ putChooser = (ns, target, cb) ->
         m ns, item, t, 'chooser' for item in items
         $(document).trigger 'new-chooser-items', t
 
-    put (clone(x, 6) for x in grp.offers), add('Offers')
-    put (clone(x, 6) for x in grp.commodities), add('Commodities')
-    put (clone(x, 6) for x in grp.promos), add('Promos')
+    put (copy(x, 6) for x in grp.offers), add('Offers')
+    put (copy(x, 6) for x in grp.commodities), add('Commodities')
+    put (copy(x, 6) for x in grp.promos), add('Promos')
 
     addb = (key, title) ->
         ch = $('#chooser-proto').tmpl(title:title).appendTo(target)
@@ -418,8 +422,6 @@ initTradeEvents = (ns, target) ->
         else
             i = 1
         j = qualseq[(i+1) % qualseq.length]
-        ### WRONG: this affects too many items, i.e., the static items
-        ### in the chooser
         item.data 'qual', j
         item.resetQualityClasses "qual-border-#{j} qual-hover-#{j}"
         item.data('item-defn').quality = j
@@ -647,6 +649,10 @@ isoOpts = (o) ->
     opts
 
 
+clone = (o) ->
+    JSON.parse JSON.stringify(o)
+
+
 ## why isn't this used?
 ##getProfile = (id64, cb) ->
 ##    $.getJSON "/profile/#{id64}", cb
@@ -712,6 +718,7 @@ cca =  # chooser copy actions
         t = b.parents '.trade'
         id = a.data('item-defn').id
         r = b.clone(false, false)
+        c.data 'item-defn', clone(a.data('item-defn'))
         b.replaceWith c
         hideItemTip()
         $(document).trigger 'trade-changed', t

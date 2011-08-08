@@ -6,13 +6,11 @@ steam = require './steam.coffee'
 
 exports.actions =
     init: (cb) ->
-        @getSession (session) ->
-            session.on 'disconnect', clientDisconnect
         cb "framework: #{SS.version}, websockets: okay, application: v07"
 
     backpack: (cb) ->
         @getSession (session) ->
-            if session.user.loggedIn()
+            if session.user_id
                 uid = session.user_id
                 id64 = uid.split('/').pop()
                 steam.actions.items id64:id64, cb
@@ -23,12 +21,13 @@ exports.actions =
         @getSession (session) ->
             session.authenticate 'local_auth', params, (response) =>
                 session.setUserId(response.user_id) if response.success
-                cb(response)
+                cb response
 
     logout: (cb) ->
         @getSession (session) ->
             session.user.logout(cb)
             session.setUserId(null)
+            cb()
 
     readStatus: (params, cb) ->
         steam.actions.status params, cb
@@ -38,17 +37,9 @@ exports.actions =
 
     userProfile: (cb) ->
         @getSession (session) ->
-            if session.user.loggedIn() and session.user_id
+            if session.user_id
                 id64 = session.user_id.split('/').pop()
                 steam.actions.profile id64: id64, (profile) ->
                     cb profile
             else
-                cb {}
-
-
-
-clientDisconnect = (s) ->
-    utils.log "DISCONNECT user_id=#{s.user_id}"
-    dummy = user_id:s.user_id
-    SS.server.channels.leaveAll session:dummy, ->
-        s.user.logout()
+                cb {session:session, auth:session.user.loggedIn() }

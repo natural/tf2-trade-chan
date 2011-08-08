@@ -8,7 +8,7 @@ ext = require './schema_ext'
 exports.actions =
     userTrades: (params, cb) ->
         @getSession (session) ->
-            if not session.user.loggedIn()
+            if not session.user_id
                 cb success:false, trades:null
 
             usr = if params.user? then params.user else session.user_id
@@ -18,7 +18,7 @@ exports.actions =
 
     publish: (params, cb) ->
         @getSession (session) ->
-            if not session.user.loggedIn()
+            if not session.user_id
                 cb success:false, tid:null
 
             uid = utils.uidFromOpenId session.user_id

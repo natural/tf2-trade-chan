@@ -1,21 +1,18 @@
-# HTTP Router Config
-# ------------------
 
-# Version 1.0
 
-# This file defines how incoming HTTP requests are handled
-# Note: The default configuration will probably change a lot in the future. Be warned!
+connect = require 'connect'
+game_urls = require './game_urls.coffee'
+openid_urls = require './openid_urls.coffee'
 
-exports.call = (request, response, next) ->
 
-    # Custom Middleware
-    # -----------------
+exports.primary = [
+    connect.router (app) ->
+        app.get '/schema', game_urls.schema
+        app.get /^\/profile\/(7656\d{13})/, game_urls.profile
+        app.get /^\/items\/(7656\d{13})/, game_urls.items
+        app.get SS.config.openid_auth.authen_path, openid_urls.authen(SS.config.openid_auth)
+        app.get SS.config.openid_auth.verify_path, openid_urls.verify(SS.config.openid_auth)
+]
 
-    # Hook-in your own custom HTTP middleware to modify or respond to requests before they're passed to the SocketStream HTTP stack
-    # See README for more details and example middleware code
 
-    require('./local_urls.coffee').call request, response, next
-
-    # Unless you're passing the callback to custom middleware, you'll need to call next() here
-    #next()
-
+exports.secondary = []
