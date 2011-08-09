@@ -35,7 +35,9 @@ exports.actions =
                 profile.steamid = params.id64
                 cb profile
             catch err
-                cb {}
+                null
+                #console.warn "ERR: ", err
+                #cb {}
 
     status: (params, cb) ->
         o = urls.status params.id64

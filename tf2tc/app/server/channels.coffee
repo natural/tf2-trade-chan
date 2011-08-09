@@ -5,21 +5,13 @@ utils = require './utils.coffee'
 steam = require './steam.coffee'
 
 
+
 exports.actions =
     join: (params, cb) ->
         @getSession (session) ->
             channel = params.channel
             session.channel.subscribe channel
-            keys = [session.user.loggedIn(), session.user_id]
-            session.getUserId (uid) ->
-                keys.push uid
-
-            console.log "JOIN CHANNEL: #{channel}"
-            console.log "SESSION: #{keys}"
-
-            if not session.user_id
-                return
-
+            return if not session.user_id
             profileMessage utils.getId64(session), what:'joined', channel:channel, (msg) ->
                 session.channel.subscribe channel
                 R.rpush keys.userList(channel), msg.id64, (err, okay) ->
@@ -32,11 +24,8 @@ exports.actions =
         @getSession (session) ->
             channel = params.channel
             session.channel.unsubscribe channel
-
-            if not session.user_id
-                return
+            return if not session.user_id
             profileMessage utils.getId64(session), what:'left', channel:channel, (msg) ->
-
                 R.lrem keys.userList(channel), 0, msg.id64, (err, okay) ->
                     R.lrem keys.currentChannels(msg.id64), 0, channel
                     SS.publish.channel [channel], keys.sysMsg, msg
@@ -44,8 +33,7 @@ exports.actions =
 
     leaveAll: (params, cb) ->
         id64 = utils.getId64 params.session
-        if not id64
-            return
+        return if not id64
         profileMessage id64, what:'left', (res) ->
             R.lrange "channels:#{id64}", 0, -1, (err, channels) ->
                 for channel in channels
@@ -64,7 +52,7 @@ exports.actions =
         R.lrange keys.tradeList(params.channel), 0, -1, (err, tids) ->
             keys = tids.map (i) -> "trade:#{i}"
             R.mget keys, (err, trades) ->
-                cb trades
+                cb (new SS.shared.set trades).members()
 
     say: (params, cb) ->
         @getSession (session) ->
@@ -95,8 +83,8 @@ keys =
 # source of the message.
 profileMessage = (id64, proto, cb) ->
     steam.actions.profile id64:id64, (profile) ->
-        usr = profile.personaname
-        if usr
+        who = profile.personaname
+        if who
             proto.id64 = id64
-            proto.who = usr
+            proto.who = who
             cb proto

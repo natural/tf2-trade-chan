@@ -1,3 +1,8 @@
+##
+# game_apps -> request handlers for various game data.
+#
+#
+
 hashlib = require 'hashlib'
 util = require 'util'
 steam = require '../app/server/steam.coffee'
@@ -25,19 +30,20 @@ exports.items = (req, res, next) ->
 
 
 maybe304 = (obj, req, res, mime='text/javascript') ->
+    con = 'Content-type':mime
     if not obj
-        res.writeHead 500, {'Content-type':mime}
+        res.writeHead 500, con
         res.end ''
         return
     str = JSON.stringify obj
     tag = hashlib.md5 str
     res.setHeader 'ETag', tag
     if req.headers['if-none-match'] == tag
-        util.log "etag object data hit #{req.url}"
+        util.log "ETag object data hit #{req.url}"
         res.setHeader 'Content-Length', 0
-        res.writeHead 304, {'Content-type':mime}
+        res.writeHead 304, con
         res.end ''
     else
-        util.log "etag object data miss #{req.url}"
-        res.writeHead 200, {'Content-type':mime}
+        util.log "ETag object data miss #{req.url}"
+        res.writeHead 200, con
         res.end str

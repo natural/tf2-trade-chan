@@ -469,15 +469,13 @@ joinChannel = (channel, context) ->
         ns = exports.ns
         target = $('.chtrade', chan)
         tid = trade.tid
-        ## need different prototype, no buttons, appropriate notes.
-        target.append $('#trade-proto').tmpl(tid:"##{tid}").data('trade-id', tid)
+        target.append $('#channel-trade').tmpl(tid:"##{tid}").data('trade-id', tid)
         last = $('.trade:last', target)
         last.addClass "trade-#{tid}"
         if trade.text
             $('.trade-show-notes', last).text trade.text
-            $('.trade-edit-notes textarea', last).val trade.text
 
-        $('a.trade-submit', last).hide()
+
         empties = (null for i in [0..7])
 
         targ = $('.haves', last)
@@ -491,7 +489,7 @@ joinChannel = (channel, context) ->
             m ns, want, targ, 'want chooser'
 
         $('.haves, .wants', last).isotope isoOpts(itemSelector:'.itemw', layoutMode:'fitRows')
-
+        last.slideDown (->$('.haves, .wants', last).isotope())
 
     delTrade = (tid) ->
         $(".trade-#{tid}", chan).fadeOut().delay(2000).detach()
@@ -581,8 +579,14 @@ login = (cb) ->
 sayChannel = (p, cb) ->
     SS.server.channels.say p, cb
 
+##getProfile = (cb) ->
+##    SS.server.app.userProfile cb
+
 getProfile = (cb) ->
-    SS.server.app.userProfile cb
+    SS.server.app.id64 (res) ->
+        if res.id64
+            $.getJSON "/profile/#{res.id64}", cb
+
 
 getTrades = (cb) ->
     SS.server.trades.userTrades {}, cb
@@ -628,7 +632,7 @@ readProfileStatus = (id64, cb) ->
     SS.server.app.readProfile id64:id64, (p) ->
         SS.server.app.readStatus id64:id64, (s) ->
             p.state = if s and s.state then s.state else null
-            p.stateMessage = s.stateMessage
+            p.stateMessage = s.stateMessage if s
             cb p
 
 
@@ -651,11 +655,6 @@ isoOpts = (o) ->
 
 clone = (o) ->
     JSON.parse JSON.stringify(o)
-
-
-## why isn't this used?
-##getProfile = (id64, cb) ->
-##    $.getJSON "/profile/#{id64}", cb
 
 
 bca = # backpack copy actions
@@ -753,3 +752,4 @@ cca =  # chooser copy actions
         drop: (e, ui) ->
             s = ui.helper.prevObject
             cca.copy s, $(@)
+

@@ -1,12 +1,18 @@
+##
+# openid_apps -> request handlers for various openid urls (authen and verify)
+#
+#
 
-
-util = require 'util'
-openid = require 'openid'
 cookies = require 'cookies'
-keygrip = require 'keygrip'
 hashlib = require 'hashlib'
+keygrip = require 'keygrip'
+openid = require 'openid'
+util = require 'util'
 
 
+# closure over the openid config; when the openid authentication url
+# is requested, formulate the openid provider url and redirect the
+# browser to it.
 exports.authen = (c) ->
     (req, res, next) ->
         rp = relyingParty req, c.verify_path
@@ -14,6 +20,10 @@ exports.authen = (c) ->
             redirect res, provider if provider
 
 
+# closure over the openid config; when the openid verification url is
+# requested, set our cookie with the player's id64 if the verification
+# is a success.  redirect the browser to either the success path or
+# the failure path when complete.
 exports.verify = (c) ->
     (req, res, next) ->
         rp = relyingParty req, c.verify_path
@@ -26,24 +36,12 @@ exports.verify = (c) ->
                 redirect res, c.failure_path
 
 
-foo = (req, res, next) ->
-    ## when the logout url is requested, clear the authentication
-    ## cookie and redirect.
-    if u.pathname == c.logout_path
-        cs = new cookies req, res
-        cs.set 'id64', ''
-        console.log "HAVE SESSION"
-        #console.log "LOGOUT: ", SS
-
-        redirect res, c.success_path
-
-
 cookieEncode = (v) ->
     encodeURI new Buffer(v).toString('base64')
 
 
 relyingParty = (request, verify) ->
-    realm = 'http://' + request.headers.host
+    realm = (if SS.config.https.enabled then 'https://' else 'http://') + request.headers.host
     new openid.RelyingParty(
         realm + verify,   # verification url
         realm,            # realm (optional, specifies realm for openid authentication)

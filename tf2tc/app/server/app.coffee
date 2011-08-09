@@ -1,5 +1,6 @@
 ## server-side app module
 #
+
 utils = require './utils'
 steam = require './steam.coffee'
 
@@ -42,4 +43,16 @@ exports.actions =
                 steam.actions.profile id64: id64, (profile) ->
                     cb profile
             else
-                cb {session:session, auth:session.user.loggedIn() }
+                cb {}
+
+    id64: (cb) ->
+        @getSession (session) ->
+            if session.user_id
+                id64 = session.user_id.split('/').pop()
+                cb id64:id64
+            else
+                cb {}
+
+    data: (cb) ->
+        @getSession (session) ->
+            cb list:session.channel.list(), key:session.user.key()

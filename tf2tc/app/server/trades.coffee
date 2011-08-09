@@ -28,7 +28,7 @@ exports.actions =
             params.tid = "#{params.tid}" if params.tid
 
             steam.actions.schema (schema) ->
-                schema.ext.items = makeSchemaItemMap(schema)
+                schema.ext.items = makeSchemaItemMap schema
 
                 if not params.tid
                     addTrade schema, uid, have, want, text, (tid) ->
