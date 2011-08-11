@@ -36,12 +36,12 @@ select.bpfilters
 
 | &nbsp;&nbsp; Sort: &nbsp;
 select.bpsorts
-    option(data-sort="*") Original
+    option(data-simple="1", data-sort="*") Original
     option(data-sort="quality") Quality
     option(data-sort="date") Date - Oldest to Newest
     option(data-sort="date_desc", data-desc="1") Date - Newest to Oldest
     option(data-sort="level") Level - Low to High
     option(data-sort="level_desc", data-desc="1") Level - High to Low
-    option(data-sort="name") Name - A to Z
-    option(data-sort="name_desc", data-desc="1") Name - Z to A
-    option(data-sort="type") Type
+    option(data-simple="1", data-sort="name") Name - A to Z
+    option(data-simple="1", data-sort="name_desc", data-desc="1") Name - Z to A
+    option(data-simple="1", data-sort="type") Type

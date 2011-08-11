@@ -10,6 +10,8 @@ exports.actions =
     offerItems: (cb) ->
         cb exports.direct.offerItems()
 
+    qualMap: (cb) ->
+        cb exports.direct.qualMap()
 
 exports.direct =
     allGroups: ->
@@ -17,6 +19,14 @@ exports.direct =
 
     qualCycle: ->
         quals exports.items
+
+    qualMap: ->
+        0: 'normal'
+        1: 'genuine'
+        3: 'vintage'
+        5: 'unusual'
+        6: 'common'
+        11: 'strange'
 
     offerItems: ->
         offerItems exports.items
@@ -30,7 +40,7 @@ groups = (items) ->
         k for k, i of items when pred(k, i)
 
     commodities: select (a, b) -> a in ['5000', '5001', '5002', '5021']
-    genuine_hats: select (a, b) -> G in b._q and b.craft_class=='hat'
+    genuine_hats: select (a, b) -> G in b._q and b.item_class=='tf_wearable'
     genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
     hats: select (a, b) -> b.item_class=='tf_wearable' and b._t == ALWAYS
 

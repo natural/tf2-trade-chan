@@ -7,7 +7,7 @@ steam = require './steam.coffee'
 
 exports.actions =
     init: (cb) ->
-        cb "framework: #{SS.version}, websockets: okay, application: v07"
+        cb framework:SS.version, websockets:true, application:'v07'
 
     backpack: (cb) ->
         @getSession (session) ->
@@ -36,11 +36,17 @@ exports.actions =
     readProfile: (params, cb) ->
         steam.actions.profile params, cb
 
+    readProfileStatus: (params, cb) ->
+        steam.actions.profile params, (p) ->
+            steam.actions.status params, (s) ->
+                p.state = if s and s.state then s.state else null
+                p.stateMessage = if s and s.stateMessage then s.stateMessage else null
+                cb p
+
     userProfile: (cb) ->
         @getSession (session) ->
             if session.user_id
-                id64 = session.user_id.split('/').pop()
-                steam.actions.profile id64: id64, (profile) ->
+                steam.actions.profile id64:utils.getId64(session), (profile) ->
                     cb profile
             else
                 cb {}
@@ -48,8 +54,7 @@ exports.actions =
     id64: (cb) ->
         @getSession (session) ->
             if session.user_id
-                id64 = session.user_id.split('/').pop()
-                cb id64:id64
+                cb id64:utils.getId64(session)
             else
                 cb {}
 

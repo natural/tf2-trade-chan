@@ -60,6 +60,7 @@ exports.formats =
 
 caches =
     profile: {}
+    profileStatus: {}
 
 
 exports.readProfile = (id64, cb) ->
@@ -68,6 +69,14 @@ exports.readProfile = (id64, cb) ->
     else
         SS.server.app.readProfile id64:id64, (p) ->
             caches.profile[id64] = p
+            cb p
+
+exports.readProfileStatus = (id64, cb) ->
+    if caches.profileStatus[id64]
+        cb caches.profileStatus[id64]
+    else
+        SS.server.app.readProfileStatus id64:id64, (p) ->
+            caches.profileStatus[id64] = p
             cb p
 
 

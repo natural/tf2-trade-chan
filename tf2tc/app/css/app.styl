@@ -22,6 +22,21 @@ pal_blue1 = #768A88
 pal_blue2 = #5B7A8C
 pal_blue3 = #385C78
 
+ui_brown1 = #2a2725 // main ui bg, disabled button text
+ui_brown2 = #3c352e // item bg
+ui_brown3 = #84756b // hover border color, separator line color
+ui_brown4 = #766b5e // inactive button bg
+ui_brown5 = #393431 // inactive border bg
+
+ui_white1 = #655d54 // h1 titles
+ui_white2 = #ece3cb // h2 titles, inactive button text
+ui_white3 = #837968 // inactive h1 titles
+
+ui_red1 = #c94f39 // counter text
+ui_red2 = #9D302F // button bg?
+
+ui_gray1 = #454545
+
 
 item_w = 80px
 item_h = (item_w * 0.85)
@@ -40,7 +55,7 @@ body, html
 
 body
     color blk
-    background-color darken(#fff, 15%)
+    background-color ui_brown5
     font-family font_sec
     font-size 100%
 
@@ -176,6 +191,9 @@ div.quantity
     top 3px
     left 3px
 
+.choffer .itemw
+    position relative
+
 div.offer
     font-family font_build
     font-size 10pt
@@ -255,14 +273,13 @@ div.offer
 
 
 #backpack, #trades
-    position relative
     margin-left (base_w*4)
     margin-right (base_w*4)
-
+    color ui_white2
 
 #trades .tradescroll
     margin-right (base_w*4)
-
+    height 500px
 
 #backpack
     margin-top base_w
@@ -280,17 +297,16 @@ div.offer
 
 
 .bpscroll, .tradescroll
-
-    margin base_w
     margin-left 0
     background-color blk
-    color wht
-    padding base_w
+    color ui_white1
     border-r(base_p)
 
+.chalt
+    -a- none
 
 #backpack .bpscroll
-    overflow-y scroll
+    overflow-y auto
     height item_h * 4
 
 .tradescroll, .chooser .bpscrollaa
@@ -326,16 +342,16 @@ div.offer
 .debug2
     border 1px dotted green
 
+.debug3
+    border 1px dotted blue
+
+.debug4
+    border 1px dotted purple
+
 
 // channel stuff
 
 
-.chscroll .on
-    background-color pal_red2
-
-
-.chscroll .off
-    background-color pal_red1
 
 
 .chchat
@@ -501,6 +517,14 @@ img.offline, span.offline
 
 
 
+.chscroll
+    overflow-y scroll !important
+    height 500px !important
+
+
+
+
+
 .chooser-group
     margin-top base_w
 
@@ -519,3 +543,7 @@ img.offline, span.offline
 
 .main, .trade-show-notes
     color wht
+
+.ui-widget
+    font-family font_build
+    font-size 1em

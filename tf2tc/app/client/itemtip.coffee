@@ -37,7 +37,7 @@ exports.show = (e) ->
     vals.name = "#{ns.schema_qualities[idef.quality]} " + vals.name if idef.quality in [1, 3, 5, 11]
 
     # clear the quality classes and add the correct one
-    $('.name', tip).resetQualityClasses("qual-text-#{idef.quality}")
+    $('.name', tip).resetQualityClasses("qual-text-#{idef.quality or 6}")
 
     # clear the crafter value.  nb: crafter isn't set via the 'vals'
     # object because of the async lookup
