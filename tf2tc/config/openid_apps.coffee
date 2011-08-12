@@ -1,7 +1,6 @@
 ##
 # openid_apps -> request handlers for various openid urls (authen and verify)
-#
-#
+
 
 cookies = require 'cookies'
 hashlib = require 'hashlib'

@@ -13,8 +13,8 @@ exports.ns = {}
 # an initial authorization.
 exports.init = ->
     SS.server.app.init (details) ->
-        console.log "init details:", details
-        initJQ jQuery
+        console.log 'init details:', details
+        initExt jQuery
         msg = $('#site .msg').text 'Loading schema...'
         getSchema exports.ns, ->
             msg.append('done.').delay(2000).slideUp()
@@ -37,39 +37,37 @@ initAuth = (ns) ->
         $('#user').slideDown()
 
         $('#backpack').bind 'lazy-load', (e, cb) ->
+            $('#user .bp .msg').text 'Loading...'
             userbp = $ @
             bpshell = $ '.bpshell', userbp
-            $('#user .bp .msg').text 'Loading...'
-            getProfile (profile) ->
-                getBackpack profile.steamid, ns, (backpack) ->
-                    putBackpack ns, bpshell, ->
-                        isoBackpack bpshell, ->
-                            initBackpackToolbar userbp, bpshell
-                            $('#user .bp .msg').text ''
-                            cb()
-                            bpshell.isotope()
+            getBackpack profile.steamid, ns, (backpack) ->
+                putBackpack ns, bpshell, ->
+                    isoBackpack bpshell, ->
+                        initItemTools userbp, bpshell
+                        $('#user .bp .msg').text ''
+                        cb()
+                        bpshell.isotope()
 
         $('#trades').bind 'lazy-load', (e, cb) ->
-                trades = $ @
-                ch = $ '.chooser', trades
-                chshell = $ '.chshell', ch
-                $('#user .ch .msg').text 'Loading...'
-                putChooser ns, ch, ->
-                    isoChooser chshell, ->
-                        $('#user .ch .msg').text ''
-                        getTrades (trades) ->
-                            target = $('#trades .tradeshell')
-                            initTradeEvents ns, target
-                            putTrades ns, trades, target, ->
-                                cb()
-                                doLater 500, ->
-                                    $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
-                                    #$('.chooserw', chshell).isotope()
+            $('#user .ch .msg').text 'Loading...'
+            ts = $ @
+            ch = $ '.chooser', ts
+            sh = $ '.shell', ch
+            putChooser ns, ch, ->
+                $('#user .ch .msg').text ''
+                getTrades (trades) ->
+                    target = $('#trades .tradeshell')
+                    initTradeEvents ns, target
+                    putTrades ns, trades, target, ->
+                        cb()
+                        doLater 500, ->
+                            $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
+                            #$('.chooserw', sh).isotope()
 
 
-
-# initialize jquery with our little plugins.
-initJQ = ($) ->
+# initialize jquery with our little plugins and add our little object
+# extensions.
+initExt = ($) ->
     $.fn.resetQualityClasses = (v) ->
         @.each ->
             for q of exports.ns.schema_qualities
@@ -87,6 +85,7 @@ initJQ = ($) ->
 
     String::slug = ->
         this.replace(/\ /g, '_').toLowerCase()
+
 
 # initialize some fixed, well-known selectors with event handers.
 initEvents = (ns) ->
@@ -124,8 +123,6 @@ initEvents = (ns) ->
                 .tradableItems()
                 .bind('dblclick', {target:target, selector:'div.item.want:empty:first'}, cca.copyToTrade)
                 .draggable(cca.dragOpts())
-
-
 
     # live bind the mouse hover events to the show/hide item tip
     # handlers
@@ -166,39 +163,16 @@ initEvents = (ns) ->
 
     # live bind the chat text entry fields to the chat channel publish
     # handler
-    $('#channels .chshell .chsay input[type=text]').live 'keydown', (e) ->
+    $('#channels .shell .chsay input[type=text]').live 'keydown', (e) ->
         if e.keyCode == 13
             inp = $ e.currentTarget
             txt = inp.attr 'value'
             if txt
-                csh = inp.parents '.chshell'
+                csh = inp.parents '.shell'
                 chn = csh.data 'cname'
                 sayChannel channel:chn, text:txt, ->
                     inp.attr 'value', ''
                 e.preventDefault()
-
-    # live bind the chooser show/hide toggle click events
-    $('#trades .chooser .chooser-group a').live 'click', ->
-        link = $ @
-        chgrp = link.parents '.chooser-group'
-        chwrp = $ '.chooserw', chgrp
-        key = chgrp.attr 'data-key'
-        upd = -> link.text if link.text() == 'Hide' then 'Show' else 'Hide'
-        if not chgrp.attr 'lazy-load'
-            chgrp.attr 'lazy-load', true
-            chwrp.isotope 'destroy'
-
-            for item in exports.ns.schema_groups()[key]()
-                putItem ns, item, chwrp, 'want chooser'
-
-            chwrp.isotope isoOpts
-                itemSelector:'.itemw'
-                layoutMode:'fitRows'
-            chwrp.slideDown (-> chwrp.isotope(); upd() )
-            $(document).trigger('new-chooser-items', chwrp)
-        else
-            chwrp.slideToggle(upd)
-        false
 
     # bind server message events to handlers that re-emit the events
     # to handlers bound to local dom elements.
@@ -217,6 +191,7 @@ putBackpack = (ns, target, cb) ->
     unplaced = ns.backpack_items_unplaced
     if unplaced.length
         putUnplaced = (i) ->
+            # TODO:  add a "NEW!" text deco to unplaced items.
             items.push putItem(ns, unplaced[i], target, 'backpack')
         putUnplaced j for j in [0..unplaced.length-1]
 
@@ -229,7 +204,9 @@ putBackpack = (ns, target, cb) ->
     cb()
 
 
-initBackpackToolbar = (container, target, simpleSort=false) ->
+# configure the filter and sort select elements within the given
+# container.
+initItemTools = (container, target, simpleSort=false) ->
     $('.bptools', container).fadeIn()
 
     $('.bpfilters', container).change ->
@@ -272,14 +249,14 @@ isoBackpack = (target, cb) ->
 
 # create groups of choosable items at the given target.
 putChooser = (ns, panel, cb) ->
-    shell = $('.chshell', panel)
-    initBackpackToolbar panel, shell, simpleSort=true
+    shell = $('.shell', panel)
+    initItemTools panel, shell, simpleSort=true
     copy = (id, q) ->
         x = clone ns.schema_items[id]
         x.quality = q
         x
 
-    other = $('.choffer', panel)
+    other = $('.chooser-offer', panel)
     for id, item of ns.schema.ext.offers
         putItem ns, copy(id, 6), other, 'chooser'
     other.isotope isoOpts
@@ -288,39 +265,30 @@ putChooser = (ns, panel, cb) ->
 
     $(document).trigger 'new-chooser-items', other
 
-
-    for id, item of ns.schema_items
-        if id in ns.schema.ext.groups.tradables
-            putItem ns, copy(id, 6), shell, 'chooser'
-
-    map =
-        'Vintage Hats': 3
-        'Vintage Weapons': 3
-        'Genuine Hats': 1
-        'Genuine Weapons': 1
-
-    for ttl, qual of map
-        for item in ns.schema_groups()[ttl.slug()]()
-            putItem ns, copy(item.defindex, qual), shell, 'want chooser'
-
-    isoBackpack shell, ->
-    $(document).trigger 'new-chooser-items', shell
     doLater 1000, ->
-        other.isotope()
-        $('.bpfilters option:nth(1)', panel).attr('selected', 1).trigger('change')
+        doLater 200, ->
+            other.isotope()
+            #$('.bpfilters option:nth(1)', panel).attr('selected', 1).trigger('change')
 
-    cb()
+        for id, item of ns.schema_items
+            if id in ns.schema.ext.groups.tradables
+                putItem ns, copy(id, 6), shell, 'chooser'
 
+        map =
+            'Vintage Hats': 3
+            'Vintage Weapons': 3
+            'Genuine Hats': 1
+            'Genuine Weapons': 1
+            'Unusual Hats': 5
+            'Unusual Weapons': 5
 
-# configure the chooser groups at the target for isotope layout.
-isoChooser = (target, cb) ->
-    cb()
-    return
+        for ttl, qual of map
+            for item in ns.schema_groups()[ttl.slug()]()
+                putItem ns, copy(item.defindex, qual), shell, 'want chooser'
 
-    for grp in $('.chooserw', target)
-        $(grp).isotope isoOpts
-            itemSelector:'.itemw'
-            layoutMode:'fitRows'
+        isoBackpack shell, ->
+        $(document).trigger 'new-chooser-items', shell
+
     cb()
 
 
@@ -332,7 +300,8 @@ makeEmptyTrade = () ->
         layoutMode:'fitRows'
     trade
 
-putTrade = (tid, trade, target) ->
+
+putTrade = (ns, tid, trade, target) ->
     trade = JSON.parse trade
     target.append $('#trade-proto').tmpl(tid:"##{tid}").data('trade-id', tid)
     last = $('.trade:last', target)
@@ -359,7 +328,7 @@ putTrade = (tid, trade, target) ->
 
 putTrades = (ns, trades, target, cb) ->
     if trades and trades.success
-        putTrade tid, trd, target for tid, trd of trades.trades
+        putTrade ns, tid, trd, target for tid, trd of trades.trades
     target.append makeEmptyTrade()
     $(document).trigger 'new-trade-slots', target
     cb()
@@ -439,7 +408,7 @@ initTradeEvents = (ns, target) ->
 
 
 leaveChannel = (channel, context) ->
-    $(".chshell.cname-#{channel}", context).slideUp(-> $(@).detach())
+    $(".shell.cname-#{channel}", context).slideUp(-> $(@).detach())
     SS.server.channels.leave channel:channel
 
 
@@ -456,7 +425,7 @@ joinChannel = (channel, context) ->
     addStatus = (player) ->
         readProfileStatus player, (profile) ->
             p = $('#channel-player').tmpl()
-            $('.chshell .chusers', context).append p
+            $('.shell .chusers', context).append p
             $('a', p).attr 'href', "http://steamcommunity.com/profiles/#{player}"
             p.addClass("id64-#{player}")
 
@@ -547,7 +516,7 @@ joinChannel = (channel, context) ->
 
 
 getChannelArea = (name) ->
-    $ "#channels .chshell.cname-#{name}"
+    $ "#channels .shell.cname-#{name}"
 
 
 getTalkArea = (name) ->
@@ -588,9 +557,6 @@ login = (cb) ->
 
 sayChannel = (p, cb) ->
     SS.server.channels.say p, cb
-
-##getProfile = (cb) ->
-##    SS.server.app.userProfile cb
 
 getProfile = (cb) ->
     SS.server.app.id64 (res) ->

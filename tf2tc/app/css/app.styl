@@ -55,7 +55,7 @@ body, html
 
 body
     color blk
-    background-color ui_brown5
+    background-color ui_brown1
     font-family font_sec
     font-size 100%
 
@@ -173,9 +173,9 @@ qual(11, #cd9b1d, #423618) // strange
 
 
 div.badge
-    background-color #fff
+    background-color blk
     font-family font_sec
-    color pal_gray1
+    color ui_red1
     border-r(6px)
     font-size 8pt
     position absolute
@@ -186,12 +186,18 @@ div.equipped
     top 48px
     left 26px
 
+div.craft
+    top 3px
+    left 3px
+    font-family font_build
+    &:before
+        content "#"
 
 div.quantity
     top 3px
     left 3px
 
-.choffer .itemw
+.chooser-offer .itemw
     position relative
 
 div.offer
@@ -298,11 +304,11 @@ div.offer
 
 .bpscroll, .tradescroll
     margin-left 0
-    background-color blk
+    background-color ui_brown1
     color ui_white1
     border-r(base_p)
 
-.chalt
+.chooser-alt
     -a- none
 
 #backpack .bpscroll
@@ -512,15 +518,15 @@ img.offline, span.offline
     vertical-align top
 
 
-.chshell
-    margin-top base_p
+// need to fix this "ch means channel" and "ch means chooser"
+// business.
 
 
+.chooser-scroll, .channels-scroll
+    overflow-y auto !important
 
-.chscroll
-    overflow-y scroll !important
+.chooser-scroll
     height 500px !important
-
 
 
 

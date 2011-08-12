@@ -1,7 +1,6 @@
 ##
 # game_apps -> request handlers for various game data.
-#
-#
+
 
 hashlib = require 'hashlib'
 util = require 'util'

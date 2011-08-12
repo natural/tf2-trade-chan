@@ -50,6 +50,12 @@ exports.make = (ns, defn, type) ->
     jewel = prop.paint()
     img.wrap "<div class='deco jewel jewel-#{jewel}' />" if jewel
 
+    ## craft number
+    craft = prop.lowCraft()
+    if craft
+        img.wrap '<div class="deco" />'
+        img.parent().append "<div class='badge craft'>#{craft}</div>"
+
     ## equipped badge
     equip = prop.equipped()
     if equip
@@ -105,7 +111,7 @@ props = (ns, defn) ->
             '5044'
 
     paint: ->
-        p = selectAttr(142)
+        p = selectAttr 142
         if p then p.float_value else null
 
     effect: ->
@@ -114,7 +120,7 @@ props = (ns, defn) ->
         else if defn.defindex==1899
             20
         else
-            e = selectAttr(134)
+            e = selectAttr 134
             if e then e.float_value else null
 
     useCount: ->
@@ -123,6 +129,10 @@ props = (ns, defn) ->
 
     offer: ->
         defn.defindex < 0
+
+    lowCraft: ->
+        e = selectAttr 229
+        if (e and e.value < 101) then e.value else null
 
 
 qualityName = (ns, id) ->

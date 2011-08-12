@@ -40,9 +40,8 @@ html(lang="en")
                     a(href="#", class="small-button", data-target="#backpack", data-loaded="") Show Backpack
                     span.msg
                     span.null Click this button to show your backpack.  You use your backpack to make trades.
-                #backpack.null
+                #backpack.null.mb1
                     .mb1
-
                         | This is your backpack.  You can use the
                         | filter and sort controls to view it
                         | differently.  When you open the trade window
@@ -59,21 +58,22 @@ html(lang="en")
                     span.msg
                     span.null Click this button to show your trades.
                 #trades.null
-                    .mt1
+                    .mb1.mt1
                         | These are your trades.  Drag items from your backpack that you want
                         | to put up for trade.  Drag items from the item selector on the left
                         | to the wishlist area.  Then click little buttons.
+
                     .line
                         .tradescroll.unit.size3of5
                             .tradeshell
-                        .chooser.unit.lastUnit.size2of5.chalt
+                        .chooser.unit.lastUnit.size2of5.chooser-alt
                             h3 Offer Types
-                            .choffer
+                            .chooser-offer
                             h3.mt1 Specific Items
                             .bptools.null
                                 include backpack_tools
-                            .chscroll
-                                .chshell
+                            .chooser-scroll
+                                .shell
 
         #channels
             .channels-help.mb1
@@ -81,7 +81,7 @@ html(lang="en")
                 | see trades as they are added to the channel,
                 | and you can chat with other channel members.
 
-            .chscroll.button-bar
+            .channels-scroll.button-bar
                 .mb1
                     a(href="#", class="small-button off", data-channel-name="commodities") Commodites
                 .mb1

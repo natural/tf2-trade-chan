@@ -53,6 +53,9 @@ groups = (items) ->
     vintage_hats: select (a, b) -> V in b._q and b.craft_class=='hat'
     vintage_weapons: select (a, b) -> V in b._q and b.craft_class=='weapon'
     weapons: select (a, b) -> b.craft_class=='weapon' and b._t == ALWAYS
+    unusual_hats: select (a, b) -> U in b._q and b.item_class=='tf_wearable'
+    unusual_weapons: select (a, b) -> U in b._q and b.craft_class=='weapon'
+
 
 quals = (items) ->
     m = {}
@@ -1597,7 +1600,7 @@ exports.items =
         item_class: 'tf_weapon_fists'
         item_type_name: 'Boxing Gloves'
         craft_class: 'weapon'
-        _q: [C, U]
+        _q: [C, S]
         _t: ALWAYS
 
     '240':

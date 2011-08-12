@@ -139,6 +139,8 @@ exports.makeSchema = (ns, sch) ->
         vintage_hats: ->    (clone x, 3 for x in grp.vintage_hats)
         vintage_weapons: -> (clone x, 3 for x in grp.vintage_weapons)
         weapons: ->         (clone x, 6 for x in grp.weapons)
+        unusual_hats: ->    (clone x, 1 for x in grp.unusual_hats)
+        unusual_weapons: -> (clone x, 1 for x in grp.unusual_weapons)
 
 
 

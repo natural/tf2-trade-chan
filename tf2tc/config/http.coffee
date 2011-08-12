@@ -1,8 +1,11 @@
+##
+# http.coffee -> middleware for game data and open id auth.
 
 
 connect = require 'connect'
 game_apps = require './game_apps.coffee'
 openid_apps = require './openid_apps.coffee'
+profile = false
 
 
 routes = connect.router (app) ->
@@ -14,8 +17,7 @@ routes = connect.router (app) ->
 
 
 exports.primary = [
-    #connect.profiler()
-    connect.responseTime()
+    (if profile then connect.profiler else connect.responseTime)()
     routes
     connect.favicon __dirname + '/../public/favicon.ico'
 ]
