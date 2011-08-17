@@ -1,23 +1,23 @@
-| Filter:&nbsp;
+span.filter.title Filter:
 
-select.bpfilters
+select.filter
     option(data-filter="*") All
-    option(data-filter=".commodity") Commodities
-    option(data-filter=".promo") Promos
-    option(data-filter=".wearable") Hats and Wearables
-    option(data-filter=".weapon") Weapons
+    option(data-filter=".commodity", data-group="commodities") Commodities
+    option(data-filter=".promo", data-group="promos") Promos
+    option(data-filter=".wearable", data-group="hats") Hats and Wearables
+    option(data-filter=".weapon", data-group="weapons") Weapons
     option(data-filter="") ---
-    option(data-filter=".vintage") Vintage - All
-    option(data-filter=".vintage.wearable") Vintage - Hats
-    option(data-filter=".vintage.weapon") Vintage - Weapons
+    option(data-filter=".vintage", data-group="tradables", data-quality="3") Vintage - All
+    option(data-filter=".vintage.wearable", data-group="vintage_hats", data-quality="3") Vintage - Hats
+    option(data-filter=".vintage.weapon", data-group="vintaage_weapons", data-quality="3") Vintage - Weapons
     option(data-filter="") ---
-    option(data-filter=".unusual") Unusual - All
-    option(data-filter=".unusual.wearable") Unusual - Hats
-    option(data-filter=".unusual.weapon") Unusual - Weapons
+    option(data-filter=".unusual", data-group="tradables", data-quality="5") Unusual - All
+    option(data-filter=".unusual.wearable", data-group="unusual_hats", data-quality="5") Unusual - Hats
+    option(data-filter=".unusual.weapon", data-group="unusual_weapons", data-quality="5") Unusual - Weapons
     option(data-filter="") ---
-    option(data-filter=".genuine") Genuine - All
-    option(data-filter=".genuine.wearable") Genuine - Hats
-    option(data-filter=".genuine.weapon") Genuine - Weapons
+    option(data-filter=".genuine", data-group="tradables", data-quality="1") Genuine - All
+    option(data-filter=".genuine.wearable", data-group="genuine_hats", data-quality="1") Genuine - Hats
+    option(data-filter=".genuine.weapon", data-group="genuine_weapons", data-quality="1") Genuine - Weapons
     option(data-filter="") ---
     option(data-filter=".strange") Strange - Weapons
     option(data-filter="") ---
@@ -34,8 +34,8 @@ select.bpfilters
     option(data-filter=".allclass") All Class
 
 
-| &nbsp;&nbsp; Sort: &nbsp;
-select.bpsorts
+span.sort.title Sort:
+select.sort
     option(data-simple="1", data-sort="*") Original
     option(data-sort="quality") Quality
     option(data-sort="date") Date - Oldest to Newest

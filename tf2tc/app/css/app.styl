@@ -2,62 +2,19 @@
 @import 'fonts'
 
 
-blk = #000
-wht = #fff
-pal_brown1 = #F6E7DE
-pal_brown2 = #DABDAB
-pal_brown3 = #C1A18A
-pal_brown4 = #6A4534
-pal_brown5 = #452C25
-pal_orange1 = #F8B98A
-pal_orange2 = #F5AD87
-pal_orange3 = #EF9849
-pal_orange4 = #F18149
-pal_red1 = #913A1F
-pal_red2 = #BD3A3A
-pal_red3 = #9D302F
-pal_gray1 = #454545
-pal_gray2 = #1F1F1F
-pal_blue1 = #768A88
-pal_blue2 = #5B7A8C
-pal_blue3 = #385C78
-
-ui_brown1 = #2a2725 // main ui bg, disabled button text
-ui_brown2 = #3c352e // item bg
-ui_brown3 = #84756b // hover border color, separator line color
-ui_brown4 = #766b5e // inactive button bg
-ui_brown5 = #393431 // inactive border bg
-
-ui_white1 = #655d54 // h1 titles
-ui_white2 = #ece3cb // h2 titles, inactive button text
-ui_white3 = #837968 // inactive h1 titles
-
-ui_red1 = #c94f39 // counter text
-ui_red2 = #9D302F // button bg?
-
-ui_gray1 = #454545
-
-
-item_w = 80px
-item_h = (item_w * 0.85)
-base_w = 12px
-base_p = (base_w / 2)
-bord_w = (base_w / 4)
-
-
-font_build = "TF2Build"
-font_sec = "TF2secondary"
-
-
+//
+// basic html element styles
+//
 
 body, html
     height 100%
 
 body
-    color blk
-    background-color ui_brown1
+    color ui_white2
+    background-color ui_brown2
     font-family font_sec
     font-size 100%
+    overflow-x hidden
 
 h1, h2, h3, h4
     font-family font_build
@@ -70,8 +27,10 @@ a, a:visited, a:active, a:hover
     text-decoration none
 
 
-div.itemw
-    a-display inline-block
+//
+// game item styles
+//
+
 
 div.item
     display inline-block
@@ -83,6 +42,10 @@ div.item
     margin-right 4px
     margin-bottom 4px
 
+    img
+        border none
+        width  (item_w - (bord_w * 2))
+        height (item_w - (bord_w * 2))
 
 div.outline
     border bord_w solid lighten(pal_gray1, 75%)
@@ -92,71 +55,26 @@ div.outline
 div.untradable
     background-color pal_gray1
 
-
-#itemtip .untradable
-    background-color inherit
-
-
-div.item img
-    border none
-    width  (item_w - (bord_w * 2))
-    height (item_w - (bord_w * 2))
-
-
-qual(1,  #4d7455, #3a5840) // genuine
-qual(2,  #b2b2b2, #706e6e) // rare
-qual(3,  #476291, #6279a1) // vintage
-qual(5,  #874fad, #5a3c6b) // unusual
-qual(6,  #ffd800, #9d8617) // unique
-qual(7,  #70b04a, #4f6d3a) // community
-qual(8,  #a50f79, #691c51) // developer
-qual(9,  #70b04a, #4f6d3a) // self-made
-qual(10, #70b04a, #4f6d3a) // custom
-qual(11, #cd9b1d, #423618) // strange
-
-
-.ztop
-  z-index 9000
-
-
-#itemtip
-    opacity(0.95)
-    background-color pal_gray1
-    border bord_w - 1 solid #ccc
-    border-r(bord_w * 3)
-    padding base_w * 2
-    margin base_w
-    position absolute
-    text-align center
-    z-index 9000
-    overflow hidden
-
-    div
-        font-family font_sec
-    .name
-        font-family font_build
-    .level
-        color #756b5e
-    .ctrl
-        color wht
-        text-align left
-        font-family Andale Mono, monospace
-        font-size: 75%
-    .alt, .neutral, .killeater, .untradable
-        color #e4dbc4
-        white-space nowrap
-    .positive, .crafter
-        color #8dbceb
-    .negative
-        color #eb3b3b
-    .limiteduse
-        color green
-
-
 .deco
     width item_w
     height item_h
     position relative
+
+.deco.title
+    font-family font_build
+    font-size 10pt
+    position absolute
+    top 6px
+    left 0
+    text-align center
+    text-shadow blk 0 0 6px
+    color #ebe2ca
+
+.deco.title + img
+    margin-top 3px
+    margin-left 3px
+    height 72px
+    width 72px
 
 .tag
     background-repeat no-repeat
@@ -170,7 +88,6 @@ qual(11, #cd9b1d, #423618) // strange
 
 .tag-5020-5044
     background-image url('/images/tags/5020-5044.png')
-
 
 div.badge
     background-color blk
@@ -197,63 +114,63 @@ div.quantity
     top 3px
     left 3px
 
-.chooser-offer .itemw
-    position relative
 
-div.offer
-    font-family font_build
-    font-size 10pt
+//
+// the item tooltip styles
+//
+
+#itemtip
+    opacity(0.95)
+    background-color pal_gray1
+    border bord_w - 1 solid #ccc
+    border-r(bord_w * 3)
+    padding base_w * 2
+    margin base_w
     position absolute
-    top 6px
-    left 0
     text-align center
-    text-shadow blk 0 0 6px
-    color #ebe2ca
+    z-index 9000
+    overflow hidden
 
-.deco.offer + img
-    margin-top 3px
-    margin-left 3px
-    height 72px
-    width 72px
-
-
-.small-button
-    background-color pal_blue3 !important
-    border-r(0.35em)
-    color lighten(blk, 75%)
-    font-family font_build
-    text-align center
-    vertical-align middle
-    white-space nowrap !important
-    display inline-block
-    padding 0.5em
-    a-background -moz-linear-gradient(top, #dcd2ba, #9a8b6b)
-    a-background -webkit-gradient(linear, left top, left bottom, from(#dcd2ba), to(#9a8b6b))
-    font-size 80%
-    color wht
-
-
-.small-button:hover
-    background-color pal_red3 !important
-    a-background-color #512a20
-    a-background  -moz-linear-gradient(top, #995040, #512a20)
-    a-background  -webkit-gradient(linear, left top, left bottom, from(#995040), to(#512a20))
-
-.small-button:active
-    color lighten(blk, 50%)
+    div
+        font-family font_sec
+    .name
+        font-family font_build
+    .level
+        color #756b5e
+    .ctrl
+        color wht
+        text-align left
+        font-family Andale Mono, monospace
+        font-size: 75%
+    .alt, .neutral, .killeater, .untradable, .painted
+        color #e4dbc4
+        white-space nowrap
+    .positive, .crafter
+        color #8dbceb
+    .negative
+        color #eb3b3b
+    .limiteduse
+        color green
+    .untradable
+        background-color inherit
+    .painted:not(:empty)
+        margin-top 1em
+        &:before
+            content "Painted "
 
 
-.button-bar .small-button
-    margin-right 1em
-    width (base_w * 10)
 
 
+//
+// the site bar, at the top of the page
+//
 
 #site
     background-color wht
     border-top (bord_w/2) solid darken(wht, 50%)
-    border-bottom bord_w solid blk
+    border-bottom bord_w solid pal_blue1
     padding base_p base_p base_p base_w
+    color ui_brown2
 
     .logo, .auth
         vertical-align middle
@@ -273,86 +190,44 @@ div.offer
         padding-left (base_w * 2)
         padding-right (base_w * 2)
 
+
+//
+// the user block, for authorized users, just under the site bar.
+//
+
 #user
-    border-bottom bord_w solid blk
+    border-bottom bord_w solid pal_blue1
     padding base_w 0 base_w 0
+    background-color ui_brown1
 
-
-#backpack, #trades
-    margin-left (base_w*4)
-    margin-right (base_w*4)
-    color ui_white2
-
-#trades .tradescroll
-    margin-right (base_w*4)
-    height 500px
 
 #backpack
-    margin-top base_w
+    margin base_w (base_w*4) 0 (base_w*4)
     overflow hidden
-
-#channels
-    padding base_w
-    background-color darken(#fff, 35%)
-    not-height 100%
-
-
-.topw
-    padding-left base_w
-    color blk
-
-
-.bpscroll, .tradescroll
-    margin-left 0
-    background-color ui_brown1
-    color ui_white1
-    border-r(base_p)
-
-.chooser-alt
-    -a- none
-
-#backpack .bpscroll
-    overflow-y auto
-    height item_h * 4
-
-.tradescroll, .chooser .bpscrollaa
-    height item_h * 6
-
-.bpshell
-    margin 0
+    .scroll
+        background-color ui_brown1
+        border-r(base_p)
+        color ui_white1
+        height (item_h * 4)
+        margin-left 0
+        margin-bottom base_w
+        overflow-y auto
+    .shell
+        margin 0
 
 
-
-.mb1
-    margin-bottom base_w
-
-.mb2
-    margin-bottom (base_w * 2)
-
-.m2
-    margin (base_w * 2)
-
-.p2
-    padding (base_w * 2)
+#trades
+    margin 0 (base_w*4) 0 (base_w*4)
+    .scroll
+        background-color ui_brown1
+        border-r(base_p)
+        color ui_white1
+        height 500px
+        height item_h * 6
+        margin-left 0
+        margin-right (base_w*4)
 
 
-.mt1
-    margin-top base_w
-
-.mt05
-    margin-top (base_w/2)
-
-.debug, .debug1
-    border 1px dotted red
-
-.debug2
-    border 1px dotted green
-
-.debug3
-    border 1px dotted blue
-
-.debug4
-    border 1px dotted purple
 
 
 // channel stuff
@@ -437,7 +312,6 @@ div.offer
 
 
 div.trade
-    background-color blk
     padding base_p*2
     border-r(bord_w*2)
     trans(background-color, 1s)
@@ -464,7 +338,7 @@ div.trade
 
 
 div.trade:hover
-    background-color #222
+    background-color ui_brown5
     trans(background-color, 1s)
 
     .help
@@ -492,7 +366,6 @@ div.trade h1 span.status
     padding-left base_w
 
 
-
 div.player span.name
     margin-left base_p
     line-height 34px
@@ -514,42 +387,70 @@ img.offline, span.offline
     color #898989
 
 
+#channels
+    padding base_w
+    background-color ui_brown5
+    not-height 100%
+
 #channels td
     vertical-align top
 
 
-// need to fix this "ch means channel" and "ch means chooser"
-// business.
-
-
-.chooser-scroll, .channels-scroll
-    overflow-y auto !important
-
-.chooser-scroll
-    height 500px !important
-
-
-
-
-.chooser-group
-    margin-top base_w
-
-    a.button
-        width (base_w * 5)
-
-    h3.chooser-title, a.button
-        margin-bottom base_p
-
-    .chooserw
-        margin-bottom 0
-
-    .title
-        font-family font_build
-        margin-left base_w
+.chooser
+    .scroll
+        overflow-y auto !important
+        height 500px !important
 
 .main, .trade-show-notes
     color wht
 
-.ui-widget
+
+
+
+//
+// ui buttons and button containers
+//
+
+.button-bar .small-button
+    margin-right 1em
+    width (base_w * 10)
+
+.small-button
+    background-color pal_blue3 !important
+    border-r(0.35em)
+    color lighten(blk, 75%)
     font-family font_build
-    font-size 1em
+    text-align center
+    vertical-align middle
+    white-space nowrap !important
+    display inline-block
+    padding 0.5em
+    a-background -moz-linear-gradient(top, #dcd2ba, #9a8b6b)
+    a-background -webkit-gradient(linear, left top, left bottom, from(#dcd2ba), to(#9a8b6b))
+    font-size 80%
+    color wht
+
+
+.small-button:hover
+    background-color pal_red3 !important
+    a-background-color #512a20
+    a-background  -moz-linear-gradient(top, #995040, #512a20)
+    a-background  -webkit-gradient(linear, left top, left bottom, from(#995040), to(#512a20))
+
+.small-button:active
+    color lighten(blk, 50%)
+
+
+.filter.title
+    margin 0 6px 0 0
+
+.sort.title
+    margin 0 6px 0 18px
+
+//
+// whaaaa ?
+//
+
+.chooser-offer .itemw
+    position relative
+

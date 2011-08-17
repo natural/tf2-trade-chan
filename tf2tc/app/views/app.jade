@@ -18,6 +18,7 @@ html(lang="en")
             .alt
             .neutral
             .limiteduse
+            .painted
             .untradable
             .ctrl
 
@@ -26,7 +27,7 @@ html(lang="en")
                 h1 tf2 trade chan
 
             .auth.unit.size1of2.lastUnit
-                span.msg
+                span#site-msg
                 span#login.null
                     | Safe and Secure Login with Steam
                     a(href='/authenticate')
@@ -35,10 +36,10 @@ html(lang="en")
                     a.small-button(href='/logout') logout
 
         #user.null
-            .topw
-                .button-bar.bp.mb1
+            .pl1
+                .button-bar.mb1
                     a(href="#", class="small-button", data-target="#backpack", data-loaded="") Show Backpack
-                    span.msg
+                    span#backpack-msg
                     span.null Click this button to show your backpack.  You use your backpack to make trades.
                 #backpack.null.mb1
                     .mb1
@@ -48,14 +49,14 @@ html(lang="en")
                         | below, you can drag items from your backpack
                         | into your trades.
 
-                    .bptools.null
+                    .backpack-tools.null
                         include backpack_tools
-                    .bpscroll
-                        .bpshell
-            .topw
-                .button-bar.ch
+                    .scroll
+                        .shell
+            .pl1
+                .button-bar
                     a(href="#", class="small-button", data-target="#trades", data-loaded="") Show Trades
-                    span.msg
+                    span#trade-msg
                     span.null Click this button to show your trades.
                 #trades.null
                     .mb1.mt1
@@ -64,15 +65,15 @@ html(lang="en")
                         | to the wishlist area.  Then click little buttons.
 
                     .line
-                        .tradescroll.unit.size3of5
+                        .scroll.unit.size3of5
                             .tradeshell
-                        .chooser.unit.lastUnit.size2of5.chooser-alt
+                        .chooser.unit.size2of5.lastUnit
                             h3 Offer Types
                             .chooser-offer
                             h3.mt1 Specific Items
-                            .bptools.null
+                            .backpack-tools.null
                                 include backpack_tools
-                            .chooser-scroll
+                            .scroll
                                 .shell
 
         #channels
@@ -81,7 +82,7 @@ html(lang="en")
                 | see trades as they are added to the channel,
                 | and you can chat with other channel members.
 
-            .channels-scroll.button-bar
+            .button-bar
                 .mb1
                     a(href="#", class="small-button off", data-channel-name="commodities") Commodites
                 .mb1

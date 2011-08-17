@@ -112,6 +112,9 @@ exports.show = (e) ->
     if idef.flag_cannot_trade
         vals.untradable = '<br>( Not Tradable )'
 
+    # set the item paint name
+    vals.painted = SS.client.item.props(ns, idef).paintName() or ''
+
     # set the values
     for k, v of vals
         $(".#{k}", tip).html v
@@ -135,3 +138,4 @@ defaults = ->
     neutral:''
     positive: ''
     untradable: ''
+    painted: ''

@@ -28,7 +28,7 @@ exports.make = (ns, defn, type) ->
         </div>
     </div>"
 
-    prop = props ns, defn
+    prop = exports.props ns, defn
     sdefn = ns.schema_items[defn.defindex]
 
     item = $ 'div.item', itemw
@@ -40,7 +40,11 @@ exports.make = (ns, defn, type) ->
 
     ## add text for offer items
     offer = prop.offer()
-    img.before "<div class='deco offer'>#{defn.name}</div>" if offer
+    img.before "<div class='deco title'>#{defn.name}</div>" if offer
+
+    ## add text for new items
+    unplaced = prop.unplaced()
+    img.before '<div class="deco title">New</div>' if unplaced
 
     ## name tag and/or desc tag icon
     tag = prop.tag()
@@ -91,16 +95,29 @@ exports.make = (ns, defn, type) ->
     itemw
 
 
-props = (ns, defn) ->
-    selectAttr = (id) ->
+
+exports.props = (ns, defn) ->
+    attrById = (id) ->
         if defn.attributes
             x = (n for n in defn.attributes.attribute)
             try
                 (n for n in x when n.defindex==id)[0]
             catch e
                 null
+
+    attrByClass = (sdefn, name) ->
+        if sdefn.attributes
+            x = (n for n in sdefn.attributes.attribute)
+            try
+                (n for n in x when n.class==name)[0]
+            catch e
+                null
+
     equipped: ->
         (defn.inventory & 0xff0000) != 0
+
+    unplaced: ->
+        defn.inventory == 0
 
     tag: ->
         if defn.custom_desc and defn.custom_name
@@ -111,16 +128,27 @@ props = (ns, defn) ->
             '5044'
 
     paint: ->
-        p = selectAttr 142
+        p = attrById 142
         if p then p.float_value else null
 
+    paintName: ->
+        if not cache.tools
+            cache.tools = ns.schema_tools()
+        n = attrById 142
+        ## this doesn't cover team paints.  wha?
+        if n
+            av = n.float_value
+            for t in cache.tools
+                a = attrByClass t, 'set_item_tint_rgb'
+                if a and a.value == av
+                    return t.item_name
     effect: ->
         if defn.defindex==143
             99
         else if defn.defindex==1899
             20
         else
-            e = selectAttr 134
+            e = attrById 134
             if e then e.float_value else null
 
     useCount: ->
@@ -131,7 +159,7 @@ props = (ns, defn) ->
         defn.defindex < 0
 
     lowCraft: ->
-        e = selectAttr 229
+        e = attrById 229
         if (e and e.value < 101) then e.value else null
 
 
@@ -141,3 +169,8 @@ qualityName = (ns, id) ->
         ns.schema.result.qualityNames[keys[0]] or ''
     else
         'Unknown'
+
+
+cache =
+    tools: null
+

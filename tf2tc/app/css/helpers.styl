@@ -1,82 +1,132 @@
+blk = #000
+wht = #fff
+pal_brown1 = #F6E7DE
+pal_brown2 = #DABDAB
+pal_brown3 = #C1A18A
+pal_brown4 = #6A4534
+pal_brown5 = #452C25
+pal_orange1 = #F8B98A
+pal_orange2 = #F5AD87
+pal_orange3 = #EF9849
+pal_orange4 = #F18149
+pal_red1 = #913A1F
+pal_red2 = #BD3A3A
+pal_red3 = #9D302F
+pal_gray1 = #454545
+pal_gray2 = #1F1F1F
+pal_blue1 = #768A88
+pal_blue2 = #5B7A8C
+pal_blue3 = #385C78
+
+ui_brown1 = desaturate(#2a2725, 100%) // main ui bg, disabled button text
+ui_brown2 = desaturate(#3c352e, 100%) // item bg
+ui_brown3 = desaturate(#84756b, 100%) // hover border color, separator line color
+ui_brown4 = desaturate(#766b5e, 100%) // inactive button bg
+ui_brown5 = desaturate(#393431, 100%) // inactive border bg
+
+ui_white1 = desaturate(#655d54, 100%) // h1 titles
+ui_white2 = desaturate(#ece3cb, 100%) // h2 titles, inactive button text
+ui_white3 = desaturate(#837968, 100%) // inactive h1 titles
+
+ui_red1 = #c94f39 // counter text
+ui_red2 = #9D302F // button bg?
+
+ui_gray1 = #454545
+
+
+item_w = 80px
+item_h = (item_w * 0.85)
+base_w = 12px
+base_p = (base_w / 2)
+bord_w = (base_w / 4)
 
 
 vendor(prop, args)
-  -webkit-{prop} args
-  -moz-{prop} args
-  {prop} args
+    -webkit-{prop} args
+    -moz-{prop} args
+    {prop} args
 
 
 round(n)
-  vendor border-radius, n
+    vendor border-radius, n
 
 
 round-corner(tb, lr, n)
-  border-{tb}\-{lr}-radius n
-  -moz-border-radius-{tb}{lr} n
+    border-{tb}\-{lr}-radius n
+    -moz-border-radius-{tb}{lr} n
 
 
 border-r(n)
-  border-radius n
-  -moz-border-radius n
-  -webkit-border-radius n
-
+    border-radius n
+    -moz-border-radius n
+    -webkit-border-radius n
 
 
 box-shadow()
-  vendor box-shadow, arguments
+    vendor box-shadow, arguments
 
 
 opacity(n)
-  opacity n
-  -moz-opacity n
+    opacity n
+    -moz-opacity n
 
 
 vertical-gradient(from, to)
-  background-color to
-  background-image -webkit-gradient(linear, left top, left bottom, from(from), to(to))
-  background-image -moz-linear-gradient(top, from, to)
+    background-color to
+    background-image -webkit-gradient(linear, left top, left bottom, from(from), to(to))
+    background-image -moz-linear-gradient(top, from, to)
 
 
 trans(prop, len)
-  -moz-transition-duration  len
-  -moz-transition-property  prop
-  -webkit-transition-duration  len
-  -webkit-transition-property  prop
-  transition-duration len
-  transition-property prop
+    -moz-transition-duration  len
+    -moz-transition-property  prop
+    -webkit-transition-duration  len
+    -webkit-transition-property  prop
+    transition-duration len
+    transition-property prop
 
 
 qual(i, a, b)
-  .qual-text-{i}
-    color a !important
+    .qual-text-{i}
+        color a !important
+    .qual-border-{i}
+        border-color a !important
+    .qual-border-{i}:hover
+        border-color b !important
+    .qual-background-{i}:hover
+        background-color a !important
+    .qual-background-{i}
+        background-color b !important
+    .qual-hover-{i}:hover
+        background-color a !important
 
-  .qual-border-{i}
-    border-color a !important
-  .qual-border-{i}:hover
-    border-color b !important
 
-  .qual-background-{i}:hover
-    background-color a !important
-
-  .qual-background-{i}
-    background-color b !important
-
-  .qual-hover-{i}:hover
-    background-color a !important
+qual(1,  #4d7455, #3a5840) // genuine
+qual(2,  #b2b2b2, #706e6e) // rare
+qual(3,  #476291, #6279a1) // vintage
+qual(5,  #874fad, #5a3c6b) // unusual
+qual(6,  #ffd800, #9d8617) // unique
+qual(7,  #70b04a, #4f6d3a) // community
+qual(8,  #a50f79, #691c51) // developer
+qual(9,  #70b04a, #4f6d3a) // self-made
+qual(10, #70b04a, #4f6d3a) // custom
+qual(11, #cd9b1d, #423618) // strange
 
 
 eff(i)
-  .effect-{i}
-    background-image url('/images/effects/' + i + '.png')
+    .effect-{i}
+        background-image url('/images/effects/' + i + '.png')
 
 
 jwl(i)
-  .jewel-{i}
-    background-image url('/images/jewels/' + i + '.png')
+    .jewel-{i}
+        background-image url('/images/jewels/' + i + '.png')
+
 
 .jewel
     background-repeat no-repeat
     background-position right top
+
 
 jwl(1)
 jwl(10843461)
@@ -125,46 +175,53 @@ eff(99) // earbuds
 
 
 
-.clear-both
-  clear both
 
 .null
-  display none
-
-
-.float-right
-  float right
-
-.float-left
-  float left
-
-.w49
-  width 49%
-
-
-
-
-
-.text-center
-  text-align center
+    display none
 
 .text-middle, .text-middle img
-  vertical-align middle
+    vertical-align middle
+
+.m2
+    margin (base_w * 2)
+
+.mt1
+    margin-top base_w
+
+.mt05
+    margin-top (base_w/2)
+
+.mb1
+    margin-bottom base_w
+
+.mb2
+    margin-bottom (base_w * 2)
+
+.p2
+    padding (base_w * 2)
+
+.pl1
+    padding-left base_w
+
+.debug, .debug1
+    border 1px dotted red
+
+.debug2
+    border 1px dotted green
+
+.debug3
+    border 1px dotted blue
+
+.debug4
+    border 1px dotted purple
+
+.ztop
+    z-index 9000
 
 
-.text-right
-  text-align right
-
-.inline
-  display inline
-
-.inline-block
-  display inline-block
-
-
-
-
+//
 // stubbornella's grid
+//
 
 .line:before, .line:after
     content ""
@@ -224,22 +281,21 @@ eff(99) // earbuds
     _margin-right -3px
 
 
-/**** Isotope filtering ****/
+//
+// isotope filtering
+//
 
 .isotope-item
     z-index 2
-
 
 .isotope-hidden.isotope-item
     pointer-events none
     z-index 1
 
-
 .isotope, .isotope .isotope-item
     -webkit-transition-duration  0.75s
     -moz-transition-duration  0.75s
     transition-duration  0.75s
-
 
 .isotope
     -webkit-transition-property  height, width
@@ -250,5 +306,3 @@ eff(99) // earbuds
     -webkit-transition-property  -webkit-transform, opacity
     -moz-transition-property     -moz-transform, opacity
     transition-property          transform, opacity
-
-
