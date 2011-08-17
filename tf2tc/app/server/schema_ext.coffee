@@ -55,6 +55,7 @@ groups = (items) ->
     weapons: select (a, b) -> b.craft_class=='weapon' and b._t == ALWAYS
     unusual_hats: select (a, b) -> U in b._q and b.item_class=='tf_wearable'
     unusual_weapons: select (a, b) -> U in b._q and b.craft_class=='weapon'
+    strange_weapons: select (a, b) -> S in b._q and b.craft_class=='weapon'
 
 
 quals = (items) ->

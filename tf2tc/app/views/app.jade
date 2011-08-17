@@ -59,14 +59,14 @@ html(lang="en")
                     span#trade-msg
                     span.null Click this button to show your trades.
                 #trades.null
-                    .mb1.mt1
-                        | These are your trades.  Drag items from your backpack that you want
-                        | to put up for trade.  Drag items from the item selector on the left
-                        | to the wishlist area.  Then click little buttons.
-
-                    .line
+                    .line.mt1
                         .scroll.unit.size3of5
-                            .tradeshell
+                            .navigator
+                                span New Trade
+                                a.small-button.add-trade(href="#") +
+                                span Existing Trades
+                            .trades.shell
+
                         .chooser.unit.size2of5.lastUnit
                             h3 Offer Types
                             .chooser-offer

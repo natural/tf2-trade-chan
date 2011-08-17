@@ -325,13 +325,11 @@ div.trade
         opacity(0)
         trans(opacity, 1s)
 
-    .button-bar .small-button
-        margin-right 1em
-        width inherit
-
     .button-bar
         .small-button
             background-color pal_gray1 !important
+            margin-right 1em
+            width inherit
 
         .small-button:hover
             background-color pal_red3 !important
@@ -400,6 +398,10 @@ img.offline, span.offline
     .scroll
         overflow-y auto !important
         height 500px !important
+    h3
+        color darken(wht, 40%)
+        margin-bottom (base_p/2)
+
 
 .main, .trade-show-notes
     color wht
@@ -414,6 +416,20 @@ img.offline, span.offline
 .button-bar .small-button
     margin-right 1em
     width (base_w * 10)
+
+.navigator
+    padding-left base_p*2 // matches padding on previous sibling (.trade)
+    margin-bottom base_p
+
+    .small-button
+        width (base_w*2)
+        margin-right 1em
+        background-color pal_gray1 !important
+
+    .small-button:hover
+        background-color pal_red3 !important
+
+
 
 .small-button
     background-color pal_blue3 !important
@@ -441,11 +457,12 @@ img.offline, span.offline
     color lighten(blk, 50%)
 
 
-.filter.title
-    margin 0 6px 0 0
+.backpack-tools
 
-.sort.title
-    margin 0 6px 0 18px
+    .filter.title
+        margin 0 base_p 0 0
+    .sort.title
+        margin 0 base_p 0 (base_p*3)
 
 //
 // whaaaa ?

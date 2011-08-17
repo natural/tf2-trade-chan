@@ -51,12 +51,16 @@ initAuth = (ns) ->
         $('#trades').bind 'lazy-load', (e, cb) ->
             tm = $('#trade-msg').text 'Loading...'
             ch = $ '.chooser', @
-            tg = $ '#trades .tradeshell'
+            tg = $ '#trades .trades.shell'
+            nv = $ '#trades .navigator'
             initTradeEvents ns, tg
+            initTradeNav ns, nv, tg
             putChooser ns, ch, ->
                 tm.text ''
                 getTrades (trades) ->
-                    putTrades ns, trades, tg, cb
+                    putTrades ns, trades, tg, ->
+                        $('.trade:first', tg).show()
+                        cb()
 
 
 # initialize jquery with our little plugins and add our little object
@@ -64,7 +68,7 @@ initAuth = (ns) ->
 initExt = ($) ->
     $.fn.resetQualityClasses = (v) ->
         @.each ->
-            for q of exports.ns.schema_qualities
+            for q of getNS().schema_qualities
                 $(@).removeClass "qual-border-#{q} qual-hover-#{q} qual-text-#{q}"
             $(@).addClass v
 
@@ -284,9 +288,9 @@ makeEmptyTrade = () ->
 
 
 # create and display an element for the trade at the target.
-putTrade = (ns, tid, trade, target) ->
+putTrade = (ns, tid, trade, target, hidden=false) ->
     trade = JSON.parse trade
-    target.append $('#trade-proto').tmpl(tid:"##{tid}").data('trade-id', tid)
+    target.append $('#trade-proto').tmpl(tid:"##{tid}").data('trade-id', tid).attr('data-tid', tid)
     last = $ '.trade:last', target
     if trade.text
         $('.trade-show-notes', last).text trade.text
@@ -305,20 +309,29 @@ putTrade = (ns, tid, trade, target) ->
     for want in trade.want.concat(empties)[0..7]
         putItem ns, want, targ, 'want chooser'
     $('.haves, .wants', last).isotope isoOpts()
+    if hidden
+        last.hide()
+    nav = $ '.navigator', target.parent()
+    nav.append "<a href='#' class='small-button show-trade' data-tid='#{tid}'>#{tid}</a>"
+    #data-id='#{tid}'>#{tid}</a>"
 
 
 # create and display elements for the given trades at the target.
 putTrades = (ns, trades, target, cb) ->
-    if trades and trades.success
-        putTrade ns, tid, trd, target for tid, trd of trades.trades
-    target.append makeEmptyTrade()
+    some = ->
+        try
+            (x for x of trades.trades).length > 0
+        catch e
+            false
+    if some()
+        putTrade ns, tid, trd, target, true for tid, trd of trades.trades
+    else
+        target.append makeEmptyTrade()
     trigger.newTradeSlots target
-
     doLater 500, ->
         $('.haves', target).isotope()
         $('.wants', target).isotope()
-
-    cb()
+    cb() if cb
 
 
 # update the trade element based on changes to its content.
@@ -350,14 +363,21 @@ initTradeEvents = (ns, target) ->
         p = parentTrade e
         tid = p.data('trade-id')
         deleteTrade tid, (status) ->
+            ## trigger trade delete so the navigator can remove it?
+
             p.children('div').slideUp()
             $('h1:first .main', p).text ''
-            $('h1:first .status', p).text(if tid then 'Closed!' else 'Cleared!').fadeIn().delay(2000).fadeOut 'fast', () ->
-                n = makeEmptyTrade()
-                p.replaceWith n
-                trigger.newTradeSlots n
-                trigger.newChooserItems n
-                $('#trades .tradeshell .haves, #trades .tradeshell .wants').isotope()
+            $('h1:first .status', p).text(if tid then 'Closed!' else 'Cleared!')
+                .fadeIn()
+                .delay(1500)
+                .fadeOut () ->
+                    n = makeEmptyTrade()
+                    p.replaceWith n
+                    trigger.newTradeSlots n
+                    trigger.newChooserItems n
+                    $('#trades .shell .haves, #trades .shell .wants').isotope()
+                    if tid
+                        trigger.tradeDeleted tid
         false
 
     $('a.trade-submit', target).live 'click', (e) ->
@@ -368,11 +388,18 @@ initTradeEvents = (ns, target) ->
         text = $('.trade-edit-notes textarea', p).val()
         if have and have.length
             publishTrade have:have, want:want, tid:tid, text:text, (status) ->
-                p.data('trade-id', status.tid) if status.success
-                $('h1:first .main', p).text("Trade ##{status.tid}")
-                $('h1:first .status', p).text(if tid then 'Updated!' else 'Submitted!').delay(5000).fadeOut()
-                $('a.trade-submit', p).slideUp()
-                $('a.trade-delete', p).text('Close')
+                if status.success
+                    p.data('trade-id', status.tid)
+                    $('h1:first .main', p).text("Trade ##{status.tid}")
+                    $('h1:first .status', p)
+                        .text(if tid then 'Updated!' else 'Submitted!')
+                        .delay(2500)
+                        .fadeOut()
+                    $('a.trade-submit', p).slideUp()
+                    $('a.trade-delete', p).text('Close')
+                    if not tid
+                        trigger.tradeAdded status.tid
+                # else show some error -- trade not submitted
         false
 
     $('a.trade-notes', target).live 'click', (e) ->
@@ -389,20 +416,42 @@ initTradeEvents = (ns, target) ->
 
     $('div.item.chooser', target).live 'click', (e) ->
         item = $ e.currentTarget
-        id = item.data('item-defn').defindex
-        qualseq = ns.schema.ext.quals[id]
-        qualc = item.data 'qual'
-        if qualc?
-            i = qualseq.indexOf qualc
-        else
-            i = 1
-        j = qualseq[(i+1) % qualseq.length]
-        item.data 'qual', j
-        item.resetQualityClasses "qual-border-#{j} qual-hover-#{j}"
-        item.data('item-defn').quality = j
-        item.trigger('mouseout').trigger 'mouseover'
+        defn = item.data 'item-defn'
+        qval = item.data 'disp-qual'
+        qseq = ns.schema.ext.quals[defn.defindex]
+        i = qseq.indexOf (if qval? then qval else defn.quality)
+        q = defn.quality = qseq[(i+1) % qseq.length]
+        item
+            .data('disp-qual', q)
+            .resetQualityClasses("qual-border-#{q} qual-hover-#{q}")
+            .trigger('mouseout')
+            .trigger('mouseover')
         trigger.tradeChanged parentTrade(e)
         false
+
+
+initTradeNav = (ns, nav, context) ->
+    $('a.add-trade', nav).click (e) ->
+        $('.trade', context).slideUp ->
+            ## FIXME:  show/hide borked on add new
+            putTrades ns, null, context
+        false
+
+    $('a.show-trade', nav).live 'click', (e) ->
+        tid = $(e.currentTarget).attr 'data-tid'
+        par = $ '.trade:visible', context
+        if par.attr('data-tid') != tid
+            par.slideUp ->
+                trd = $ ".trade[data-tid=#{tid}]"
+                trd.slideDown ->
+                    $('.haves, .wants', trd).isotope isoOpts()
+        false
+
+    $(document).bind 'trade-added', (e, tid) ->
+        nav.append "<a href='#' class='small-button show-trade' data-tid='#{tid}'>#{tid}</a>"
+
+    $(document).bind 'trade-deleted', (e, tid) ->
+        $("a.show-trade[data-tid=#{tid}]").fadeOut().detach()
 
 
 leaveChannel = (channel, context) ->
@@ -441,7 +490,7 @@ joinChannel = (channel, context) ->
         $(".id64-#{player}:nth(0)").fadeOut().detach()
 
     addTrade = (trade) ->
-        ns = exports.ns
+        ns = getNS()
         target = $('.chtrade', chan)
         tid = trade.tid
         target.append $('#channel-trade').tmpl(tid:"##{tid}").data('trade-id', tid)
@@ -507,7 +556,7 @@ joinChannel = (channel, context) ->
                 do (trade) ->
                     addTrade JSON.parse(trade)
 
-    which = if exports.ns.auth then '.chsay' else '.chanon'
+    which = if getNS().auth then '.chsay' else '.chanon'
     $(which, chan).fadeIn()
 
 
@@ -623,21 +672,17 @@ isoOpts = (o) ->
 clone = (o) -> JSON.parse JSON.stringify(o)
 
 clone.defn = (id) -> clone getNS().schema_items[id]
-
 clone.genuine = (id) -> clone.qual id, 1
-
+clone.strange = (id) -> clone.qual id, 11
 clone.unique = (id) -> clone.qual id, 6
-
 clone.unusual = (id) -> clone.qual id, 5
-
 clone.vintage = (id) -> clone.qual id, 3
-
 clone.qual = (id, q) ->
     x = clone.defn id
     x.quality = q
     x
 
-getNS = -> SS.client.app.ns
+getNS = -> exports.ns
 
 parentTrade = (ev) -> $(ev.currentTarget).parents 'div.trade'
 
@@ -749,7 +794,8 @@ trigger =
     newChooserItems:  (s) -> $(document).trigger 'new-chooser-items', s
     newTradeSlots:    (s) -> $(document).trigger 'new-trade-slots', s
     tradeChanged:     (s) -> $(document).trigger 'trade-changed', s
-
+    tradeAdded:       (s) -> $(document).trigger 'trade-added', s
+    tradeDeleted:     (s) -> $(document).trigger 'trade-deleted', s
 
 
 makeChooserItems = (ns) ->
@@ -775,6 +821,8 @@ makeChooserItems = (ns) ->
         '.genuine'          : -> mk ns, clone.genuine(id), ch for id in gs.genuine_weapons.concat gs.genuine_hats
         '.genuine.weapon'   : -> mk ns, clone.genuine(id), ch for id in gs.genuine_weapons
         '.genuine.wearable' : -> mk ns, clone.genuine(id), ch for id in gs.genuine_hats
+
+        '.strange'          : -> mk ns, clone.strange(id), ch for id in gs.strange_weapons
 
         byClass     : (n) -> i for i in items['*']() when i.hasClass(n)
         '.scout'    : -> items.byClass 'scout'

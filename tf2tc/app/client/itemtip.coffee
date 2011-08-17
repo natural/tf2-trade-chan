@@ -26,7 +26,6 @@ exports.show = (e) ->
 
     # determine the item name
     type = sdef.item_type_name
-                .replace('TF_Wearable_Hat', 'Wearable Item')
                 .replace('TF_LockedCrate', 'Crate')
     vals.level = "Level #{idef.level} #{type}" if idef.level?
     if idef.custom_name
