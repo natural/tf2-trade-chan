@@ -86,6 +86,15 @@ trans(prop, len)
     transition-property prop
 
 
+size(val)
+    -webkit-transform scale(val)
+    -moz-transform scale(val)
+    transform scale(val)
+    transform-origin 0 0
+    -webkit-transform-origin 0 0
+    -moz-transform-origin 0 0
+
+
 qual(i, a, b)
     .qual-text-{i}
         color a !important
@@ -184,6 +193,9 @@ eff(99) // earbuds
 
 .m2
     margin (base_w * 2)
+
+.mr1
+    margin-right base_w
 
 .mt1
     margin-top base_w

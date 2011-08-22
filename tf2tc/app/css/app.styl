@@ -11,7 +11,8 @@ body, html
 
 body
     color ui_white2
-    background-color ui_brown2
+    a-background-color ui_brown2
+    background-color ui_brown1
     font-family font_sec
     font-size 100%
     overflow-x hidden
@@ -30,7 +31,6 @@ a, a:visited, a:active, a:hover
 //
 // game item styles
 //
-
 
 div.item
     display inline-block
@@ -196,9 +196,8 @@ div.quantity
 //
 
 #user
-    border-bottom bord_w solid pal_blue1
     padding base_w 0 base_w 0
-    background-color ui_brown1
+
 
 
 #backpack
@@ -222,50 +221,65 @@ div.quantity
         background-color ui_brown1
         border-r(base_p)
         color ui_white1
-        height 500px
-        height item_h * 6
         margin-left 0
         margin-right (base_w*4)
+
+
+    .wants
+        size(0.85)
 
 
 
 
 // channel stuff
 
+#channels
+    padding base_w
+    background-color ui_brown5
+
+    .haves
+        size(0.85)
+
+    .wants
+        size(0.7)
+
+    .trades
+        overflow-y auto
+        height 250px !important
+
+    .trade
+        padding-left base_w
+
+        .who
+            color ui_blue2
+
+        .who:not(:empty):before
+            content "posted by "
+
+    .trade:nth-child(even)
+        background-color pal_gray2
 
 
-
-.chchat
-    border 1px solid pal_gray1
-    background-color pal_gray2
-    border-r(base_p)
-    color wht
-    padding (base_p)
-    margin-right base_p
-
-
-// the div with the list of channel users
-.chusers
-    overflow-x hidden
-    overflow-y scroll !important
-    height 200px
-    margin-left base_p
-
-.chsay
-    border 1px solid blue
-
+#channels .say
     input[type=text]
-        border 1px solid green
-        width 95%
         padding base_p
         font-family monospace
+        margin 0 12px 0 auto
+        width 98%
 
-
-
-.chtalk
+#channels .talk, #channels .users
+    height 200px
     overflow-x hidden
+    border-r(base_p)
+    background-color pal_gray1
+    padding base_p
+    margin-bottom base_w
+
+
+#channels .talk
     font-family monospace
-    margin-right (base_w/2)
+    margin-right base_p
+    background-color pal_gray2
 
     .sys
         color lighten(pal_gray1, 75%)
@@ -278,6 +292,14 @@ div.quantity
 
     .timestamp:after
         content "]"
+
+    span.user:before
+        content: "<"
+        color lighten(pal_gray1, 75%)
+
+    span.user:after
+        content: "> "
+        color lighten(pal_gray1, 75%)
 
     span.trade
         font-weight bold
@@ -297,13 +319,6 @@ div.quantity
         color pal_brown3
         &:before
             content "changed "
-
-
-.chtrade
-    padding base_w
-    border 1px solid pal_blue2
-
-
 
 
 .help
@@ -344,18 +359,15 @@ div.trade:hover
         trans(opacity, 1s)
 
 
-.trade-show-notes:not(:empty)
+pre.notes:not(:empty)
     border 1px solid pal_gray1
     padding base_p
-    font-family Andale Mono, monospace
-    font-size 90%
-    width 60%
+    -a-overflow-y scroll
+    a-height 8em
 
-.trade-edit-notes textarea
+div.notes textarea
     height 8em
-    width 60%
-    font-family Andale Mono, monospace
-    font-size 90%
+
 
 
 
@@ -385,26 +397,27 @@ img.offline, span.offline
     color #898989
 
 
-#channels
-    padding base_w
-    background-color ui_brown5
-    not-height 100%
-
-#channels td
-    vertical-align top
 
 
 .chooser
     .scroll
         overflow-y auto !important
-        height 500px !important
+        height 250px !important
     h3
         color darken(wht, 40%)
         margin-bottom (base_p/2)
 
 
-.main, .trade-show-notes
+#trades .chooser .scroll .shell, #trades .chooser-offer
+    size(0.85)
+
+.main, .notes
     color wht
+
+.notes, .notes textarea
+    font-family Andale Mono, monospace
+    font-size 90%
+    width 95%
 
 
 
@@ -422,7 +435,7 @@ img.offline, span.offline
     margin-bottom base_p
 
     .small-button
-        width (base_w*2)
+        min-width (base_w*2)
         margin-right 1em
         background-color pal_gray1 !important
 
@@ -458,7 +471,6 @@ img.offline, span.offline
 
 
 .backpack-tools
-
     .filter.title
         margin 0 base_p 0 0
     .sort.title
@@ -470,4 +482,38 @@ img.offline, span.offline
 
 .chooser-offer .itemw
     position relative
+
+
+// solemn vow
+.defn-413
+    img
+        height 64px !important
+        position absolute
+        clip rect(0px, 64px, 52px, 0px)
+
+
+// gunboats
+.defn-133
+    img
+        margin-top 6px
+
+
+// mask of the shaman
+.defn-514
+    img
+        margin-left 4px
+
+
+// professor speks
+.defn-343
+    img
+        margin-top -3px
+
+// col roule
+.defn-483
+    img
+        margin-top -10px
+
+
+
 

@@ -13,7 +13,6 @@ exports.ns = {}
 # an initial authorization.
 exports.init = ->
     SS.server.app.init (details) ->
-        console.log 'init details:', details
         initExt jQuery
         msg = $('#site-msg').text 'Loading schema...'
         getSchema exports.ns, ->
@@ -34,7 +33,7 @@ initAnon = ->
 initAuth = (ns) ->
     getProfile (profile) ->
         $('#logout').prepend("Welcome, #{profile.personaname}.").show()
-        $('#user').slideDown()
+        #$('#user').slideDown()
 
         $('#backpack').bind 'lazy-load', (e, cb) ->
             bm = $('#backpack-msg').text 'Loading...'
@@ -87,6 +86,16 @@ initExt = ($) ->
 
 # initialize some fixed, well-known selectors with event handers.
 initEvents = (ns) ->
+    $('#main-chat').click ->
+        if not $('#channels').is ':visible'
+            $('#channels, #user').toggle()
+        false
+
+    $('#main-trade').click ->
+        if not $('#user').is ':visible'
+            $('#channels, #user').toggle()
+        false
+
 
     # bind the trade changed event to the singular handler
     $(document).bind 'trade-changed', adjustTradeUI
@@ -119,7 +128,7 @@ initEvents = (ns) ->
             targets = $('div.item.want:empty', target).droppable CCA.dropOpts()
             $(source)
                 .tradableItems()
-                .bind('dblclick.chooser', {target:target, selector:'div.item.want:empty:first'}, CCA.copyToTrade)
+                .bind('dblclick', {target:target, selector:'div.item.want:empty:first'}, CCA.copyToTrade)
                 .draggable(CCA.dragOpts())
 
     # live bind the mouse hover events to the show/hide item tip
@@ -127,6 +136,9 @@ initEvents = (ns) ->
     $('div.item:not(:empty)')
         .live('mouseover', namespace:ns, showItemTip)
         .live('mouseout',  namespace:ns, hideItemTip)
+
+    $('div.item')
+        .live('mousedown', -> false)
 
     # bind the logout button to this local helper
     $('#logout a').click ->
@@ -161,7 +173,7 @@ initEvents = (ns) ->
 
     # live bind the chat text entry fields to the chat channel publish
     # handler
-    $('#channels .shell .chsay input[type=text]').live 'keydown', (e) ->
+    $('#channels .shell .say input[type=text]').live 'keydown', (e) ->
         if e.keyCode == 13
             inp = $ e.currentTarget
             txt = inp.attr 'value'
@@ -181,6 +193,13 @@ initEvents = (ns) ->
     SS.events.on 'trd-msg', (m) ->
         getChannelArea(m.channel).trigger "trade-#{m.action}", m
 
+
+    $('#test').click (e) ->
+        console.log "EVENT 1"
+        return false
+
+    $('#test').click ->
+        console.log "EVENT 2!"
 
 # create items from a backpack at the given target.
 putBackpack = (ns, target, cb) ->
@@ -290,11 +309,11 @@ makeEmptyTrade = () ->
 # create and display an element for the trade at the target.
 putTrade = (ns, tid, trade, target, hidden=false) ->
     trade = JSON.parse trade
-    target.append $('#trade-proto').tmpl(tid:"##{tid}").data('trade-id', tid).attr('data-tid', tid)
+    target.append $('#trade-proto').tmpl(tid:"##{tid}").attr('data-tid', tid)
     last = $ '.trade:last', target
     if trade.text
-        $('.trade-show-notes', last).text trade.text
-        $('.trade-edit-notes textarea', last).val trade.text
+        $('pre.notes', last).text trade.text
+        $('div.notes textarea', last).val trade.text
 
     $('a.trade-submit', last).hide()
     empties = (null for i in [0..7])
@@ -311,9 +330,11 @@ putTrade = (ns, tid, trade, target, hidden=false) ->
     $('.haves, .wants', last).isotope isoOpts()
     if hidden
         last.hide()
-    nav = $ '.navigator', target.parent()
-    nav.append "<a href='#' class='small-button show-trade' data-tid='#{tid}'>#{tid}</a>"
-    #data-id='#{tid}'>#{tid}</a>"
+
+    trigger.tradeAdded tid
+    trigger.newTradeSlots target
+    #trigger.newChooserItems target
+    #doLater 500, -> trigger.tradeChanged last
 
 
 # create and display elements for the given trades at the target.
@@ -327,7 +348,9 @@ putTrades = (ns, trades, target, cb) ->
         putTrade ns, tid, trd, target, true for tid, trd of trades.trades
     else
         target.append makeEmptyTrade()
-    trigger.newTradeSlots target
+        trigger.newTradeSlots target
+        #trigger.newChooserItems target
+
     doLater 500, ->
         $('.haves', target).isotope()
         $('.wants', target).isotope()
@@ -336,7 +359,7 @@ putTrades = (ns, trades, target, cb) ->
 
 # update the trade element based on changes to its content.
 adjustTradeUI = (e, tc) ->
-    existing = $(tc).data 'trade-id'
+    existing = $(tc).attr 'data-tid'
     have = $ 'div.item.backpack:not(:empty)', tc
     if have.length
         $('a.trade-submit', tc).text(if existing then 'Update' else 'Submit').slideDown()
@@ -354,17 +377,16 @@ adjustTradeUI = (e, tc) ->
 
     if $('.item.want:empty', tc).length == 0
        $('.wants', tc).isotope 'insert', makeItem(getNS(), null, 'want chooser')
-       trigger.newChooserItems tc
+       #trigger.newChooserItems tc
 
 
-
+# live bind the trade manipulation buttons to handlers for submit,
+# delete, update, etc.
 initTradeEvents = (ns, target) ->
     $('a.trade-delete', target).live 'click', (e) ->
         p = parentTrade e
-        tid = p.data('trade-id')
+        tid = p.attr('data-tid')
         deleteTrade tid, (status) ->
-            ## trigger trade delete so the navigator can remove it?
-
             p.children('div').slideUp()
             $('h1:first .main', p).text ''
             $('h1:first .status', p).text(if tid then 'Closed!' else 'Cleared!')
@@ -374,7 +396,7 @@ initTradeEvents = (ns, target) ->
                     n = makeEmptyTrade()
                     p.replaceWith n
                     trigger.newTradeSlots n
-                    trigger.newChooserItems n
+                    #trigger.newChooserItems n
                     $('#trades .shell .haves, #trades .shell .wants').isotope()
                     if tid
                         trigger.tradeDeleted tid
@@ -382,14 +404,14 @@ initTradeEvents = (ns, target) ->
 
     $('a.trade-submit', target).live 'click', (e) ->
         p = parentTrade e
-        tid = p.data 'trade-id'
+        tid = p.attr 'data-tid'
         have = ($(i).data('item-defn') for i in $('div.backpack', p))
         want = ($(i).data('item-defn') for i in $('div.chooser', p))
-        text = $('.trade-edit-notes textarea', p).val()
+        text = $('div.notes textarea', p).val()
         if have and have.length
             publishTrade have:have, want:want, tid:tid, text:text, (status) ->
                 if status.success
-                    p.data('trade-id', status.tid)
+                    p.attr('data-tid', status.tid)
                     $('h1:first .main', p).text("Trade ##{status.tid}")
                     $('h1:first .status', p)
                         .text(if tid then 'Updated!' else 'Submitted!')
@@ -404,14 +426,14 @@ initTradeEvents = (ns, target) ->
 
     $('a.trade-notes', target).live 'click', (e) ->
         p = parentTrade(e)
-        if $('.trade-edit-notes', p).is(':visible')
+        if $('div.notes', p).is(':visible')
             # done editing
-            txt = $('.trade-edit-notes textarea', p).val()
-            $('.trade-show-notes', p).text(txt)
+            txt = $('div.notes textarea', p).val()
+            $('pre.notes', p).text(txt)
         else
-            txt = $('.trade-show-notes', p).text()
-            $('.trade-edit-notes textarea', p).val(txt)
-        $('.trade-edit-notes, .trade-show-notes', p).slideToggle()
+            txt = $('pre.notes', p).text()
+            $('div.notes textarea', p).val(txt)
+        $('div.notes, pre.notes', p).slideToggle()
         false
 
     $('div.item.chooser', target).live 'click', (e) ->
@@ -430,14 +452,23 @@ initTradeEvents = (ns, target) ->
         false
 
 
+# initialize the trade navigator with bindings to handlers to show
+# existing trades and a single new trade element.  also binds the
+# document to the trade-added and trade-deleted events so the
+# navigator can update its elements.
 initTradeNav = (ns, nav, context) ->
-    $('a.add-trade', nav).click (e) ->
-        $('.trade', context).slideUp ->
-            ## FIXME:  show/hide borked on add new
-            putTrades ns, null, context
+    $('a.new', nav).click (e) ->
+        par = $ '.trade:visible', context
+        if par.attr('data-tid')
+            $('.trade', context).slideUp ->
+                existing = $(".trade:not([data-tid])", context)
+                if existing.length
+                    existing.first().slideDown()
+                else
+                    putTrades ns, null, context
         false
 
-    $('a.show-trade', nav).live 'click', (e) ->
+    $('a.show', nav).live 'click', (e) ->
         tid = $(e.currentTarget).attr 'data-tid'
         par = $ '.trade:visible', context
         if par.attr('data-tid') != tid
@@ -448,10 +479,10 @@ initTradeNav = (ns, nav, context) ->
         false
 
     $(document).bind 'trade-added', (e, tid) ->
-        nav.append "<a href='#' class='small-button show-trade' data-tid='#{tid}'>#{tid}</a>"
+        nav.append "<a href='#' class='small-button show' data-tid='#{tid}'>#{tid}</a>"
 
     $(document).bind 'trade-deleted', (e, tid) ->
-        $("a.show-trade[data-tid=#{tid}]").fadeOut().detach()
+        $("a.show[data-tid=#{tid}]").fadeOut().detach()
 
 
 leaveChannel = (channel, context) ->
@@ -467,57 +498,57 @@ joinChannel = (channel, context) ->
                .data('cname', channel)
                .slideDown()
 
-    talk = $ '.chtalk', chan
+    talk = $ '.talk', chan
 
     addStatus = (player) ->
         readProfileStatus player, (profile) ->
-            p = $('#channel-player').tmpl()
-            $('.shell .chusers', context).append p
+            p = $('#channel-player').tmpl().addClass("id64-#{player}")
+            $('.shell .users', context).append p
             $('a', p).attr 'href', "http://steamcommunity.com/profiles/#{player}"
-            p.addClass("id64-#{player}")
 
             name = $('.name', p)
-            name.text profile.personaname
-            name.addClass "#{profile.state}"
-            name.fadeIn()
+                .text(profile.personaname)
+                .addClass("#{profile.state}")
+                .fadeIn()
 
             img = $('img.avatar', p)
-            img.addClass "#{profile.state}"
-            img.attr 'src', profile.avatar
-            img.fadeIn()
+                .addClass("#{profile.state}")
+                .attr('src', profile.avatar)
+                .fadeIn()
 
     delStatus = (player) ->
         $(".id64-#{player}:nth(0)").fadeOut().detach()
 
     addTrade = (trade) ->
         ns = getNS()
-        target = $('.chtrade', chan)
+        target = $('.trades', chan)
         tid = trade.tid
-        target.append $('#channel-trade').tmpl(tid:"##{tid}").data('trade-id', tid)
-        last = $('.trade:last', target)
+        target.prepend $('#channel-trade').tmpl(tid:"##{tid}").attr('data-tid', tid)
+        last = $('.trade:first', target)
         last.addClass "trade-#{tid}"
         if trade.text
-            $('.trade-show-notes', last).text trade.text
-
-        empties = (null for i in [0..7])
+            $('pre.notes', last).text trade.text[0..256]
 
         targ = $('.haves', last)
-        $('.itemw', targ).detach()
-        for have in trade.have.concat(empties)[0..7]
-            putItem ns, have, targ, 'have backpack'
+        putItem ns, have, targ, 'have backpack' for have in trade.have
 
         targ = $('.wants', last)
-        $('.itemw', targ).detach()
-        for want in trade.want.concat(empties)[0..7]
-            putItem ns, want, targ, 'want chooser'
+        putItem ns, want, targ, 'want chooser' for want in trade.want
 
-        $('.haves, .wants', last).isotope isoOpts()
+        $('.haves, .wants', last).isotope isoOpts(layoutMode:'fitRows')
+        last.slideDown ->
+            doLater 500, -> $('.haves, .wants', last).isotope()
 
-        last.slideDown (->$('.haves, .wants', last).isotope())
-        console.log "TRADE:", trade
+        readProfileStatus trade.uid, (s) ->
+            $('h1 .who', last).text s.personaname
+
 
     delTrade = (tid) ->
         $(".trade-#{tid}", chan).fadeOut().delay(2000).detach()
+
+    updTrade = (trade) ->
+        delTrade trade.tid
+        addTrade trade
 
     chan.bind 'channel-joined', (e, m) ->
         talk.addTalk makeSysMsg(m)
@@ -539,7 +570,8 @@ joinChannel = (channel, context) ->
         delTrade m.tid
 
     chan.bind 'trade-upd', (e, m) ->
-        console.log 'trade updated:', m, ' this channel is', channel
+        #console.log 'trade updated:', m, ' this channel is', channel
+        updTrade m
 
     SS.server.channels.listUsers channel:channel, (players) ->
         for player in players
@@ -556,25 +588,26 @@ joinChannel = (channel, context) ->
                 do (trade) ->
                     addTrade JSON.parse(trade)
 
-    which = if getNS().auth then '.chsay' else '.chanon'
-    $(which, chan).fadeIn()
+    which = if getNS().auth then '.say' else '.anon'
+    $(which, chan).fadeIn ->
+        $('input', @).focus() #.width $(@).parent().width()
 
 
 getChannelArea = (name) -> $ "#channels .shell.cname-#{name}"
 
 
-getTalkArea = (name) -> $ '.chtalk', getChannelArea(name)
+getTalkArea = (name) -> $ '.talk', getChannelArea(name)
 
 
 makeSysMsg = (m) ->
     t = new Date().toLocaleTimeString()
-    "<span class='timestamp'>#{t}</span> <span class='sys'>system: #{m.who} has #{m.what} the channel.</span><br>"
+    "<span class='timestamp'>#{t}</span> <span class='sys'>#{m.who} has #{m.what} the channel.</span><br>"
 
 
 makeUserMsg = (m) ->
     t = new Date().toLocaleTimeString()
     x = $("<span>#{m.text}</span>").text()
-    "<span class='timestamp'>#{t}</span> <span class='user'>#{m.who}: </span>#{x}<br>"
+    "<span class='timestamp'>#{t}</span> <span class='user'>#{m.who}</span>#{x}<br>"
 
 
 makeTradeMsg = (m) ->
@@ -662,7 +695,7 @@ isoOpts = (o) ->
         if $.browser.mozilla then 'jquery' else 'best-available'
     opts =
         itemSelector: '.itemw'
-        layoutMode: 'cellsByRow'
+        layoutMode: 'masonry'
         animationEngine: getAniEngine()
         animationOptions:
             duration: 750
@@ -712,7 +745,7 @@ BCA = # backpack copy actions
     copyToTrade: (e) ->
         s = $ e.currentTarget
         i = s.data('item-defn').id
-        avail = (x for x in $('.trade', e.data.target) when i not in ($(x).data('ids') or []))
+        avail = (x for x in $('.trade:visible', e.data.target) when i not in ($(x).data('ids') or []))
         if avail
             a = $ avail[0]
             t = $ e.data.selector, a
@@ -750,7 +783,11 @@ CCA =  # chooser copy actions
     copy: (a, b) ->
         c = a.clone(true, true).unbind()
         t = b.parents '.trade'
-        id = a.data('item-defn').id
+        try
+            id = a.data('item-defn').id
+        catch err
+            console.log "ERR:", err, a, a.data('item-defn')
+            return
         r = b.clone(false, false)
         c.data 'item-defn', clone(a.data('item-defn'))
         b.replaceWith c
@@ -763,12 +800,18 @@ CCA =  # chooser copy actions
             trigger.tradeChanged t
 
     copyToTrade: (e) ->
+        e.stopImmediatePropagation()
         s = $ e.currentTarget
-        avail = (x for x in $('.trade', e.data.target))
+        avail = (x for x in $('.trade:visible', e.data.target))
         if avail and avail.length
             a = $ avail[0]
             t = $ 'div.item.want:empty:first', a
-            CCA.copy s, t
+            if s.parents('.trade').length
+                console.log 'CCA copy:',s, t, e
+                #s.detach()
+                #trigger.tradeChannged s.parents('.trade')
+            else
+                CCA.copy s, t
         # else alert or message or something
 
     dragOpts: ->
@@ -799,30 +842,30 @@ trigger =
 
 
 makeChooserItems = (ns) ->
-    gs = ns.schema.ext.groups
-    ch = 'chooser'
-    mk = makeItem
+    g = ns.schema.ext.groups
+    c = 'chooser'
+    m = makeItem
 
     items =
-        '*'                 : -> mk ns, clone.unique(id), ch for id in gs.tradables
-        '.commodity'        : -> mk ns, clone.unique(id), ch for id in gs.commodities
-        '.promo'            : -> mk ns, clone.unique(id), ch for id in gs.promos
-        '.wearable'         : -> mk ns, clone.unique(id), ch for id in gs.hats
-        '.weapon'           : -> mk ns, clone.unique(id), ch for id in gs.weapons
+        '*'                 : -> m ns, clone.unique(i), c for i in g.tradables when i > 0
+        '.commodity'        : -> m ns, clone.unique(i), c for i in g.commodities
+        '.promo'            : -> m ns, clone.unique(i), c for i in g.promos
+        '.wearable'         : -> m ns, clone.unique(i), c for i in g.hats
+        '.weapon'           : -> m ns, clone.unique(i), c for i in g.weapons
 
-        '.vintage'          : -> mk ns, clone.vintage(id), ch for id in gs.vintage_weapons.concat gs.vintage_hats
-        '.vintage.weapon'   : -> mk ns, clone.vintage(id), ch for id in gs.vintage_weapons
-        '.vintage.wearable' : -> mk ns, clone.vintage(id), ch for id in gs.vintage_hats
+        '.vintage'          : -> m ns, clone.vintage(i), c for i in g.vintage_weapons.concat g.vintage_hats
+        '.vintage.weapon'   : -> m ns, clone.vintage(i), c for i in g.vintage_weapons
+        '.vintage.wearable' : -> m ns, clone.vintage(i), c for i in g.vintage_hats
 
-        '.unusual'          : -> mk ns, clone.unusual(id), ch for id in gs.unusual_hats.concat gs.unusual_weapons
-        '.unusual.weapon'   : -> mk ns, clone.unusual(id), ch for id in gs.unusual_weapons
-        '.unusual.wearable' : -> mk ns, clone.unusual(id), ch for id in gs.unusual_hats
+        '.unusual'          : -> m ns, clone.unusual(i), c for i in g.unusual_hats.concat g.unusual_weapons
+        '.unusual.weapon'   : -> m ns, clone.unusual(i), c for i in g.unusual_weapons
+        '.unusual.wearable' : -> m ns, clone.unusual(i), c for i in g.unusual_hats
 
-        '.genuine'          : -> mk ns, clone.genuine(id), ch for id in gs.genuine_weapons.concat gs.genuine_hats
-        '.genuine.weapon'   : -> mk ns, clone.genuine(id), ch for id in gs.genuine_weapons
-        '.genuine.wearable' : -> mk ns, clone.genuine(id), ch for id in gs.genuine_hats
+        '.genuine'          : -> m ns, clone.genuine(i), c for i in g.genuine_weapons.concat g.genuine_hats
+        '.genuine.weapon'   : -> m ns, clone.genuine(i), c for i in g.genuine_weapons
+        '.genuine.wearable' : -> m ns, clone.genuine(i), c for i in g.genuine_hats
 
-        '.strange'          : -> mk ns, clone.strange(id), ch for id in gs.strange_weapons
+        '.strange.weapon'   : -> m ns, clone.strange(i), c for i in g.strange_weapons
 
         byClass     : (n) -> i for i in items['*']() when i.hasClass(n)
         '.scout'    : -> items.byClass 'scout'

@@ -1,8 +1,9 @@
 .trade.mb1.null
 
     h1
-        span.main ${prefix} Trade ${tid}
+        span.main ${prefix} ${tid}
         span.status
+        span.who
 
     .line
         .unit
@@ -11,47 +12,14 @@
             .help These are the items the player will give in the trade.
 
     .haves
-        .itemw
-            .item.have
-        .itemw
-            .item.have
-        .itemw
-            .item.have
-        .itemw
-            .item.have
-        .itemw
-            .item.have
-        .itemw
-            .item.have
-        .itemw
-            .item.have
-        .itemw
-            .item.have
 
-    .line.mt1
+    .line
         .unit
             h3 Wishlist
         .unit.lastUnit
             .help These are the items the player wants to receive in the trade.
 
     .wants
-        .itemw
-            .item.want
-        .itemw
-            .item.want
-        .itemw
-            .item.want
-        .itemw
-            .item.want
-        .itemw
-            .item.want
-        .itemw
-            .item.want
-        .itemw
-            .item.want
-        .itemw
-            .item.want
 
-    .mb2
-        .mt1
-            pre.trade-show-notes
+    div
+        pre.notes

@@ -39,23 +39,24 @@ groups = (items) ->
     select = (pred) ->
         k for k, i of items when pred(k, i)
 
-    commodities: select (a, b) -> a in ['5000', '5001', '5002', '5021']
-    genuine_hats: select (a, b) -> G in b._q and b.item_class=='tf_wearable'
-    genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
-    hats: select (a, b) -> b.item_class=='tf_wearable' and b._t == ALWAYS
+    tradables: select (a, b) -> b._t == ALWAYS
+    untradables: select (a, b) -> b._t == NEVER
 
+    commodities: select (a, b) -> a in ['5000', '5001', '5002', '5021']
+    hats: select (a, b) -> b.item_class=='tf_wearable' and b._t == ALWAYS
     metal: select (a, b) -> b.item_type_name=='Craft Item' and b.craft_class=='craft_bar'
     offers: select (a, b) -> (a < 0) and (b.item_class=='Offer')
     promos: select (a, b) -> a in ['126', '143', '162', '161', '160']
     tools: select (a, b) -> b.item_class=='tool' and b._t == ALWAYS
-    tradables: select (a, b) -> b._t == ALWAYS
-    untradables: select (a, b) -> b._t == NEVER
-    vintage_hats: select (a, b) -> V in b._q and b.craft_class=='hat'
-    vintage_weapons: select (a, b) -> V in b._q and b.craft_class=='weapon'
     weapons: select (a, b) -> b.craft_class=='weapon' and b._t == ALWAYS
+
+    genuine_hats: select (a, b) -> G in b._q and b.item_class=='tf_wearable'
+    genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
+    strange_weapons: select (a, b) -> S in b._q and b.craft_class=='weapon'
     unusual_hats: select (a, b) -> U in b._q and b.item_class=='tf_wearable'
     unusual_weapons: select (a, b) -> U in b._q and b.craft_class=='weapon'
-    strange_weapons: select (a, b) -> S in b._q and b.craft_class=='weapon'
+    vintage_hats: select (a, b) -> V in b._q and b.craft_class=='hat'
+    vintage_weapons: select (a, b) -> V in b._q and b.craft_class=='weapon'
 
 
 quals = (items) ->
@@ -401,7 +402,7 @@ exports.items =
         item_class: 'tf_weapon_flaregun'
         item_type_name: 'Flare Gun'
         craft_class: 'weapon'
-        _q: [C, V]
+        _q: [C, V, S]
         _t: ALWAYS
 
     '40':
@@ -409,7 +410,7 @@ exports.items =
         item_class: 'tf_weapon_flamethrower'
         item_type_name: 'Flame Thrower'
         craft_class: 'weapon'
-        _q: [C, V]
+        _q: [C, V, S]
         _t: ALWAYS
 
     '41':
@@ -441,7 +442,7 @@ exports.items =
         item_class: 'tf_weapon_bat_wood'
         item_type_name: 'Bat'
         craft_class: 'weapon'
-        _q: [C, V]
+        _q: [C, V, S]
         _t: ALWAYS
 
     '45':
@@ -553,7 +554,7 @@ exports.items =
         item_class: 'tf_weapon_jar'
         item_type_name: 'Jar Based Karate'
         craft_class: 'weapon'
-        _q: [C, V]
+        _q: [C, V, S]
         _t: ALWAYS
 
     '59':
@@ -577,7 +578,7 @@ exports.items =
         item_class: 'tf_weapon_revolver'
         item_type_name: 'Revolver'
         craft_class: 'weapon'
-        _q: [C, V]
+        _q: [C, V, S]
         _t: ALWAYS
 
     '94':
@@ -929,7 +930,7 @@ exports.items =
         item_class: 'tf_weapon_sentry_revenge'
         item_type_name: 'Shotgun'
         craft_class: 'weapon'
-        _q: [C, V]
+        _q: [C, V, S]
         _t: ALWAYS
 
     '142':
@@ -1280,7 +1281,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_KNIFE'
         item_class: 'tf_weapon_knife'
         item_type_name: 'Knife'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1304,7 +1305,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_WRENCH'
         item_class: 'tf_weapon_wrench'
         item_type_name: 'Wrench'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1312,7 +1313,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_BONESAW'
         item_class: 'tf_weapon_bonesaw'
         item_type_name: 'Bonesaw'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1328,7 +1329,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_SCATTERGUN'
         item_class: 'tf_weapon_scattergun'
         item_type_name: 'Scattergun'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1336,7 +1337,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_SNIPERRIFLE'
         item_class: 'tf_weapon_sniperrifle'
         item_type_name: 'Sniper Rifle'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1344,7 +1345,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_MINIGUN'
         item_class: 'tf_weapon_minigun'
         item_type_name: 'Minigun'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1360,7 +1361,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_SYRINGEGUN_MEDIC'
         item_class: 'tf_weapon_syringegun_medic'
         item_type_name: 'Syringe Gun'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1368,7 +1369,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_ROCKETLAUNCHER'
         item_class: 'tf_weapon_rocketlauncher'
         item_type_name: 'Rocket Launcher'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1376,7 +1377,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_GRENADELAUNCHER'
         item_class: 'tf_weapon_grenadelauncher'
         item_type_name: 'Grenade Launcher'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1384,7 +1385,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_PIPEBOMBLAUNCHER'
         item_class: 'tf_weapon_pipebomblauncher'
         item_type_name: 'Stickybomb Launcher'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1392,7 +1393,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_FLAMETHROWER'
         item_class: 'tf_weapon_flamethrower'
         item_type_name: 'Flame Thrower'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1400,7 +1401,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_PISTOL'
         item_class: 'tf_weapon_pistol'
         item_type_name: 'Pistol'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1408,7 +1409,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_REVOLVER'
         item_class: 'tf_weapon_revolver'
         item_type_name: 'Revolver'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1416,7 +1417,7 @@ exports.items =
         name: 'Upgradeable TF_WEAPON_MEDIGUN'
         item_class: 'tf_weapon_medigun'
         item_type_name: 'Medi Gun'
-        craft_class: null
+        craft_class: 'weapon'
         _q: [C, S]
         _t: ALWAYS
 
@@ -1553,7 +1554,7 @@ exports.items =
         item_class: 'tf_weapon_sniperrifle'
         item_type_name: 'Sniper Rifle'
         craft_class: 'weapon'
-        _q: [C]
+        _q: [C, S]
         _t: ALWAYS
 
     '231':
@@ -1569,7 +1570,7 @@ exports.items =
         item_class: 'tf_weapon_club'
         item_type_name: 'Kukri'
         craft_class: 'weapon'
-        _q: [C]
+        _q: [C, S]
         _t: ALWAYS
 
     '233':
@@ -2073,7 +2074,7 @@ exports.items =
         item_class: 'tf_weapon_crossbow'
         item_type_name: 'Crossbow'
         craft_class: 'weapon'
-        _q: [C, V]
+        _q: [C, V, S]
         _t: ALWAYS
 
     '306':
@@ -2225,7 +2226,7 @@ exports.items =
         item_class: 'tf_weapon_bat'
         item_type_name: 'Bat'
         craft_class: 'weapon'
-        _q: [C]
+        _q: [C, S]
         _t: ALWAYS
 
     '326':
@@ -2249,7 +2250,7 @@ exports.items =
         item_class: 'tf_weapon_wrench'
         item_type_name: 'Wrench'
         craft_class: 'weapon'
-        _q: [C]
+        _q: [C, S]
         _t: ALWAYS
 
     '330':
@@ -2441,7 +2442,7 @@ exports.items =
         item_class: 'tf_weapon_knife'
         item_type_name: 'Kunai'
         craft_class: 'weapon'
-        _q: [C, G, V]
+        _q: [C, G, V, S]
         _t: ALWAYS
 
     '357':
@@ -4131,7 +4132,7 @@ exports.items =
         item_type_name: 'TF_LockedCrate'
         craft_class: 'supply_crate'
         _q: [C]
-        _t: ALWAYS
+        _t: NEVER
 
     '5067':
         name: 'Summer Key'
@@ -4153,6 +4154,7 @@ exports.items =
         name: "Lord Cockswain's Pith Helmet"
         _q: [C]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: ""
         item_name: "Lord Cockswain's Pith Helmet"
@@ -4162,6 +4164,7 @@ exports.items =
         name: "Lord Cockswain's Novelty Mutton Chops and Pipe"
         _q: [C]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: ""
         item_name: "Lord Cockswain's Novelty Mutton Chops and Pipe"
@@ -4171,6 +4174,7 @@ exports.items =
         name: "The Cow Mangler 5000"
         _q: [C]
         _t: ALWAYS
+        craft_class: 'weapon'
         item_class: "tf_weapon_particle_cannon"
         item_description: ''
         item_name: "Cow Mangler 5000"
@@ -4180,6 +4184,7 @@ exports.items =
         name: "The Righteous Bison"
         _q: [C, G]
         _t: ALWAYS
+        craft_class: 'weapon'
         item_class: "tf_weapon_raygun"
         item_description: ""
         item_name: "Righteous Bison"
@@ -4189,6 +4194,7 @@ exports.items =
         name: "Dr. Grordbort's Crest"
         _q: [C]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: "A symbol of service in the Venusian legions."
         item_name: "Dr. Grordbort's Crest"
@@ -4351,6 +4357,7 @@ exports.items =
         name: "The Original"
         _q: [C, G]
         _t: ALWAYS
+        craft_class: 'weapon'
         item_class: "tf_weapon_rocketlauncher"
         item_description: ''
         item_name: "Original"
@@ -4360,6 +4367,7 @@ exports.items =
         name: "Mask of the Shaman"
         _q: [C, G]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: "An invincibility mask made by the Ancients. It hasn’t worked in a long, long time."
         item_name: "Mask of the Shaman"
@@ -4369,6 +4377,7 @@ exports.items =
         name: "Pilotka"
         _q: [C, G]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: ''
         item_name: "Pilotka"
@@ -4378,6 +4387,7 @@ exports.items =
         name: "Stahlhelm"
         _q: [C, G]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: ''
         item_name: "Stahlhelm"
@@ -4387,6 +4397,7 @@ exports.items =
         name: "Tamrielic Relic"
         _q: [C, G]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: "Designed to inspire fear, the dragons this helm was based on were less than impressed."
         item_name: "Tamrielic Relic"
@@ -4396,6 +4407,7 @@ exports.items =
         name: "The Anger"
         _q: [C, G]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: ''
         item_name: "Anger"
@@ -4405,6 +4417,7 @@ exports.items =
         name: "Pip-Boy"
         _q: [C, G]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: "Using modern super-deluxe resolution graphics!"
         item_name: "Pip-Boy"
@@ -4414,6 +4427,7 @@ exports.items =
         name: "Wingstick"
         _q: [C, G]
         _t: ALWAYS
+        craft_class: 'hat'
         item_class: "tf_wearable"
         item_description: ''
         item_name: "Wingstick"
@@ -4435,5 +4449,166 @@ exports.items =
         item_class: "bundle"
         item_description: ""
         item_name: "TF_Bundle_DrGComicCon"
+        item_type_name: "Item Bundle"
+
+    '521':
+        name: "Belltower Spec Ops"
+        _q: [C, G]
+        _t: ALWAYS
+        craft_class: 'hat'
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "Nanobalaclava"
+        item_type_name: "Hat"
+
+    '522':
+        name: "The Deus Specs"
+        _q: [C, G]
+        _t: ALWAYS
+        craft_class: 'hat'
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "Deus Specs"
+        item_type_name: "Glasses"
+
+    '523':
+        name: "The Sarif Cap"
+        _q: [C, G]
+        _t: ALWAYS
+        craft_class: 'hat'
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "Company Man"
+        item_type_name: "Hat"
+
+    '524':
+        name: "The Purity Fist"
+        _q: [C, G]
+        _t: ALWAYS
+        craft_class: 'hat'
+        item_class: "tf_wearable"
+        item_description: ""
+        item_name: "Purity Fist"
+        item_type_name: "TF_Wearable_Arms"
+
+    '525':
+        name: "The Diamondback"
+        _q: [C, G]
+        _t: ALWAYS
+        craft_class: 'weapon'
+        item_class: "tf_weapon_revolver"
+        item_description: ""
+        item_name: "Diamondback"
+        item_type_name: "Revolver"
+
+    '526':
+        name: "The Machina"
+        _q: [C, G]
+        _t: ALWAYS
+        craft_class: 'weapon'
+        item_class: "tf_weapon_sniperrifle"
+        item_description: ""
+        item_name: "Machina"
+        item_type_name: "Sniper Rifle"
+
+    '527':
+        name: "The Widowmaker"
+        _q: [C, G]
+        _t: ALWAYS
+        craft_class: 'weapon'
+        item_class: "tf_weapon_shotgun_primary"
+        item_description: ""
+        item_name: "Widowmaker"
+        item_type_name: "Shotgun"
+
+    '528':
+        name: "The Short Circuit"
+        _q: [C, G]
+        _t: ALWAYS
+        craft_class: 'weapon'
+        item_class: "tf_weapon_mechanical_arm"
+        item_description: ""
+        item_name: "Short Circuit"
+        item_type_name: "TF_Weapon_Mechanical_Arm"
+
+    '533':
+        name: "Clockwerk's Helm"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: "DOTA 2 International Championship Gamescom 2011"
+        item_name: "Clockwerk's Helm"
+        item_type_name: "Hat"
+
+    '534':
+        name: "Sniper's Snipin' Glass"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: "DOTA 2 International Championship Gamescom 2011"
+        item_name: "Sniper's Snipin' Glass"
+        item_type_name: "Hat"
+
+    '535':
+        name: "Storm Spirit's Jolly Hat"
+        _q: [C]
+        _t: NEVER
+        item_class: "tf_wearable"
+        item_description: "DOTA 2 International Championship Gamescom 2011"
+        item_name: "Storm Spirit's Jolly Hat"
+        item_type_name: "Hat"
+
+    '2036':
+        name: "Bethesda Employee Bundle"
+        _q: [C]
+        _t: NEVER
+        item_class: "bundle"
+        item_description: "undefined"
+        item_name: "Bethesda Employee Bundle"
+        item_type_name: "Item Bundle"
+
+    '2037':
+        name: "Tripwire Employee Bundle"
+        _q: [C]
+        _t: NEVER
+        item_class: "bundle"
+        item_description: "undefined"
+        item_name: "Tripwire Employee Bundle"
+        item_type_name: "Item Bundle"
+
+    '2038':
+        name: "Bethesda Employee Bundle Genuine"
+        _q: [C]
+        _t: NEVER
+        item_class: "bundle"
+        item_description: "undefined"
+        item_name: "Bethesda Employee Bundle"
+        item_type_name: "Item Bundle"
+
+    '2039':
+        name: "Tripwire Employee Bundle Genuine"
+        _q: [C]
+        _t: NEVER
+        item_class: "bundle"
+        item_description: "undefined"
+        item_name: "Tripwire Employee Bundle"
+        item_type_name: "Item Bundle"
+
+    '2040':
+        name: "Deus Ex Promo Bundle"
+        _q: [C]
+        _t: NEVER
+        item_class: "bundle"
+        item_description: "When will it be the future? Right now! See for yourself with these eight items:"
+        item_name: "The Manno-Technology Bundle"
+        item_type_name: "Item Bundle"
+
+    '2041':
+        name: "Deus Ex Purity Fist PAX Promo"
+        _q: [C]
+        _t: NEVER
+        item_class: "bundle"
+        item_description: ""
+        item_name: "TF_Bundle_DeusExPAX"
         item_type_name: "Item Bundle"
 

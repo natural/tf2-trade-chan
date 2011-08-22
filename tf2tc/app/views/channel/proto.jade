@@ -1,21 +1,24 @@
-.shell.null
+.shell.null.mb2
 
-    table(width="100%")
-        tr
-            td(width="50%")
-                h2 Chat with Traders
-                .chchat
-                    table(width="100%")
-                        tr
-                            td(width="65%")
-                                .chtalk(style="height:200px")
-                                .chsay.null
-                                    input(type="text")
-                                .chanon.null
-                                    span You have to log in to chat.
-                            td(width="35%")
-                                .chusers.debug2
+    .line.mt1
 
-            td(width="50%")
-                .chtrade
-                    h2 Trades in this Channel
+        .unit.size1of2.mr1
+            h2 Chat
+            .line
+                .unit.size3of4
+                    .talk
+
+                .unit.size1of4.lastUnit
+                    .users.mb2
+            .foo
+                .say.null
+                    input.mr1(type="text")
+                .anon.null
+                    span You have to log in to chat.
+
+        .unit.size1of2.lastUnit
+            h2 Trades
+            .trades
+
+
+

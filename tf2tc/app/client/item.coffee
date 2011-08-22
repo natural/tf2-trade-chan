@@ -32,11 +32,14 @@ exports.make = (ns, defn, type) ->
     sdefn = ns.schema_items[defn.defindex]
 
     item = $ 'div.item', itemw
-    item.data 'item-defn', defn
-    item.data 'schema-defn', sdefn
-    item.addClass "qual-border-#{defn.quality or 6} qual-hover-#{defn.quality or 6}"
-    item.addClass "untradable" if defn.flag_cannot_trade
     img = $ 'img', item
+    item
+        .data('item-defn', defn)
+        .data('schema-defn', sdefn)
+        .addClass("qual-border-#{defn.quality or 6} qual-hover-#{defn.quality or 6}")
+        .addClass(if defn.flag_cannot_trade then "untradable" else '')
+        .addClass("defn-#{defn.defindex}")
+
 
     ## add text for offer items
     offer = prop.offer()

@@ -32,17 +32,17 @@ exports.actions =
 
                 if not params.tid
                     addTrade schema, uid, have, want, text, (tid) ->
-                        sendMessage schema, tid, have, want, text, keys.add
+                        sendMessage schema, tid, uid, have, want, text, keys.add
                         cb success:true, tid:tid
 
                 else if params.tid and not have.length
                     deleteTrade schema, uid, params.tid, (trade) ->
-                        sendMessage schema, params.tid, trade.have, trade.want, trade.text, keys.del
+                        sendMessage schema, params.tid, uid, trade.have, trade.want, trade.text, keys.del
                         cb success:true, tid:params.tid
 
                 else
-                    updateTrade schema, params.tid, have, want, text, () ->
-                        sendMessage schema, params.tid, have, want, text, keys.upd
+                    updateTrade schema, params.tid, uid, have, want, text, () ->
+                        sendMessage schema, params.tid, uid, have, want, text, keys.upd
                         cb success:true, tid:params.tid
 
 
@@ -55,7 +55,7 @@ makeSchemaItemMap = (s) ->
 
 addTrade = (schema, uid, have, want, text, next) ->
     newTradeId uid, (tid) ->
-        putTradePayload tid, have, want, text, (okay) ->
+        putTradePayload tid, uid, have, want, text, (okay) ->
             for item in have
                 fillTradeBuckets schema, tid, item, keys.have
             for item in want
@@ -75,7 +75,7 @@ deleteTrade = (schema, uid, tid, next) ->
                 next trade
 
 
-updateTrade = (schema, tid, have, want, text, next) ->
+updateTrade = (schema, tid, uid, have, want, text, next) ->
     getTrades [tid], (trades) ->
         trade = JSON.parse trades[tid]
         ## drain the old buckets
@@ -84,7 +84,7 @@ updateTrade = (schema, tid, have, want, text, next) ->
         for item in trade.want
             drainTradeBuckets schema, tid, item, keys.want
 
-        putTradePayload tid, have, want, text, (okay) ->
+        putTradePayload tid, uid, have, want, text, (okay) ->
             for item in have
                 fillTradeBuckets schema, tid, item, keys.have
             for item in want
@@ -92,9 +92,9 @@ updateTrade = (schema, tid, have, want, text, next) ->
             next()
 
 
-sendMessage = (schema, tid, have, want, text, action) ->
+sendMessage = (schema, tid, uid, have, want, text, action) ->
     cns = keys.tradeChannels schema, have, want
-    msg = tid:tid, have:have, want:want, text:text, action:action
+    msg = tid:tid, have:have, want:want, text:text, action:action, uid:uid
     for cn in cns
         do(cn) ->
             msg.channel = cn
@@ -119,9 +119,9 @@ getTrades = (tids, next) ->
         next trades
 
 
-putTradePayload = (tid, have, want, text, next) ->
+putTradePayload = (tid, uid, have, want, text, next) ->
     k = keys.trade tid
-    v = JSON.stringify {have:have, want:want, text:text, tid:tid}
+    v = JSON.stringify {have:have, want:want, text:text, tid:tid, uid:uid}
     R.set k, v, ->
         next true ## set can't fail
 

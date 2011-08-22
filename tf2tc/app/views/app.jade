@@ -7,7 +7,6 @@ html(lang="en")
         title TF2 Trade Chan
     body
 
-
         #itemtip.null
             .name
             .level
@@ -25,6 +24,9 @@ html(lang="en")
         #site.line
             .logo.unit.size1of2
                 h1 tf2 trade chan
+                .button-bar
+                    a#main-chat.small-button(href="#") Chat
+                    a#main-trade.small-button(href="#") Trade
 
             .auth.unit.size1of2.lastUnit
                 span#site-msg
@@ -62,9 +64,7 @@ html(lang="en")
                     .line.mt1
                         .scroll.unit.size3of5
                             .navigator
-                                span New Trade
-                                a.small-button.add-trade(href="#") +
-                                span Existing Trades
+                                a.small-button.new(href="#") New
                             .trades.shell
 
                         .chooser.unit.size2of5.lastUnit

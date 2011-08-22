@@ -1,20 +1,24 @@
 #!/usr/bin/env coffee
 
+utils = require '../app/server/utils.coffee'
+utils.log = ->
+
 global.SS = require '../config/app.coffee'
 global.R = require('redis').createClient()
 
 print_item = (idx, itm) ->
     """
-    '#{idx}':
-        name: \"#{itm.name}\"
-        _q: [C]
-        _t: ALWAYS
-        item_class: "#{itm.item_class}"
-        item_description: "#{itm.item_description}"
-        item_name: "#{itm.item_name}"
-        item_type_name: "#{itm.item_type_name}"
 
-    """
+'#{idx}':
+    name: \"#{itm.name}\"
+     _q: [C]
+     _t: ALWAYS
+     craft_class: "#{itm.craft_class}"
+     item_class: "#{itm.item_class}"
+     item_description: "#{itm.item_description}"
+     item_name: "#{itm.item_name}"
+     item_type_name: "#{itm.item_type_name}"
+    """.replace /\n/g, '\n    '
 
 make_item = (def) ->
     name: def.name
