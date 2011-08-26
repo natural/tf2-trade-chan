@@ -301,7 +301,7 @@ putChooser = (ns, panel, cb) ->
 # create and return a new, empty trade element from the prototype.
 makeEmptyTrade = () ->
     trade = $('#trade-proto').tmpl prefix:'NEW'
-    $('a.trade-submit, a.trade-delete', trade).hide()
+    $('a.submit, a.delete', trade).hide()
     $('.haves, .wants', trade).isotope isoOpts()
     trade
 
@@ -315,7 +315,7 @@ putTrade = (ns, tid, trade, target, hidden=false) ->
         $('pre.notes', last).text trade.text
         $('div.notes textarea', last).val trade.text
 
-    $('a.trade-submit', last).hide()
+    $('a.submit', last).hide()
     empties = (null for i in [0..7])
 
     targ = $ '.haves', last
@@ -362,14 +362,14 @@ adjustTradeUI = (e, tc) ->
     existing = $(tc).attr 'data-tid'
     have = $ 'div.item.backpack:not(:empty)', tc
     if have.length
-        $('a.trade-submit', tc).text(if existing then 'Update' else 'Submit').slideDown()
+        $('a.submit', tc).text(if existing then 'Update' else 'Submit').slideDown()
     else
-        $('a.trade-submit', tc).slideUp()
+        $('a.submit', tc).slideUp()
     want = $ 'div.item.chooser:not(:empty)', tc
     if want.length or have.length
-        $('a.trade-delete', tc).text(if existing then 'Close' else 'Clear').slideDown()
+        $('a.delete', tc).text(if existing then 'Close' else 'Clear').slideDown()
     else
-        $('a.trade-delete', tc).slideUp()
+        $('a.delete', tc).slideUp()
 
     if $('.item.have:empty', tc).length == 0
        $('.haves', tc).isotope 'insert', makeItem(getNS(), null, 'have')
@@ -383,7 +383,12 @@ adjustTradeUI = (e, tc) ->
 # live bind the trade manipulation buttons to handlers for submit,
 # delete, update, etc.
 initTradeEvents = (ns, target) ->
-    $('a.trade-delete', target).live 'click', (e) ->
+    $('a.match', target).live 'click', (e) ->
+        p = parentTrade e
+        tid = p.attr('data-tid')
+        SS.server.trades.match tid:tid
+
+    $('a.delete', target).live 'click', (e) ->
         p = parentTrade e
         tid = p.attr('data-tid')
         deleteTrade tid, (status) ->
@@ -402,7 +407,7 @@ initTradeEvents = (ns, target) ->
                         trigger.tradeDeleted tid
         false
 
-    $('a.trade-submit', target).live 'click', (e) ->
+    $('a.submit', target).live 'click', (e) ->
         p = parentTrade e
         tid = p.attr 'data-tid'
         have = ($(i).data('item-defn') for i in $('div.backpack', p))
@@ -417,14 +422,14 @@ initTradeEvents = (ns, target) ->
                         .text(if tid then 'Updated!' else 'Submitted!')
                         .delay(2500)
                         .fadeOut()
-                    $('a.trade-submit', p).slideUp()
-                    $('a.trade-delete', p).text('Close')
+                    $('a.submit', p).slideUp()
+                    $('a.delete', p).text('Close')
                     if not tid
                         trigger.tradeAdded status.tid
                 # else show some error -- trade not submitted
         false
 
-    $('a.trade-notes', target).live 'click', (e) ->
+    $('a.notes', target).live 'click', (e) ->
         p = parentTrade(e)
         if $('div.notes', p).is(':visible')
             # done editing

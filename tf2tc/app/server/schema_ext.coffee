@@ -1,86 +1,28 @@
+tools = require '../shared/schema_tools.coffee'
 
 
-exports.actions =
-    allGroups: (cb) ->
-        cb exports.direct.allGroups()
-
-    qualCycle: (cb) ->
-        cb exports.direct.qualCycle()
-
-    offerItems: (cb) ->
-        cb exports.direct.offerItems()
-
-    qualMap: (cb) ->
-        cb exports.direct.qualMap()
-
-exports.direct =
-    allGroups: ->
-        groups exports.items
-
-    qualCycle: ->
-        quals exports.items
-
-    qualMap: ->
-        0: 'normal'
-        1: 'genuine'
-        3: 'vintage'
-        5: 'unusual'
-        6: 'common'
-        11: 'strange'
-
-    offerItems: ->
-        offerItems exports.items
-
-    items: () ->
-        exports.items
+exports.groups = groups = () ->
+    tools.groupMaps(items).selectors
 
 
-groups = (items) ->
-    select = (pred) ->
-        k for k, i of items when pred(k, i)
-
-    tradables: select (a, b) -> b._t == ALWAYS
-    untradables: select (a, b) -> b._t == NEVER
-
-    commodities: select (a, b) -> a in ['5000', '5001', '5002', '5021']
-    hats: select (a, b) -> b.item_class=='tf_wearable' and b._t == ALWAYS
-    metal: select (a, b) -> b.item_type_name=='Craft Item' and b.craft_class=='craft_bar'
-    offers: select (a, b) -> (a < 0) and (b.item_class=='Offer')
-    promos: select (a, b) -> a in ['126', '143', '162', '161', '160']
-    tools: select (a, b) -> b.item_class=='tool' and b._t == ALWAYS
-    weapons: select (a, b) -> b.craft_class=='weapon' and b._t == ALWAYS
-
-    genuine_hats: select (a, b) -> G in b._q and b.item_class=='tf_wearable'
-    genuine_weapons: select (a, b) -> G in b._q and b.craft_class=='weapon'
-    strange_weapons: select (a, b) -> S in b._q and b.craft_class=='weapon'
-    unusual_hats: select (a, b) -> U in b._q and b.item_class=='tf_wearable'
-    unusual_weapons: select (a, b) -> U in b._q and b.craft_class=='weapon'
-    vintage_hats: select (a, b) -> V in b._q and b.craft_class=='hat'
-    vintage_weapons: select (a, b) -> V in b._q and b.craft_class=='weapon'
+exports.qualities = () ->
+    tools.mapObj items, (k, v) -> v._q
 
 
-quals = (items) ->
-    m = {}
-    m[k] = i._q for k, i of items
-    m
+exports.offers = () ->
+    tools.mapSeq groups().offers, (i) -> items[i]
 
 
-offerItems = (items) ->
-    m = {}
-    m[k] = items[k] for k in groups(items).offers
-    m
+C = tools.basicQualities.common
+G = tools.basicQualities.genuine
+S = tools.basicQualities.strange
+U = tools.basicQualities.unusual
+V = tools.basicQualities.vintage
 
 
-C=6  # common, aka unique
-G=1  # genuine
-N=0  # normal
-S=11 # strange
-U=5  # unusual
-V=3  # vintage
-
-NEVER=0
-ALWAYS=1
-GIFT=-1
+NEVER = tools.tradableFlags.never
+ALWAYS = tools.tradableFlags.always
+GIFT = tools.tradableFlags.gift
 
 
 # this is a mapping of schema items to very simple item
@@ -89,7 +31,7 @@ GIFT=-1
 # have, and the '_t' property, which is a value that denotes how the item can
 # be traded.
 
-exports.items =
+exports.items = items =
     '-3':
         name: 'Promos'
         _q: [C, V]

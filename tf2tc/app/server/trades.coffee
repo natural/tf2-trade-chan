@@ -6,15 +6,17 @@ ext = require './schema_ext'
 
 
 exports.actions =
-    userTrades: (params, cb) ->
+    match: (params, cb) ->
         @getSession (session) ->
             if not session.user_id
-                cb success:false, trades:null
+                cb success:false, matches:null
 
-            usr = if params.user? then params.user else session.user_id
-            uid = utils.uidFromOpenId usr
-            getUserTrades uid, (trades) ->
-                cb success:true, trades:trades
+            localSchema (schema) ->
+                getTrade params.tid, (trade) ->
+                    matchTrade schema, trade, (tids) ->
+                        getTrades tids, (matches) ->
+                            cb success:true, count:tids.length, matches:matches
+
 
     publish: (params, cb) ->
         @getSession (session) ->
@@ -27,8 +29,7 @@ exports.actions =
             text = params.text or ''
             params.tid = "#{params.tid}" if params.tid
 
-            steam.actions.schema (schema) ->
-                schema.ext.items = makeSchemaItemMap schema
+            localSchema (schema) ->
 
                 if not params.tid
                     addTrade schema, uid, have, want, text, (tid) ->
@@ -44,6 +45,22 @@ exports.actions =
                     updateTrade schema, params.tid, uid, have, want, text, () ->
                         sendMessage schema, params.tid, uid, have, want, text, keys.upd
                         cb success:true, tid:params.tid
+
+    userTrades: (params, cb) ->
+        @getSession (session) ->
+            if not session.user_id
+                cb success:false, trades:null
+
+            usr = if params.user? then params.user else session.user_id
+            uid = utils.uidFromOpenId usr
+            getUserTrades uid, (trades) ->
+                cb success:true, trades:trades
+
+
+localSchema = (next) ->
+    steam.actions.schema (schema) ->
+        schema.ext.items = makeSchemaItemMap schema
+        next schema
 
 
 makeSchemaItemMap = (s) ->
@@ -102,6 +119,29 @@ sendMessage = (schema, tid, uid, have, want, text, action) ->
             SS.publish.channel [cn], 'trd-msg', msg
 
 
+matchTrade = (schema, trade, next) ->
+    multi = R.multi()
+    mrange = (k) ->
+        console.log 'mrange key:', k
+        multi.lrange k, 0, -1
+
+    mrange k for k in keys.tradeBuckets(schema, item, 'have') for item in trade.want
+    mrange k for k in keys.tradeBuckets(schema, item, 'want') for item in trade.have
+
+    #mrange k for k in keys.matchWantBuckets(schema, item) for item in trade.want
+    #mrange k for k in keys.matchHaveBuckets(schema, item) for item in trade.have
+
+    multi.exec (err, replies) ->
+        outs = new SS.shared.set
+        outs.update v for v in replies
+        next outs.members()
+
+
+getTrade = (tid, next) ->
+    R.get keys.trade(tid), (err, val) ->
+        next JSON.parse(val)
+
+
 getUserTrades = (uid, next) ->
     k = keys.userTrades uid
     R.lrange k, 0, -1, (err, ids) ->
@@ -127,12 +167,12 @@ putTradePayload = (tid, uid, have, want, text, next) ->
 
 
 fillTradeBuckets = (schema, tid, item, which) ->
-    for key in keys.tradeBuckets schema, item, which
+    for key in keys.tradeBuckets schema, item, which, channels=true
         R.lpush key, tid, ->
 
 
 drainTradeBuckets = (schema, tid, item, which) ->
-    for key in keys.tradeBuckets schema, item, which
+    for key in keys.tradeBuckets schema, item, which, channels=true
         R.lrem key, 0, tid, ->
 
 
@@ -144,7 +184,7 @@ newTradeId = (uid, next) ->
                     next tid
 
 
-extGroups = ext.direct.allGroups()
+extGroups = ext.groups()
 
 
 extPred =
@@ -173,17 +213,44 @@ keys =
     trade: (tid) ->
         "trade:#{tid}"
 
-    tradeBuckets: (sch, def, dir) ->
-        quality = if def.quality? then def.quality else def.item_quality
+    otherBuckets: (schema, item, direction) ->
+        quality = if item.quality? then item.quality else item.item_quality
         buckets = {}
-        buckets["bucket:#{dir}:#{quality}:#{def.defindex}"] = 1
+        d = "#{item.defindex}"
+        console.log quality, d
+        if quality == 3 and d in extGroups.offers
+            buckets["bucket:#{direction}:3:-2"] = 1
+        if quality == 3 and d in extGroups.vintage_hats
+            buckets["bucket:#{direction}:3:-2"] = 1
+        if quality == 5 and d in extGroups.offers
+            buckets["bucket:#{direction}:5:-2"] = 1
+            buckets["bucket:#{direction}:5:-2"] = 1
+
+
+    matchWantBuckets: (schema, item) ->
+        d = "#{item.defindex}"
+        b = {}
+        q = if item.quality? then item.quality else item.item_quality
+        if d in extGroups.promos
+            b["bucket:have:#{q}:#{d}"] = 1
+        if d in extGroups.offers
+            b["bucket:have:#{q}:#{d}"] = 1
+        (name for name of b)
+
+    matchHaveBuckets: (schema, item) ->
+        []
+
+    tradeBuckets: (schema, item, direction, channels=false) ->
+        quality = if item.quality? then item.quality else item.item_quality
+        buckets = {}
+        buckets["bucket:#{direction}:#{quality}:#{item.defindex}"] = 1
 
         for name, pred of extPred
-            if pred sch, def
-                quality = if def.quality then def.quality else 6
-                buckets["bucket:#{dir}:#{quality}:#{name}"] = 1
-                ## if dir is keys.have
-                buckets["channel:trades:#{name}"] = 1
+            if pred schema, item
+                quality = if item.quality then item.quality else 6
+                buckets["bucket:#{direction}:#{quality}:#{name}"] = 1
+                if channels
+                    buckets["channel:trades:#{name}"] = 1
         (name for name of buckets)
 
     tradeChannels: (sch, have, want) ->

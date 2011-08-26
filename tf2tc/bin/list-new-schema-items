@@ -37,7 +37,7 @@ main = ->
             items[item.defindex] = item
 
         ext = require '../app/server/schema_ext.coffee'
-        existing = (k for k, v of ext.direct.items())
+        existing = (k for k, v of ext.items)
 
         for id, defn of items
             if "#{id}" not in existing

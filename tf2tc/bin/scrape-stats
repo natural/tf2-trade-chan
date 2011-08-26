@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+
+import sys
+from json import load as jsonload
+from urllib import urlopen
+from lxml import etree
+from lxml.html.soupparser import fromstring
+from lxml.cssselect import CSSSelector
+
+
+schema = 'http://tf2apiproxy.appspot.com/api/v2/public/schema'
+def fetch_schema():
+    return jsonload(urlopen(schema))
+
+
+def map_items(s):
+    d = {}
+    for item in s['result']['items']['item']:
+        d[item['defindex']] = item
+    return d
+
+
+def fetch_item_page(s):
+    return urlopen( 'http://tf2stats.net' + s )
+
+
+def get_qual(element, selector, default=0):
+    try:
+        val = selector(element)[0].text.split(': ')[1]
+        return float(val.replace('%', ''))
+    except:
+        return default
+
+
+qual_map = (
+    ('C', CSSSelector('div.unique  > span')),
+    ('S', CSSSelector('div.strange > span')),
+    ('G', CSSSelector('div.rarity1 > span')),
+    ('V', CSSSelector('div.vintage > span')),
+    ('U', CSSSelector('div.rarity4 > span')),
+)
+
+
+output_header = """
+#!/usr/bin/coffee
+
+C =  6  # common, aka unique
+G =  1  # genuine
+S = 11  # strange
+U =  5  # unusual
+V =  3  # vintage
+
+
+exports.items ="""
+
+
+output_item_format = """
+    '{id}':
+        name: "{name}"
+        _q: {quals}"""
+
+
+def main(sources):
+    documents = {}
+    itemlinks = set()
+    print >> sys.stderr, 'fetching schema'
+    schema = fetch_schema()
+    items = map_items(schema)
+
+    for source in sources:
+        print >> sys.stderr, 'reading', source
+        documents[source] = source.read()
+
+    sel = CSSSelector('a[href^="/item/"]')
+    for document in documents.values():
+        tree = fromstring(document)
+        itemlinks.update( e.get('href') for e in sel(tree) )
+
+    print output_header
+    for link in itemlinks:
+        defidx = int(link.split('/')[-2])
+        item = items[defidx]
+        itempage = fetch_item_page(link)
+        itemelem = fromstring(itempage)
+        itemdist = []
+        for k, v in qual_map:
+            dv = get_qual(itemelem, v)
+            if dv > 0:
+                itemdist.append(k)
+        quals = '[{}]'.format( str.join(', ', itemdist) )
+        print output_item_format.format(id=defidx, quals=quals, name=item.get('name'))
+
+
+if __name__ == '__main__':
+    urls = [
+        'http://tf2stats.net/weapons/',
+        'http://tf2stats.net/hats/',
+        'http://tf2stats.net/misc_items/'
+    ]
+    main(urlopen(u) for u in urls)
