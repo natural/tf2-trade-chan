@@ -8,28 +8,28 @@ steam = require './steam.coffee'
 
 exports.actions =
     join: (params, cb) ->
-        @getSession (session) ->
-            channel = params.channel
+        session = @session
+        channel = params.channel
+        session.channel.subscribe channel
+        return if not session.user_id
+        profileMessage utils.getId64(session), what:'joined', channel:channel, (msg) ->
             session.channel.subscribe channel
-            return if not session.user_id
-            profileMessage utils.getId64(session), what:'joined', channel:channel, (msg) ->
-                session.channel.subscribe channel
-                R.rpush keys.userList(channel), msg.id64, (err, okay) ->
-                    if okay and not err
-                        R.rpush keys.currentChannels(msg.id64), channel
-                        SS.publish.channel [channel], keys.sysMsg, msg
-                        cb()
-
-    leave: (params, cb) ->
-        @getSession (session) ->
-            channel = params.channel
-            session.channel.unsubscribe channel
-            return if not session.user_id
-            profileMessage utils.getId64(session), what:'left', channel:channel, (msg) ->
-                R.lrem keys.userList(channel), 0, msg.id64, (err, okay) ->
-                    R.lrem keys.currentChannels(msg.id64), 0, channel
+            R.rpush keys.userList(channel), msg.id64, (err, okay) ->
+                if okay and not err
+                    R.rpush keys.currentChannels(msg.id64), channel
                     SS.publish.channel [channel], keys.sysMsg, msg
                     cb()
+
+    leave: (params, cb) ->
+        session = @session
+        channel = params.channel
+        session.channel.unsubscribe channel
+        return if not session.user_id
+        profileMessage utils.getId64(session), what:'left', channel:channel, (msg) ->
+            R.lrem keys.userList(channel), 0, msg.id64, (err, okay) ->
+                R.lrem keys.currentChannels(msg.id64), 0, channel
+                SS.publish.channel [channel], keys.sysMsg, msg
+                cb()
 
     leaveAll: (params, cb) ->
         id64 = utils.getId64 params.session
@@ -55,13 +55,13 @@ exports.actions =
                 cb (new SS.shared.set trades).members()
 
     say: (params, cb) ->
-        @getSession (session) ->
-            if not session.user_id
-                return
-            msg = what:'said', channel:params.channel, text:params.text
-            profileMessage utils.getId64(session), msg, (res) ->
-                SS.publish.channel [params.channel], keys.usrMsg, res
-                cb()
+        session = @session
+        if not session.user_id
+            return
+        msg = what:'said', channel:params.channel, text:params.text
+        profileMessage utils.getId64(session), msg, (res) ->
+            SS.publish.channel [params.channel], keys.usrMsg, res
+            cb()
 
 
 keys =

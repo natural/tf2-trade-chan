@@ -7,20 +7,10 @@ request = require 'request'
 ext = require './schema_ext'
 utils = require './utils'
 
+
 exports.actions =
     schema: (cb) ->
         o = urls.schema SS.config.local.steam_api_key
-        schemaTweak = (d) ->
-            sch = JSON.parse d
-            sch.ext =
-                groups: ext.groups()
-                quals: ext.qualities()
-                offers: ext.offers()
-            ks = (Number(k) for k, j of imgFixes)
-            for k, n of sch.result.items.item
-                if n.defindex in ks
-                    n.image_url = imgFixes[n.defindex]
-            sch
         get o, schemaTweak, cb
 
     items: (params, cb) ->
@@ -29,15 +19,7 @@ exports.actions =
 
     profile: (params, cb) ->
         o = urls.profile params.id64, SS.config.local.steam_api_key
-        get o, JSON.parse, (d) ->
-            try
-                profile = d.response.players.player[0]
-                profile.steamid = params.id64
-                cb profile
-            catch err
-                null
-                #console.warn "ERR: ", err
-                #cb {}
+        get o, JSON.parse, extractProfile(params.id64, cb)
 
     status: (params, cb) ->
         o = urls.status params.id64
@@ -47,7 +29,7 @@ exports.actions =
         o = urls.news 5, 256
         get o, JSON.parse, (d) ->
             news = d.appnews.newsitems.newsitem
-            cb(news)
+            cb news
 
 
 req = (opts, cb) ->
@@ -67,6 +49,26 @@ get = (opts, parse, cb) ->
                         cb(if parse then parse body else body)
                 else
                     cb null
+
+
+extractProfile = (id64, next) ->
+    (payload) ->
+        try
+            profile = payload.response.players.player[0]
+            profile.steamid = id64
+            next profile
+        catch err
+            null
+
+
+schemaTweak = (payload) ->
+    schema = JSON.parse payload
+    schema.ext = ext.all()
+    ks = (Number(k) for k, j of imgFixes)
+    for k, n of schema.result.items.item
+        if n.defindex in ks
+            n.image_url = imgFixes[n.defindex]
+    schema
 
 
 urls =

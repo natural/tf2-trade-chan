@@ -1,6 +1,6 @@
 ## server-side app module
 #
-
+path = require 'path'
 utils = require './utils'
 steam = require './steam.coffee'
 
@@ -10,25 +10,26 @@ exports.actions =
         cb framework:SS.version, websockets:true, application:'v07'
 
     backpack: (cb) ->
-        @getSession (session) ->
-            if session.user_id
-                uid = session.user_id
-                id64 = uid.split('/').pop()
-                steam.actions.items id64:id64, cb
-            else
-                cb {}
+        session = @session
+        if session.user_id
+            uid = session.user_id
+            id64 = uid.split('/').pop()
+            steam.actions.items id64:id64, cb
+        else
+            cb {}
 
     login: (params, cb) ->
-        @getSession (session) ->
-            session.authenticate 'local_auth', params, (response) =>
-                session.setUserId(response.user_id) if response.success
-                cb response
+        session = @session
+        modname = path.resolve 'lib/server/local_auth'
+        session.authenticate modname, params, (response) =>
+            session.setUserId(response.user_id) if response.success
+            cb response
 
     logout: (cb) ->
-        @getSession (session) ->
-            session.user.logout(cb)
-            session.setUserId(null)
-            cb()
+        session = @session
+        session.user.logout(cb)
+        session.setUserId(null)
+        cb()
 
     readStatus: (params, cb) ->
         steam.actions.status params, cb
@@ -44,20 +45,20 @@ exports.actions =
                 cb p
 
     userProfile: (cb) ->
-        @getSession (session) ->
-            if session.user_id
-                steam.actions.profile id64:utils.getId64(session), (profile) ->
-                    cb profile
-            else
-                cb {}
+        session = @session
+        if session.user_id
+            steam.actions.profile id64:utils.getId64(session), (profile) ->
+                cb profile
+        else
+            cb {}
 
     id64: (cb) ->
-        @getSession (session) ->
-            if session.user_id
-                cb id64:utils.getId64(session)
-            else
-                cb {}
+        session = @session
+        if session.user_id
+            cb id64:utils.getId64(session)
+        else
+            cb {}
 
     data: (cb) ->
-        @getSession (session) ->
-            cb list:session.channel.list(), key:session.user.key()
+        session = @session
+        cb list:session.channel.list(), key:session.user.key()

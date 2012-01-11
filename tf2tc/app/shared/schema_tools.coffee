@@ -1,3 +1,6 @@
+##
+# shared tools for schema manipulation and item selection.
+#
 
 
 exports.invert = invert = (obj) ->
@@ -24,7 +27,7 @@ exports.groupMaps = groupMaps = (items) ->
     weap = 'weapon'
     hat = 'hat'
     wear = 'tf_wearable'
-    select = (pred) -> k for k, i of items when pred(k, i)
+    select = (f) -> k for k, i of items when f(k, i)
 
     groups =
         commodities : [
@@ -121,7 +124,6 @@ exports.qualityMaps = qualityMaps = (schema) ->
     keyToTitle: mapObj(keyToName, (k, v) -> nameToTitle[v])
 
 
-
 exports.basicQualities = basicQualities =
     genuine:  1
     vintage:  3
@@ -134,6 +136,3 @@ exports.tradableFlags = tradableFlags =
     never: 0
     always: 1
     gift: -1
-
-
-

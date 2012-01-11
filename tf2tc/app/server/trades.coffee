@@ -3,58 +3,55 @@
 utils = require './utils'
 steam = require './steam'
 ext = require './schema_ext'
+groups = ext.all().groups
 
 
 exports.actions =
     match: (params, cb) ->
-        @getSession (session) ->
-            if not session.user_id
-                cb success:false, matches:null
-
-            localSchema (schema) ->
-                getTrade params.tid, (trade) ->
-                    matchTrade schema, trade, (tids) ->
-                        getTrades tids, (matches) ->
-                            cb success:true, count:tids.length, matches:matches
+        session = @session
+        if not session.user_id
+            cb success:false, matches:null
+        localSchema (schema) ->
+            getTrade params.tid, (trade) ->
+                matchTrade schema, trade, (tids) ->
+                    getTrades tids, (matches) ->
+                        cb success:true, count:tids.length, matches:matches
 
 
     publish: (params, cb) ->
-        @getSession (session) ->
-            if not session.user_id
-                cb success:false, tid:null
+        session = @session
+        if not session.user_id
+            cb success:false, tid:null
 
-            uid = utils.uidFromOpenId session.user_id
-            have = if params.have then (p for p in params.have when p) else []
-            want = if params.want then (p for p in params.want when p) else []
-            text = params.text or ''
-            params.tid = "#{params.tid}" if params.tid
+        uid = utils.uidFromOpenId session.user_id
+        have = if params.have then (p for p in params.have when p) else []
+        want = if params.want then (p for p in params.want when p) else []
+        text = params.text or ''
+        params.tid = "#{params.tid}" if params.tid
 
-            localSchema (schema) ->
+        localSchema (schema) ->
+            if not params.tid
+                addTrade schema, uid, have, want, text, (tid) ->
+                    sendMessage schema, tid, uid, have, want, text, keys.add
+                    cb success:true, tid:tid
+            else if params.tid and not have.length
+                deleteTrade schema, uid, params.tid, (trade) ->
+                    sendMessage schema, params.tid, uid, trade.have, trade.want, trade.text, keys.del
+                    cb success:true, tid:params.tid
+            else
+                updateTrade schema, params.tid, uid, have, want, text, () ->
+                    sendMessage schema, params.tid, uid, have, want, text, keys.upd
+                    cb success:true, tid:params.tid
 
-                if not params.tid
-                    addTrade schema, uid, have, want, text, (tid) ->
-                        sendMessage schema, tid, uid, have, want, text, keys.add
-                        cb success:true, tid:tid
-
-                else if params.tid and not have.length
-                    deleteTrade schema, uid, params.tid, (trade) ->
-                        sendMessage schema, params.tid, uid, trade.have, trade.want, trade.text, keys.del
-                        cb success:true, tid:params.tid
-
-                else
-                    updateTrade schema, params.tid, uid, have, want, text, () ->
-                        sendMessage schema, params.tid, uid, have, want, text, keys.upd
-                        cb success:true, tid:params.tid
 
     userTrades: (params, cb) ->
-        @getSession (session) ->
-            if not session.user_id
-                cb success:false, trades:null
-
-            usr = if params.user? then params.user else session.user_id
-            uid = utils.uidFromOpenId usr
-            getUserTrades uid, (trades) ->
-                cb success:true, trades:trades
+        session = @session
+        if not session.user_id
+            cb success:false, trades:null
+        usr = if params.user? then params.user else session.user_id
+        uid = utils.uidFromOpenId usr
+        getUserTrades uid, (trades) ->
+            cb success:true, trades:trades
 
 
 localSchema = (next) ->
@@ -127,10 +124,8 @@ matchTrade = (schema, trade, next) ->
 
     mrange k for k in keys.tradeBuckets(schema, item, 'have') for item in trade.want
     mrange k for k in keys.tradeBuckets(schema, item, 'want') for item in trade.have
-
     #mrange k for k in keys.matchWantBuckets(schema, item) for item in trade.want
     #mrange k for k in keys.matchHaveBuckets(schema, item) for item in trade.have
-
     multi.exec (err, replies) ->
         outs = new SS.shared.set
         outs.update v for v in replies
@@ -184,17 +179,14 @@ newTradeId = (uid, next) ->
                     next tid
 
 
-extGroups = ext.groups()
-
-
 extPred =
-    commodities: (s, d) -> "#{d.defindex}" in extGroups.commodities
-    promos: (s, d) -> "#{d.defindex}" in extGroups.promos
-    metal: (s, d) -> "#{d.defindex}" in extGroups.metal
-    vintage_weapons: (s, d) -> "#{d.defindex}" in extGroups.vintage_weapons and d.quality == 3
-    vintage_hats: (s, d) -> "#{d.defindex}" in extGroups.vintage_hats and d.quality == 3
-    genuine_weapons: (s, d) -> "#{d.defindex}" in extGroups.genuine_weapons and d.quality == 1
-    genuine_hats: (s, d) -> "#{d.defindex}" in extGroups.genuine_hats and d.quality == 1
+    commodities: (s, d) -> "#{d.defindex}" in groups.commodities
+    promos: (s, d) -> "#{d.defindex}" in groups.promos
+    metal: (s, d) -> "#{d.defindex}" in groups.metal
+    vintage_weapons: (s, d) -> "#{d.defindex}" in groups.vintage_weapons and d.quality == 3
+    vintage_hats: (s, d) -> "#{d.defindex}" in groups.vintage_hats and d.quality == 3
+    genuine_weapons: (s, d) -> "#{d.defindex}" in groups.genuine_weapons and d.quality == 1
+    genuine_hats: (s, d) -> "#{d.defindex}" in groups.genuine_hats and d.quality == 1
     unusual_hats: (s, d) ->
         try
             s.ext.items[d.defindex].item_class == 'tf_wearable' and d.quality == 5
@@ -218,11 +210,11 @@ keys =
         buckets = {}
         d = "#{item.defindex}"
         console.log quality, d
-        if quality == 3 and d in extGroups.offers
+        if quality == 3 and d in groups.offers
             buckets["bucket:#{direction}:3:-2"] = 1
-        if quality == 3 and d in extGroups.vintage_hats
+        if quality == 3 and d in groups.vintage_hats
             buckets["bucket:#{direction}:3:-2"] = 1
-        if quality == 5 and d in extGroups.offers
+        if quality == 5 and d in groups.offers
             buckets["bucket:#{direction}:5:-2"] = 1
             buckets["bucket:#{direction}:5:-2"] = 1
 
@@ -231,9 +223,9 @@ keys =
         d = "#{item.defindex}"
         b = {}
         q = if item.quality? then item.quality else item.item_quality
-        if d in extGroups.promos
+        if d in groups.promos
             b["bucket:have:#{q}:#{d}"] = 1
-        if d in extGroups.offers
+        if d in groups.offers
             b["bucket:have:#{q}:#{d}"] = 1
         (name for name of b)
 
